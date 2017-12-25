@@ -1,5 +1,5 @@
-# SpringBoard
-c3piu flight controller project
+# C3PU
+c3pu flight controller project
 
 # setup
 clone the project
