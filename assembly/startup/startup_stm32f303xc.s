@@ -81,11 +81,12 @@ defined in linker script */
     .weak	Reset_Handler
     .type	Reset_Handler, %function
 Reset_Handler:
-    ldr     sp, =_estack    /* Atollic update: set stack pointer */
+    bl  BootHandler
+    ldr   sp, =_estack      /* set stack pointer */
 
-/* Copy the data segment initializers from flash to SRAM */
-    movs	r1, #0
-    b       LoopCopyDataInit
+/* Copy the data segment initializers from flash to SRAM */  
+    movs  r1, #0
+    b  LoopCopyDataInit
 
 CopyDataInit:
     ldr	r3, =_sidata
