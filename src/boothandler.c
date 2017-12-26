@@ -2,28 +2,9 @@
 
 typedef void (*pFunction)(void);
 
-/*
-Boot modes:
-RECOVERY_rfbl_app 1 //This is the recovery loader and thewre exists rfbl and an app
-RECOVERY_app      2 //This is the only bootloader and there is an app
-recovery_RFBL_app 3 //This is the second bootloader and there is a recovery loader and an app
-APP               4 //This is an app and there's no bl (DFU updates only)
-recovery_APP      5 //This is an app and there is only one BL
-recovery_rfbl_APP 6 //This is an app and there are two boot loaders
-
-
-#define BOOT_CODE_RECOVERY      0XB0074EC2
-#define BOOT_CODE_BOOTLOADER    0XB007B007
-#define BOOT_CODE_APP           0XB007A999
-
-
-*/
-
-static int CheckBootCrc(void);
-
-static int CheckBootCrc(void)
+static int CheckBootChecksum(void)
 {
-    return(BOOT_MAGIC_CRC == BootCrc());
+    return(BOOT_MAGIC_CHECKSUM == BootChecksum());
 }
 
 int BootToAddress(uint32_t address)
@@ -32,7 +13,7 @@ int BootToAddress(uint32_t address)
     BOOT_MAGIC_CODE = BOOT_MAGIC_WORD;
     BOOT_MAGIC_ADDRESS = address;
     BOOT_MAGIC_COUNTER = 0;
-    SetBootCrc();
+    SetBootChecksum();
     SystemReset();
     return(0);
 }
@@ -42,16 +23,16 @@ int ClearBootMagic(void)
     BOOT_MAGIC_CODE = 0;
     BOOT_MAGIC_ADDRESS = 0;
     BOOT_MAGIC_COUNTER = 0;
-    BOOT_MAGIC_CRC = 0;
+    BOOT_MAGIC_CHECKSUM = 0;
     return(0);
 }
 
-unsigned int SetBootCrc(void)
+unsigned int SetBootChecksum(void)
 {
-    return(BOOT_MAGIC_CRC = BootCrc());
+    return(BOOT_MAGIC_CHECKSUM = BootChecksum());
 }
 
-unsigned int BootCrc(void)
+unsigned int BootChecksum(void)
 {
     return(BOOT_MAGIC_CODE + BOOT_MAGIC_ADDRESS + BOOT_MAGIC_COUNTER);
 }
@@ -62,18 +43,18 @@ int BootHandler(void)
     pFunction JumpToApplication;
     uint32_t jumpAddress, address, bootMagic;
 
-    //STEP 1, Check CRC
-    if(!CheckBootCrc())
+    //STEP 1, Check Checksum
+    if(!CheckBootChecksum())
     {
-        //crc check failed, clear boot magic and continue boot
+        //Checksum check failed, clear boot magic and continue boot
         ClearBootMagic();
         return(0);
     }
     else if (THIS_ADDRESS == ADDR_FLASH_SECTOR_0)
     {
-        //crc passed and we're in the recovery loader
-        BOOT_MAGIC_COUNTER++; //increment boot counter and set boot CRC
-        SetBootCrc(); //reset the boot crc
+        //Checksum passed and we're in the recovery loader
+        BOOT_MAGIC_COUNTER++; //increment boot counter and set boot Checksum
+        SetBootChecksum(); //reset the boot Checksum
 
         if(BOOT_MAGIC_COUNTER > 3)
         {
@@ -84,7 +65,7 @@ int BootHandler(void)
     }
 
 
-    //crc matches, check mem location, if the magic word is set we check if the boot location matches the code location
+    //Checksum matches, check mem location, if the magic word is set we check if the boot location matches the code location
     if(BOOT_MAGIC_CODE == BOOT_MAGIC_WORD)
     {
         if(BOOT_MAGIC_ADDRESS == DFU_ADDRESS)
