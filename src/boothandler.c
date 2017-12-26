@@ -48,6 +48,7 @@ int BootHandler(void)
     pFunction JumpToApplication;
     uint32_t jumpAddress, address, bootMagic;
 
+    volatile uint32_t watchMe = THIS_ADDRESS;
     //STEP 1, Check Checksum
     if(!CheckBootChecksum())
     {
