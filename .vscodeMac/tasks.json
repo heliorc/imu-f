@@ -1,0 +1,25 @@
+{
+    "version": "0.1.0",
+    "tasks": [
+		{
+            "taskName": "F3 C3PU BL",
+            "command": "python",
+            "args": [
+                "make.py",
+                "-TF3BL",
+                "-D"
+            ],
+            "isShellCommand": true
+		},
+        {
+            "taskName": "F3 C3PU",
+            "command": "python",
+            "args": [
+                "make.py",
+                "-TF3",
+                "-D"
+            ],
+            "isShellCommand": true
+		}
+    ]
+}
