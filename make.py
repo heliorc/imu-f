@@ -102,7 +102,7 @@ def configure_target(TARGET):
 
     if (args.debug):
         os.system("PID=\"$(ps -elf | grep  openocd | grep -v 'grep' | sed -e 's/    / /g' | sed -e 's/   / /g' | sed -e 's/  / /g' | cut -d ' ' -f 3)\";kill $PID")
-        os.system("openocd -s ~/dev -s /usr/local/share/openocd/scripts -f /usr/local/share/openocd/scripts/interface/stlink-v2.cfg -f /usr/local/share/openocd/scripts/target/stm32f3x.cfg &> redirection.junk &")
+        os.system("openocd -s /usr/local/share/openocd/scripts -f /usr/local/share/openocd/scripts/interface/stlink-v2.cfg -f /usr/local/share/openocd/scripts/target/stm32f3x.cfg &> redirection &")
 
     FC_NAME = "C3PU"
     PROJECT = "C3PU"
@@ -116,7 +116,7 @@ def configure_target(TARGET):
     APP_ADDRESS = str(0x08020000)
     MSP_ADDRESS = str(0x080E0000)
     TARGET_SCRIPT = "stm32_flash_f30x_6k.ld"
-    THIS_ADDRESS = str(0x080E0000)
+    THIS_ADDRESS = str(0x08000000)
 
     #extra D flags
     EXTRA_DEF_FLAGS = " -DUSE_HAL_DRIVER -DTHIS_ADDRESS="+THIS_ADDRESS
