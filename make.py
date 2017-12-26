@@ -70,7 +70,7 @@ parser.add_argument('-C', "--clean", help="clean up output folder", action='stor
 parser.add_argument('-D', "--debug", help="build debug target", action='store_true')
 parser.add_argument('-j', "--threads", help="number of threads to run", default=10, type=int)
 parser.add_argument('-v', "--verbose", help="print compiler calls", action='store_true')
-parser.add_argument("-T", "--target", help="target controller to build", default="f3", nargs='*')
+parser.add_argument("-T", "--target", help="target controller to build", default="", nargs='*')
 args = parser.parse_args()
 
 IS_CLEANUP = args.clean
@@ -105,9 +105,9 @@ def configure_target(TARGET):
         os.system("openocd -s ~/dev -s /usr/local/share/openocd/scripts -f /usr/local/share/openocd/scripts/interface/stlink-v2.cfg -f /usr/local/share/openocd/scripts/target/stm32f3x.cfg &> redirection &")
 
     FC_NAME = "C3PU"
-    PROJECT = "DISCO"
-    TARGET_DEVICE = "STM32F303xc"
-    TARGET_PROCESSOR_TYPE = "f3"
+    PROJECT = "C3PU"
+    TARGET_DEVICE = "STM32F303xC"
+    TARGET_PROCESSOR_TYPE = "F3"
     OPTIMIZE_FLAGS = "-Og"
 
     DFU_ADDRESS = str(0x1FF00000)
@@ -119,10 +119,11 @@ def configure_target(TARGET):
     THIS_ADDRESS = str(0x080E0000)
 
     #extra D flags
-    EXTRA_DEF_FLAGS = " -DUSE_HAL_DRIVER -DSTM32F303xC -DTHIS_ADDRESS="+THIS_ADDRESS
+    EXTRA_DEF_FLAGS = " -DUSE_HAL_DRIVER -DTHIS_ADDRESS="+THIS_ADDRESS
     #All include dirs
     INCLUDE_DIRS = [
         "src",
+        os.path.join("src", "stm32"),
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Include",
         LIBRARY_PATH + "/STM32F3xx_HAL_Driver/Inc",
         LIBRARY_PATH + "/CMSIS/Include"
@@ -130,12 +131,13 @@ def configure_target(TARGET):
     #source dirs for all flie inclusion
     SOURCE_DIRS = [
         "src",
+        os.path.join("src", "stm32"),
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Source",
         LIBRARY_PATH + "/STM32F3xx_HAL_Driver/Src"
     ]
     #extra source files to include not in the above dirs
     SOURCE_FILES = [
-        LIBRARY_PATH + "/Startup/startup_stm32f303xc.s"
+        this_dir + "/assembly/startup/startup_stm32f303xc.s"
     ]
 
     ################################################################################
@@ -150,8 +152,10 @@ def configure_target(TARGET):
     ]
     # BOOT_MODE_DEF_FLAGS = " -DPROJECT="+PROJECT+" -DTHIS_ADDRESS="+THIS_ADDRESS+" -DMSP_ADDRESS="+MSP_ADDRESS+" -DDFU_ADDRESS="+DFU_ADDRESS+" -DRECOVERY_ADDRESS="+RECOVERY_ADDRESS+" -DRFBL_ADDRESS="+RFBL_ADDRESS+" -DAPP_ADDRESS="+APP_ADDRESS
     EXTRA_DEF_FLAGS = EXTRA_DEF_FLAGS + " -D".join(FLAGS)
-   
+
     DEF_FLAGS = "-DUSE_HAL_DRIVER -DHSE_VALUE=8000000 -D" + FC_NAME +" -D" + TARGET_DEVICE + " -DARM_MATH_CM4 -D" + TARGET + " -D" + TARGET_DEVICE.lower() + " -D" + TARGET_PROCESSOR_TYPE + EXTRA_DEF_FLAGS
+    print(DEF_FLAGS);
+
     ARCH_FLAGS = "-mthumb -mcpu=cortex-m4 -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant"
 
     ################################################################################

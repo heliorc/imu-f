@@ -1,12 +1,11 @@
 #include "includes.h"
-
-
-
 typedef void (*pFunction)(void);
 
 static int CheckBootChecksum(void)
 {
     return(BOOT_MAGIC_CHECKSUM == BootChecksum());
+    // return(0);
+    
 }
 
 int BootToAddress(uint32_t address)
@@ -32,11 +31,15 @@ int ClearBootMagic(void)
 unsigned int SetBootChecksum(void)
 {
     return(BOOT_MAGIC_CHECKSUM = BootChecksum());
+    // return(0);
+    
 }
 
 unsigned int BootChecksum(void)
 {
     return(BOOT_MAGIC_CODE + BOOT_MAGIC_ADDRESS + BOOT_MAGIC_COUNTER);
+    // return(0);
+    
 }
 
 int BootHandler(void)
