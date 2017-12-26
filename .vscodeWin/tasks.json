@@ -1,0 +1,21 @@
+{
+    "version": "0.1.0",
+    "command": "cmd",
+    "isShellCommand": true,
+    "showOutput": "always",
+    "args": ["/C"],
+    "tasks": [
+        {
+            "taskName": "F3 C3PU BL",
+            "suppressTaskName": true,
+            "isBuildCommand": true,
+            "args": [ "powershell -Command \"Start-Process 'cmd' -Verb RunAs -ArgumentList '/c C:\\dev\\scripts\\openocd.bat f3'\" & cd ${workspaceFolderBasename} & python.exe make.py -TF3BL -D" ]
+        },
+        {
+            "taskName": "F3 C3PU",
+            "suppressTaskName": true,
+            "isBuildCommand": true,
+            "args": [ "powershell -Command \"Start-Process 'cmd' -Verb RunAs -ArgumentList '/c C:\\dev\\scripts\\openocd.bat f3'\" & cd ${workspaceFolderBasename} & python.exe make.py -TF3 -D" ]
+        }
+    ]
+}
