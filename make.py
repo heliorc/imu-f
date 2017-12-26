@@ -106,7 +106,7 @@ def configure_target(TARGET):
 
     FC_NAME = "C3PU"
     PROJECT = "DISCO"
-    TARGET_DEVICE = "STM32F303xC"
+    TARGET_DEVICE = "STM32F303xc"
     TARGET_PROCESSOR_TYPE = "f3"
     OPTIMIZE_FLAGS = "-Og"
 
@@ -119,13 +119,13 @@ def configure_target(TARGET):
     THIS_ADDRESS = str(0x080E0000)
 
     #extra D flags
-    EXTRA_DEF_FLAGS = " -DUSE_HAL_DRIVER -DSTM32F303xC"
+    EXTRA_DEF_FLAGS = " -DUSE_HAL_DRIVER -DSTM32F303xC -DTHIS_ADDRESS="+THIS_ADDRESS
     #All include dirs
     INCLUDE_DIRS = [
         "src",
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Include",
         LIBRARY_PATH + "/STM32F3xx_HAL_Driver/Inc",
-        LIBRARY_PATH + "/Drivers/CMSIS/Include"
+        LIBRARY_PATH + "/CMSIS/Include"
     ]
     #source dirs for all flie inclusion
     SOURCE_DIRS = [
@@ -135,7 +135,7 @@ def configure_target(TARGET):
     ]
     #extra source files to include not in the above dirs
     SOURCE_FILES = [
-        LIBRARY_PATH + "/Startup/startup_stm32f303xC.s"
+        LIBRARY_PATH + "/Startup/startup_stm32f303xc.s"
     ]
 
     ################################################################################
@@ -149,7 +149,7 @@ def configure_target(TARGET):
         "APP_ADDRESS=" + APP_ADDRESS
     ]
     # BOOT_MODE_DEF_FLAGS = " -DPROJECT="+PROJECT+" -DTHIS_ADDRESS="+THIS_ADDRESS+" -DMSP_ADDRESS="+MSP_ADDRESS+" -DDFU_ADDRESS="+DFU_ADDRESS+" -DRECOVERY_ADDRESS="+RECOVERY_ADDRESS+" -DRFBL_ADDRESS="+RFBL_ADDRESS+" -DAPP_ADDRESS="+APP_ADDRESS
-    EXTRA_DEF_FLAGS = EXTRA_DEF_FLAGS + FLAGS.join(" -D")
+    EXTRA_DEF_FLAGS = EXTRA_DEF_FLAGS + " -D".join(FLAGS)
    
     DEF_FLAGS = "-DUSE_HAL_DRIVER -DHSE_VALUE=8000000 -D" + FC_NAME +" -D" + TARGET_DEVICE + " -DARM_MATH_CM4 -D" + TARGET + " -D" + TARGET_DEVICE.lower() + " -D" + TARGET_PROCESSOR_TYPE + EXTRA_DEF_FLAGS
     ARCH_FLAGS = "-mthumb -mcpu=cortex-m4 -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant"
@@ -170,7 +170,7 @@ def configure_target(TARGET):
     # compiler options
 
     # INCLUDES = " ".join("-I" + include for include in INCLUDE_DIRS) #this is stupid.
-    INCLUDES = " -I" + INCLUDE_DIRS.join(" -I")
+    INCLUDES = " -I" + " -I".join(INCLUDE_DIRS)
 
     LTO_FLAGS = "-flto -fuse-linker-plugin"
     DEBUG_FLAGS = "-ggdb3 -DDEBUG -Og"

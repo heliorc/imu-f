@@ -1,5 +1,7 @@
 #include "includes.h"
 
+
+
 typedef void (*pFunction)(void);
 
 static int CheckBootChecksum(void)
@@ -9,12 +11,12 @@ static int CheckBootChecksum(void)
 
 int BootToAddress(uint32_t address)
 {
-    DisableIrq();
+    __disable_irq();
     BOOT_MAGIC_CODE = BOOT_MAGIC_WORD;
     BOOT_MAGIC_ADDRESS = address;
     BOOT_MAGIC_COUNTER = 0;
     SetBootChecksum();
-    SystemReset();
+    NVIC_SystemReset();
     return(0);
 }
 
@@ -50,7 +52,7 @@ int BootHandler(void)
         ClearBootMagic();
         return(0);
     }
-    else if (THIS_ADDRESS == ADDR_FLASH_SECTOR_0)
+    else if (THIS_ADDRESS == (0x08000000))
     {
         //Checksum passed and we're in the recovery loader
         BOOT_MAGIC_COUNTER++; //increment boot counter and set boot Checksum
@@ -74,7 +76,7 @@ int BootHandler(void)
             address = DFU_ADDRESS;
             ClearBootMagic();
         }
-        else if(CUSTOM_LOC_ADDRESS_DATA == THIS_ADDRESS)
+        else if ( (BOOT_MAGIC_ADDRESS == 0) || (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) )
         {
             //we're in the right spot, return 0 to continue boot, boot magic is to be cleared in the app
             return(0);
@@ -94,5 +96,5 @@ int BootHandler(void)
     __set_MSP(*(__IO uint32_t*)address);
     JumpToApplication();
 
-    return(0);  
+    return(0);
 }
