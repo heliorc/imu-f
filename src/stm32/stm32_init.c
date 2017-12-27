@@ -18,11 +18,15 @@ int stm32_init(void)
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
 
-    #ifdef  __HAL_RCC_GPIOF_CLK_ENABLE()
+    #ifdef  __HAL_RCC_GPIOE_CLK_ENABLE
+        __HAL_RCC_GPIOE_CLK_ENABLE();
+    #endif
+
+    #ifdef  __HAL_RCC_GPIOF_CLK_ENABLE
         __HAL_RCC_GPIOF_CLK_ENABLE();
     #endif
 
-    #ifdef  __HAL_RCC_SPI1_CLK_ENABLE()
+    #ifdef  __HAL_RCC_SPI1_CLK_ENABLE
         __HAL_RCC_SPI1_CLK_ENABLE();
     #endif
 
@@ -30,6 +34,10 @@ int stm32_init(void)
     __HAL_RCC_SPI3_CLK_ENABLE();
 
     __HAL_RCC_DMA1_CLK_ENABLE();
+
+    #ifdef  __HAL_RCC_DMA2_CLK_ENABLE
+        __HAL_RCC_DMA2_CLK_ENABLE();
+    #endif
 
     /*
     __USART1_CLK_ENABLE();

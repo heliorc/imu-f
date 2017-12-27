@@ -2,6 +2,7 @@
     "python.linting.pylintEnabled": false,
     "files.associations": {
         "*.ld": "c",
-        "includes.h": "c"
+        "includes.h": "c",
+        "clock.h": "c"
     }
 }

@@ -3,6 +3,7 @@
 #include "includes.h"
 
 
+#define GYRO_SPI            SPI2
 #define GYRO_CS_HARDWARE    0
 #define GYRO_CS_PIN         GPIO_PIN_12
 #define GYRO_CS_PORT        GPIOB
