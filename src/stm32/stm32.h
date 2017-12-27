@@ -13,7 +13,7 @@ extern void InlineUpdateMillisClock (void);
 extern uint32_t InlineMicros(void);
 extern void InlineDelayUs(uint32_t uSec);
 extern void InlineDelayMs(uint32_t mSec);
-extern void InlineDigitalHi(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
+extern void inline_digital_hi(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 extern void InlineDigitalLo(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 extern int InlineIsPinStatusHi(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 extern void DeInitGpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
