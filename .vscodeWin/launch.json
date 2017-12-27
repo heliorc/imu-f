@@ -1,0 +1,56 @@
+{
+    "version": "0.2.0",
+    "configurations": [{
+            "name": "F3 C3PU BL OpenOCD Debug",
+            "preLaunchTask": "F3 C3PU BL",
+            "type": "gdb",
+            "request": "attach",
+            "executable": "./output/F3BL.elf",
+            "target": "127.0.0.1:3333",
+            "remote": true,
+            "cwd": "${workspaceRoot}",
+            "autorun": [
+                "set target-async on",
+                "set confirm off",
+                "set mem inaccessible-by-default off",
+                "interrupt",
+                "monitor sleep 100",
+                "monitor reset halt",
+                "monitor sleep 100",
+                "set debug remote 0",
+                "mon version",
+                "file ${workspaceFolderBasename}//output//F3BL.elf",
+                "load",
+                "monitor reset init",
+                "break main"
+            ],
+            "gdbpath": "arm-none-eabi-gdb"
+        },
+        {
+            "name": "F3 C3PU OpenOCD Debug",
+            "preLaunchTask": "F3 C3PU",
+            "type": "gdb",
+            "request": "attach",
+            "executable": "./output/F3.elf",
+            "target": "127.0.0.1:3333",
+            "remote": true,
+            "cwd": "${workspaceRoot}",
+            "autorun": [
+                "set target-async on",
+                "set confirm off",
+                "set mem inaccessible-by-default off",
+                "interrupt",
+                "monitor sleep 100",
+                "monitor reset halt",
+                "monitor sleep 100",
+                "set debug remote 0",
+                "mon version",
+                "file ${workspaceFolderBasename}//output//F3.elf",
+                "load",
+                "monitor reset init",
+                "break main"
+            ],
+            "gdbpath": "arm-none-eabi-gdb"
+        }
+    ]
+}

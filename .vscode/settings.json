@@ -1,0 +1,7 @@
+{
+    "python.linting.pylintEnabled": false,
+    "files.associations": {
+        "*.ld": "c",
+        "includes.h": "c"
+    }
+}
