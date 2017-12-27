@@ -124,6 +124,7 @@ def configure_target(TARGET):
     INCLUDE_DIRS = [
         "src",
         os.path.join("src", "stm32"),
+        os.path.join("src", "gpio"),
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Include",
         LIBRARY_PATH + "/STM32F3xx_HAL_Driver/Inc",
         LIBRARY_PATH + "/CMSIS/Include"
@@ -132,6 +133,7 @@ def configure_target(TARGET):
     SOURCE_DIRS = [
         "src",
         os.path.join("src", "stm32"),
+        os.path.join("src", "gpio"),
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Source",
         LIBRARY_PATH + "/STM32F3xx_HAL_Driver/Src"
     ]
