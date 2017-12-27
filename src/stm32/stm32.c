@@ -58,12 +58,12 @@ inline void InlineDelayMs(uint32_t mSec)
 }
 
 
-inline void InlineDigitalHi(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
+inline void inline_digital_hi(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 {
 	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
 }
 
-inline void InlineDigitalLo(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
+inline void inline_digital_lo(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 {
 	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
 }
@@ -82,7 +82,7 @@ void DeInitGpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 	HAL_GPIO_DeInit(GPIOx, GPIO_Pin);
 }
 
-void InitGpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t on)
+void init_gpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t on)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
