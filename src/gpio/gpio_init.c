@@ -1,6 +1,6 @@
 #include "includes.h"
 
-void gpio_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t on)
+void gpio_board_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
 

@@ -20,7 +20,7 @@ int gyro_init(void)
 //maybe an unnecessary abstraction?
 static void spi_gpio_init(void)
 {
-    gpio_init();
+    gpio_board_init();
 }
 
 void gyro_configure(void)
