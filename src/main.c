@@ -1,6 +1,6 @@
 #include "includes.h"
 #include "gpio/gpio_init.h"
-#include "gyro/gyro_init.h"
+#include "gyro/passthrough_init.h"
 #include "stm32/stm32_init.h"
 
 

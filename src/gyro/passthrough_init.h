@@ -1,3 +1,3 @@
 #pragma once
 
-extern void gyropassthroughinit(void);
+extern void gyro_passthrough_init(void);
