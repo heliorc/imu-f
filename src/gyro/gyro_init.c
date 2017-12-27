@@ -1,6 +1,6 @@
 #include "includes.h"
 #include "spi_init.h"
-#include "../gpio/gpio_init.h"
+#include "../gpio/board_init.h"
 
 static void spi_gpio_init(void);
 static void spi_init(uint32_t baudRatePrescaler);
