@@ -40,9 +40,4 @@ void gpio_board_init(void)
 	GPIO_InitStruct.Alternate = GYRO_MOSI_ALTERNATE;
 	HAL_GPIO_Init(GYRO_MOSI_PORT, &GPIO_InitStruct);
 
-    if(!GYRO_CS_HARDWARE)
-    {
-        inline_digital_hi(GYRO_CS_PORT, GYRO_CS_PIN);
-    }
-
 }

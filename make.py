@@ -171,7 +171,7 @@ def configure_target(TARGET):
     EXTRA_DEF_FLAGS = EXTRA_DEF_FLAGS + " -D".join(FLAGS)
 
     DEF_FLAGS = "-DUSE_HAL_DRIVER -DHSE_VALUE=8000000 -D" + FC_NAME +" -D" + TARGET_DEVICE + " -DARM_MATH_CM4 -D" + TARGET + " -D" + TARGET_DEVICE.lower() + " -D" + TARGET_PROCESSOR_TYPE + EXTRA_DEF_FLAGS
-    print(DEF_FLAGS);
+    print(DEF_FLAGS)
 
     ARCH_FLAGS = "-mthumb -mcpu=cortex-m4 -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant"
 

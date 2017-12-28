@@ -82,7 +82,7 @@ void DeInitGpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 	HAL_GPIO_DeInit(GPIOx, GPIO_Pin);
 }
 
-void gpio_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t on)
+void init_gpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t on)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -113,4 +113,5 @@ void init_gpio_input(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t GPIO_Pull)
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Pull  = GPIO_Pull;
     HAL_GPIO_Init(GPIOx, &GPIO_InitStructure);
+
 }

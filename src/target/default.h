@@ -2,13 +2,13 @@
 //springboard header file
 #include "includes.h"
 
-#ifdef BOARD_TARGET
-    #if BOARD_TARGET == "OMNIBUS"
-        #include "omnibus.h"
-    #elif BOARD_TARGET == "MOTOLAB"
-        #include "motolab.h"
-    #endif
-#else 
+#define MOTOLAB
+
+#if defined(OMNIBUS)
+    #include "omnibus.h"
+#elif defined(MOTOLAB)
+    #include "motolab.h"
+#else
     //chip select pin
     #define GYRO_CS_PIN       GPIO_PIN_9
     //chip select port

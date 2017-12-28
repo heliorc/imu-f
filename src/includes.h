@@ -10,3 +10,6 @@
 #include "clock.h"
 #include "boothandler.h"
 #include "bootloader.h"
+#include "spi_init.h"
+#include "gyro_init.h"
+#include "board_init.h"

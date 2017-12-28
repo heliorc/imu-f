@@ -12,7 +12,7 @@ int main(void)
     return(0);
     #endif
 
-    gpio_init(GPIOB, GPIO_PIN_5, 1);
+    gpio_board_init();
 
     gyro_passthrough_init();
 

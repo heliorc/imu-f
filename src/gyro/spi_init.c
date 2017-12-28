@@ -29,5 +29,8 @@ void spi_init(uint32_t baudRatePrescaler)
     {
         while(1);
     }
-    inline_digital_hi(ports[board.gyros[0].csPort], board.gyros[0].csPin);
+    if(!GYRO_CS_HARDWARE)
+    {
+        inline_digital_hi(GYRO_CS_PORT, GYRO_CS_PIN);
+    }
 }
