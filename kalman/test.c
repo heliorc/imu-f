@@ -6,33 +6,35 @@
 
 
 
-
+int gyroInputMultiplier = 60976;
 
 typedef struct fastKalmanI_s {
-    int64_t q;       //process noise covariance
-    int64_t r;       //measurement noise covariance
-    int64_t p;       //estimation error covariance matrix
-    float k;       //kalman gain
-    int64_t x;       //state
-    int64_t lastX;   //previous state
+    int qt;       //process noise covariance
+    int q;       //process noise covariance
+    int rt;       //measurement noise covariance
+    int r;       //measurement noise covariance
+    int pt;       //estimation error covariance matrix
+    int p;       //estimation error covariance matrix
+    int k;       //kalman gain
+    int x;       //state
+    int lastX;   //previous state
 } fastKalmanI_t;
 
 //Fast two-state Kalman
-void fastKalmanInitI(fastKalmanI_t *filter, int q, int r, int p, int intialValue)
+void fastKalmanInitI(fastKalmanI_t *filter, int q, int r, int p)
 {
-    //q is about 5
-    //r is about 100000
-	filter->q     = q;
-	filter->r     = r;
-	filter->p     = p;
-	filter->x     = intialValue << 8;   //set intial value, can be zero if unknown
-	filter->lastX = intialValue << 8;   //set intial value, can be zero if unknown
-	filter->k     = 0;          //kalman gain,  
+	filter->q     = q * 1000;
+	filter->r     = r * 1000000;
+	filter->p     = p * 1000000;
+    printf("INT: q: %i r: %i\n", filter->q, filter->r);
+	filter->x     = 0;   //set intial value, can be zero if unknown
+	filter->lastX = 0;   //set intial value, can be zero if unknown
+	filter->k     = 0;   //kalman gain, will be between 0-1,000,000
 }
 
 int fastKalmanUpdateI(fastKalmanI_t *filter, int input)
 {
-
+    input = input * gyroInputMultiplier;
     //project the state ahead using acceleration
     filter->x += (filter->x - filter->lastX);
 
@@ -43,18 +45,33 @@ int fastKalmanUpdateI(fastKalmanI_t *filter, int input)
 	filter->p = filter->p + filter->q;
 
 	//measurement update
-    filter->k = ((float)(filter->p) / (float)(filter->p + filter->r));
+    // filter->k = (filter->p) / (filter->p + filter->r);
+    // int div = filter->p + filter->r;//divisor
+    // float d = filter->p/(float)div;
 
-	filter->x += filter->k * ( (input) - filter->x);
-	filter->p = (1.0f - filter->k) * (filter->p);
+    //multiply J * 1000000
+    //i is remainder
+    //add i to J.
+    // printf("INT: remainder: %i\n", i);
+	filter->k = (float)(filter->p) / (filter->p + filter->r);
 
-    printf("k: %f, q: %i, r: %i, p: %i, x: %i\n", filter->k, filter->q, filter->r, filter->p, filter->x );
-    static int xxx = 0;
-    xxx++;
-    if(xxx == 100)
-        while(1);
+    // filter->k = (d * 1000000);
+    printf("INT: k: %f\n", filter->k);
 
-    return (filter->x);
+
+	filter->x += filter->k * (input - filter->x);
+    // printf("INT: x: %f\n", filter->x);
+    
+	filter->p = (1000000 - filter->k) * (filter->p);
+    // printf("INT: p: %f\n", filter->p);
+
+    // printf("INT -- k: %i, q: %i, r: %i, p: %i, x: %i\n", filter->k, filter->q, filter->r, filter->p, filter->x );
+    // static int xxx = 0;
+    // xxx++;
+    // if(xxx == 100)
+    //     while(1);
+
+    return filter->x;
 }
 
 typedef struct fastKalmanF_s {
@@ -71,6 +88,7 @@ void fastKalmanInitF(fastKalmanF_t *filter, float q, float r, float p, float int
 {
 	filter->q     = q * 0.001f; //add multiplier to make tuning easier
 	filter->r     = r;    //add multiplier to make tuning easier
+    printf("FLT: q: %f r: %f\n", filter->q, filter->r);
 	filter->p     = p;    //add multiplier to make tuning easier
 	filter->x     = intialValue;   //set intial value, can be zero if unknown
 	filter->lastX = intialValue;   //set intial value, can be zero if unknown
@@ -91,14 +109,18 @@ float fastKalmanUpdateF(fastKalmanF_t *filter, float input)
 
 	//measurement update
 	filter->k = filter->p / (filter->p + filter->r);
-	filter->x += filter->k * (input - filter->x);
-	filter->p = (1.0f - filter->k) * filter->p;
+    printf("FLT: k: %f\n", filter->k);
 
-    //printf("k: %f, p: %f, q: %f, x: %f\n", filter->k, filter->p, filter->q, (filter->x) );
+	filter->x += filter->k * (input - filter->x);
+    // printf("FLT: x: %f\n", filter->x);
+
+	filter->p = (1.0f - filter->k) * filter->p;
+    // printf("FLT: p: %f\n", filter->p);
+
+    // printf("FLT -- k: %f, q: %f, r: %f, p: %f, x: %f\n", filter->k,  filter->q, filter->r, filter->p, (filter->x) );
 
     return filter->x;
 }
-
 
 const char* getfield(char* line, int num)
 {
@@ -136,10 +158,10 @@ yaw rap = 88.0f
     //filter->r     = r * 0.001f; 
     
     //fastKalmanInitF(&fastKalmanFloat, 25.0f, 88.0f, 0.0f, 0.0f);
-    fastKalmanInitF(&fastKalmanFloat, 25000.0f, 88000.0f, 40.0f, 0.0f);
+    fastKalmanInitF(&fastKalmanFloat, 25.0f, 88.0f, 40.0f, 0.0f);
     //0.8192
     //32768
-    fastKalmanInitI(&fastKalmanInt, 2, 2885, 0, 0);
+    fastKalmanInitI(&fastKalmanInt, 25, 88, 40);
 
     volatile int retInt;
     volatile int retFloat;

@@ -11,10 +11,10 @@ args = parser.parse_args()
 for target in args.target:
 	if target == "test":
 		print "Making test"
-		os.system("gcc -o test.exe test.c -O0 -lpthread");
-		os.system("chmod +x test.exe")
-		os.system("test.exe")
-		os.system("mv test.exe bin/text.exe")
+		os.system("gcc -o ./test test.c -O0 -lpthread");
+		os.system("chmod +x ./test")
+		os.system("./test")
+		os.system("mv ./test bin/text")
 	elif target == "blink":
 		print "Making blink"
 		os.system("gcc -o blink.pi blink.c -O3 -lwiringPi -lwiringPiDev -lmpg123 -lao -lpthread");
