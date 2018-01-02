@@ -5,10 +5,6 @@
 #include <math.h>
 #include "./libfixmath/fix16.h"
 
-
-
-int gyroInputMultiplier = 60976;
-
 typedef struct fastKalmanI_s {
     fix16_t q;       //process noise covariance
     fix16_t r;       //measurement noise covariance
@@ -16,6 +12,7 @@ typedef struct fastKalmanI_s {
     fix16_t k;       //kalman gain
     fix16_t x;       //state
     fix16_t lastX;   //previous state
+    fix16_t fixed1;   
 } fastKalmanI_t;
 
 //Fast two-state Kalman
@@ -24,15 +21,15 @@ void fastKalmanInitI(fastKalmanI_t *filter, fix16_t q, fix16_t r, fix16_t p)
 	filter->q     = q;
 	filter->r     = r;
 	filter->p     = p;
-    printf("INT: q: %i r: %i\n", filter->q, filter->r);
-	filter->x     = 0;   //set intial value, can be zero if unknown
-	filter->lastX = 0;   //set intial value, can be zero if unknown
-	filter->k     = 0;   //kalman gain, will be between 0-1,000,000
+    // printf("INT: q: %f r: %f\n", fix16_to_float(filter->q), fix16_to_float(filter->r));
+	filter->x     = fix16_from_int(0);   //set intial value, can be zero if unknown
+	filter->lastX = fix16_from_int(0);   //set intial value, can be zero if unknown
+	filter->k     = fix16_from_int(0);   //kalman gain, will be between 0-1
+	filter->fixed1= fix16_from_int(1);   
 }
 
 fix16_t fastKalmanUpdateI(fastKalmanI_t *filter, fix16_t input)
 {
-    input = input * gyroInputMultiplier;
     //project the state ahead using acceleration
     filter->x += (filter->x - filter->lastX);
 
@@ -51,16 +48,17 @@ fix16_t fastKalmanUpdateI(fastKalmanI_t *filter, fix16_t input)
     //i is remainder
     //add i to J.
     // printf("INT: remainder: %i\n", i);
-	filter->k = fix16_div(filter->p, (filter->p + filter->r));
+	filter->k = fix16_sdiv(filter->p, fix16_sadd(filter->p, filter->r));
 
     // filter->k = (d * 1000000);
     // printf("INT: k: %f\n", filter->k);
+    printf("INT: k: %f\n", fix16_to_float(filter->k));
 
 
 	filter->x += filter->k * (input - filter->x);
-    // printf("INT: x: %f\n", filter->x);
+    // printf("INT: x: %fix16_t\n", filter->x);
     
-	filter->p = (10000 - filter->k) * (filter->p);
+	filter->p = (filter->fixed1 - filter->k) * (filter->p);
     // printf("INT: p: %f\n", filter->p);
 
     // printf("INT -- k: %i, q: %i, r: %i, p: %i, x: %i\n", filter->k, filter->q, filter->r, filter->p, filter->x );
@@ -71,6 +69,7 @@ fix16_t fastKalmanUpdateI(fastKalmanI_t *filter, fix16_t input)
 
     return filter->x;
 }
+
 
 typedef struct fastKalmanF_s {
     float q;       //process noise covariance
@@ -86,7 +85,7 @@ void fastKalmanInitF(fastKalmanF_t *filter, float q, float r, float p, float int
 {
 	filter->q     = q * 0.001f; //add multiplier to make tuning easier
 	filter->r     = r;    //add multiplier to make tuning easier
-    printf("FLT: q: %f r: %f\n", filter->q, filter->r);
+    // printf("FLT: q: %f r: %f\n", filter->q, filter->r);
 	filter->p     = p;    //add multiplier to make tuning easier
 	filter->x     = intialValue;   //set intial value, can be zero if unknown
 	filter->lastX = intialValue;   //set intial value, can be zero if unknown
@@ -107,7 +106,7 @@ float fastKalmanUpdateF(fastKalmanF_t *filter, float input)
 
 	//measurement update
 	filter->k = filter->p / (filter->p + filter->r);
-    // printf("FLT: k: %f\n", filter->k);
+    printf("FLT: k: %f\n", filter->k);
 
 	filter->x += filter->k * (input - filter->x);
     // printf("FLT: x: %f\n", filter->x);
@@ -135,9 +134,8 @@ const char* getfield(char* line, int num)
 
 int main()
 {
-    fix16_t intGyro;
     int cleanGyro;
-    int floatGyro;
+    int rawGyro;
 
     FILE* stream = fopen("32data.csv", "r");
 
@@ -164,19 +162,21 @@ yaw rap = 88.0f
 
     volatile int retInt;
     volatile int retFloat;
-    fix16_t deg = fix16_from_float(16.4);
+    // fix16_t deg = fix16_from_float(16.4);
     while (fgets(line, 1024, stream))
     {
+        
         char* tmp = strdup(line);
-        cleanGyro = atoi( getfield(tmp, 3) );
-        floatGyro = atoi( getfield(tmp, 4) );
+        
+        // cleanGyro = atoi( getfield(tmp, 3) );
+        rawGyro = atoi( getfield(tmp, 4) );
+        
         tmp = strdup(line);
-        intGyro = fix16_from_int(atoi( getfield(tmp, 4) ));
         // NOTE strtok clobbers tmp
         free(tmp);
 
-        retFloat = fastKalmanUpdateF(&fastKalmanFloat, (floatGyro/16.4f));
-        retInt = fastKalmanUpdateI(&fastKalmanInt, fix16_div(intGyro, deg));
+        retFloat = fastKalmanUpdateF(&fastKalmanFloat, (rawGyro/16.4f));
+        retInt = fastKalmanUpdateI(&fastKalmanInt, fix16_sdiv(fix16_from_float(rawGyro), fix16_from_float(16.4f)))
 
         //printf("raw: %i, clean: %i, float: %i, int: %i\n", rawGyro, cleanGyro, (int)(retFloat*16.4), retInt );
 

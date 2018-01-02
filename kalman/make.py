@@ -11,7 +11,7 @@ args = parser.parse_args()
 for target in args.target:
 	if target == "test":
 		print "Making test"
-		os.system("gcc -o ./test test.c -O0 -lpthread");
+		os.system("gcc -o ./test ./libfixmath/fix16.c test.c -O0 -lpthread")
 		os.system("chmod +x ./test")
 		os.system("./test")
 		os.system("mv ./test bin/text")
