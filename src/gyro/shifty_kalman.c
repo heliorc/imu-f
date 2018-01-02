@@ -2,6 +2,44 @@
 #include "shifty_kalman.h"
 #include "fix16.h"
 
+
+
+
+//Fast two-state Kalman
+void fastKalmanInitF(fastKalmanF_t *filter, float q, float r, float p, float intialValue)
+{
+	filter->q     = q * 0.001f; //add multiplier to make tuning easier
+	filter->r     = r;    //add multiplier to make tuning easier
+	filter->p     = p;    //add multiplier to make tuning easier
+	filter->x     = intialValue;   //set intial value, can be zero if unknown
+	filter->lastX = intialValue;   //set intial value, can be zero if unknown
+	filter->k     = 0.0f;          //kalman gain,  
+}
+
+float fastKalmanUpdateF(fastKalmanF_t *filter, float input)
+{
+
+    //project the state ahead using acceleration
+    filter->x += (filter->x - filter->lastX);
+
+    //update last state
+    filter->lastX = filter->x;
+
+	//prediction update
+	filter->p = filter->p + filter->q;
+
+	//measurement update
+	filter->k = filter->p / (filter->p + filter->r);
+	filter->x += filter->k * (input - filter->x);
+	filter->p = (1.0f - filter->k) * filter->p;
+
+    //printf("k: %f, p: %f, q: %f, x: %f\n", filter->k, filter->p, filter->q, (filter->x) );
+
+    return filter->x;
+}
+
+
+
 //SHIFTY_KALMAN
 void shifty_kalman_init(shifty_kalman_t *filter, fix16_t q, fix16_t r, fix16_t p)
 {
