@@ -14,7 +14,7 @@ for target in args.target:
 		os.system("gcc -o ./test ./libfixmath/fix16.c test.c -O0 -lpthread")
 		os.system("chmod +x ./test")
 		os.system("./test")
-		os.system("mv ./test bin/text")
+		os.system("rm ./test")
 	elif target == "blink":
 		print "Making blink"
 		os.system("gcc -o blink.pi blink.c -O3 -lwiringPi -lwiringPiDev -lmpg123 -lao -lpthread");

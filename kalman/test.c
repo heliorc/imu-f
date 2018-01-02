@@ -30,38 +30,28 @@ void fastKalmanInitI(fastKalmanI_t *filter, fix16_t q, fix16_t r, fix16_t p)
 
 fix16_t fastKalmanUpdateI(fastKalmanI_t *filter, fix16_t input)
 {
+    
     //project the state ahead using acceleration
-    filter->x += (filter->x - filter->lastX);
+    filter->x += fix16_sub(filter->x, filter->lastX);
 
     //update last state
     filter->lastX = filter->x;
 
 	//prediction update
-	filter->p = filter->p + filter->q;
+	filter->p = fix16_add(filter->p, filter->q);
 
 	//measurement update
-    // filter->k = (filter->p) / (filter->p + filter->r);
-    // int div = filter->p + filter->r;//divisor
-    // float d = filter->p/(float)div;
+	filter->k = fix16_div(filter->p, fix16_add(filter->p, filter->r));
+    // printf("INT: k: %f\n", fix16_to_float(filter->k));
 
-    //multiply J * 1000000
-    //i is remainder
-    //add i to J.
-    // printf("INT: remainder: %i\n", i);
-	filter->k = fix16_sdiv(filter->p, fix16_sadd(filter->p, filter->r));
-
-    // filter->k = (d * 1000000);
-    // printf("INT: k: %f\n", filter->k);
-    printf("INT: k: %f\n", fix16_to_float(filter->k));
-
-
-	filter->x += filter->k * (input - filter->x);
-    // printf("INT: x: %fix16_t\n", filter->x);
+	filter->x += fix16_mul(filter->k, fix16_sub(input, filter->x));
+    // printf("INT: x: %f\n", fix16_to_float(filter->x));
     
-	filter->p = (filter->fixed1 - filter->k) * (filter->p);
-    // printf("INT: p: %f\n", filter->p);
+	filter->p = fix16_mul(fix16_sub(filter->fixed1, filter->k), (filter->p));
+    // printf("INT: p: %f\n", fix16_to_float(filter->p));
+    
 
-    // printf("INT -- k: %i, q: %i, r: %i, p: %i, x: %i\n", filter->k, filter->q, filter->r, filter->p, filter->x );
+    printf("INT -- k: %f, q: %f, r: %f, p: %f, x: %f\n", fix16_to_float(filter->k), fix16_to_float(filter->q), fix16_to_float(filter->r), fix16_to_float(filter->p), fix16_to_float(filter->x));
     // static int xxx = 0;
     // xxx++;
     // if(xxx == 100)
@@ -83,7 +73,7 @@ typedef struct fastKalmanF_s {
 //Fast two-state Kalman
 void fastKalmanInitF(fastKalmanF_t *filter, float q, float r, float p, float intialValue)
 {
-	filter->q     = q * 0.001f; //add multiplier to make tuning easier
+	filter->q     = q; //add multiplier to make tuning easier
 	filter->r     = r;    //add multiplier to make tuning easier
     // printf("FLT: q: %f r: %f\n", filter->q, filter->r);
 	filter->p     = p;    //add multiplier to make tuning easier
@@ -106,7 +96,7 @@ float fastKalmanUpdateF(fastKalmanF_t *filter, float input)
 
 	//measurement update
 	filter->k = filter->p / (filter->p + filter->r);
-    printf("FLT: k: %f\n", filter->k);
+    // printf("FLT: k: %f\n", filter->k);
 
 	filter->x += filter->k * (input - filter->x);
     // printf("FLT: x: %f\n", filter->x);
@@ -114,7 +104,7 @@ float fastKalmanUpdateF(fastKalmanF_t *filter, float input)
 	filter->p = (1.0f - filter->k) * filter->p;
     // printf("FLT: p: %f\n", filter->p);
 
-    // printf("FLT -- k: %f, q: %f, r: %f, p: %f, x: %f\n", filter->k,  filter->q, filter->r, filter->p, (filter->x) );
+    printf("FLT -- k: %f, q: %f, r: %f, p: %f, x: %f\n", filter->k,  filter->q, filter->r, filter->p, (filter->x) );
 
     return filter->x;
 }
@@ -139,7 +129,7 @@ int main()
 
     FILE* stream = fopen("32data.csv", "r");
 
-    char line[1024];
+    char line[256];
 
 /*
 set filter_type1=0
@@ -155,7 +145,7 @@ yaw rap = 88.0f
     //filter->r     = r * 0.001f; 
     
     //fastKalmanInitF(&fastKalmanFloat, 25.0f, 88.0f, 0.0f, 0.0f);
-    fastKalmanInitF(&fastKalmanFloat, 25.0f, 88.0f, 40.0f, 0.0f);
+    fastKalmanInitF(&fastKalmanFloat, 25.001f, 88.0f, 40.0f, 0.0f);
     //0.8192
     //32768
     fastKalmanInitI(&fastKalmanInt, fix16_from_float(25.001), fix16_from_int(88), fix16_from_int(40));
@@ -163,7 +153,8 @@ yaw rap = 88.0f
     volatile int retInt;
     volatile int retFloat;
     // fix16_t deg = fix16_from_float(16.4);
-    while (fgets(line, 1024, stream))
+    int c = 0;
+    while (c < 10 && fgets(line, 256, stream))
     {
         
         char* tmp = strdup(line);
@@ -176,10 +167,10 @@ yaw rap = 88.0f
         free(tmp);
 
         retFloat = fastKalmanUpdateF(&fastKalmanFloat, (rawGyro/16.4f));
-        retInt = fastKalmanUpdateI(&fastKalmanInt, fix16_sdiv(fix16_from_float(rawGyro), fix16_from_float(16.4f)))
+        retInt = fastKalmanUpdateI(&fastKalmanInt, fix16_div(fix16_from_float(rawGyro), fix16_from_float(16.4f)));
 
         //printf("raw: %i, clean: %i, float: %i, int: %i\n", rawGyro, cleanGyro, (int)(retFloat*16.4), retInt );
-
+        c++;
     }
 
 }
