@@ -141,7 +141,8 @@ def configure_target(TARGET):
         os.path.join("src", "gyro"),
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Include",
         LIBRARY_PATH + "/STM32F3xx_HAL_Driver/Inc",
-        LIBRARY_PATH + "/CMSIS/Include"
+        LIBRARY_PATH + "/CMSIS/Include",
+        LIBRARY_PATH + "/libfixmath"
     ]
     #source dirs for all flie inclusion
     SOURCE_DIRS = [
@@ -150,7 +151,8 @@ def configure_target(TARGET):
         os.path.join("src", "gpio"),
         os.path.join("src", "gyro"),
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Source",
-        LIBRARY_PATH + "/STM32F3xx_HAL_Driver/Src"
+        LIBRARY_PATH + "/STM32F3xx_HAL_Driver/Src",
+        LIBRARY_PATH + "/libfixmath"
     ]
     #extra source files to include not in the above dirs
     SOURCE_FILES = [

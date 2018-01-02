@@ -6,6 +6,7 @@
         "clock.h": "c",
         "passthrough_init.h": "c",
         "gyro_init.h": "c",
-        "board_init.h": "c"
+        "board_init.h": "c",
+        "fix16.h": "c"
     }
 }

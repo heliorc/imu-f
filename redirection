@@ -12,41 +12,48 @@ Info : Unable to match requested speed 1000 kHz, using 950 kHz
 Info : clock speed 950 kHz
 Info : STLINK v2 JTAG v28 API v2 SWIM v7 VID 0x0483 PID 0x3748
 Info : using stlink api v2
-Info : Target voltage: 3.231196
+Info : Target voltage: 3.215779
 Info : stm32f3x.cpu: hardware has 6 breakpoints, 4 watchpoints
 Info : accepting 'gdb' connection on tcp/3333
 Info : device id = 0x10036422
 Info : flash size = 256kbytes
 undefined debug reason 7 - target needs reset
 target halted due to debug-request, current mode: Handler HardFault
-xPSR: 0x01000003 pc: 0xfffffffe msp: 0x20003fe0
+xPSR: 0x21000003 pc: 0x08001110 msp: 0xffffffd8
 Info : Unable to match requested speed 1000 kHz, using 950 kHz
 Info : Unable to match requested speed 1000 kHz, using 950 kHz
 adapter speed: 950 kHz
 target halted due to debug-request, current mode: Thread 
-xPSR: 0x01000000 pc: 0xfffffffe msp: 0xfffffffc
+xPSR: 0x01000000 pc: 0x080011a8 msp: 0x20004000
 Open On-Chip Debugger 0.10.0
 Info : Unable to match requested speed 1000 kHz, using 950 kHz
 Info : Unable to match requested speed 1000 kHz, using 950 kHz
 adapter speed: 950 kHz
 target halted due to debug-request, current mode: Thread 
-xPSR: 0x01000000 pc: 0xfffffffe msp: 0xfffffffc
+xPSR: 0x01000000 pc: 0x080011a8 msp: 0x20004000
 Info : Unable to match requested speed 8000 kHz, using 4000 kHz
 Info : Unable to match requested speed 8000 kHz, using 4000 kHz
 adapter speed: 4000 kHz
 target halted due to breakpoint, current mode: Thread 
-xPSR: 0x61000000 pc: 0x2000003a msp: 0xfffffffc
+xPSR: 0x61000000 pc: 0x2000003a msp: 0x20004000
 Info : Unable to match requested speed 1000 kHz, using 950 kHz
 Info : Unable to match requested speed 1000 kHz, using 950 kHz
 adapter speed: 950 kHz
 target halted due to debug-request, current mode: Thread 
-xPSR: 0x01000000 pc: 0x08000304 msp: 0x20004000
+xPSR: 0x01000000 pc: 0x08000438 msp: 0x20004000
 Info : Unable to match requested speed 1000 kHz, using 950 kHz
 Info : Unable to match requested speed 1000 kHz, using 950 kHz
 adapter speed: 950 kHz
 target halted due to debug-request, current mode: Thread 
-xPSR: 0x01000000 pc: 0x08000304 msp: 0x20004000
+xPSR: 0x01000000 pc: 0x08000438 msp: 0x20004000
 Info : Unable to match requested speed 8000 kHz, using 4000 kHz
 Info : Unable to match requested speed 8000 kHz, using 4000 kHz
 adapter speed: 4000 kHz
+Info : halted: PC: 0x08000382
+Info : halted: PC: 0x08000384
+Info : halted: PC: 0x08000388
+Info : halted: PC: 0x0800038c
+Info : halted: PC: 0x0800038e
+Info : halted: PC: 0x08000390
+Info : halted: PC: 0x080001b0
 Info : dropped 'gdb' connection

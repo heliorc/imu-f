@@ -3,36 +3,34 @@
 #include <string.h>
 #include <stdint.h>
 #include <math.h>
+#include "./libfixmath/fix16.h"
 
 
 
 int gyroInputMultiplier = 60976;
 
 typedef struct fastKalmanI_s {
-    int qt;       //process noise covariance
-    int q;       //process noise covariance
-    int rt;       //measurement noise covariance
-    int r;       //measurement noise covariance
-    int pt;       //estimation error covariance matrix
-    int p;       //estimation error covariance matrix
-    int k;       //kalman gain
-    int x;       //state
-    int lastX;   //previous state
+    fix16_t q;       //process noise covariance
+    fix16_t r;       //measurement noise covariance
+    fix16_t p;       //estimation error covariance matrix
+    fix16_t k;       //kalman gain
+    fix16_t x;       //state
+    fix16_t lastX;   //previous state
 } fastKalmanI_t;
 
 //Fast two-state Kalman
-void fastKalmanInitI(fastKalmanI_t *filter, int q, int r, int p)
+void fastKalmanInitI(fastKalmanI_t *filter, fix16_t q, fix16_t r, fix16_t p)
 {
-	filter->q     = q * 1000;
-	filter->r     = r * 1000000;
-	filter->p     = p * 1000000;
+	filter->q     = q;
+	filter->r     = r;
+	filter->p     = p;
     printf("INT: q: %i r: %i\n", filter->q, filter->r);
 	filter->x     = 0;   //set intial value, can be zero if unknown
 	filter->lastX = 0;   //set intial value, can be zero if unknown
 	filter->k     = 0;   //kalman gain, will be between 0-1,000,000
 }
 
-int fastKalmanUpdateI(fastKalmanI_t *filter, int input)
+fix16_t fastKalmanUpdateI(fastKalmanI_t *filter, fix16_t input)
 {
     input = input * gyroInputMultiplier;
     //project the state ahead using acceleration
@@ -53,16 +51,16 @@ int fastKalmanUpdateI(fastKalmanI_t *filter, int input)
     //i is remainder
     //add i to J.
     // printf("INT: remainder: %i\n", i);
-	filter->k = (float)(filter->p) / (filter->p + filter->r);
+	filter->k = fix16_div(filter->p, (filter->p + filter->r));
 
     // filter->k = (d * 1000000);
-    printf("INT: k: %f\n", filter->k);
+    // printf("INT: k: %f\n", filter->k);
 
 
 	filter->x += filter->k * (input - filter->x);
     // printf("INT: x: %f\n", filter->x);
     
-	filter->p = (1000000 - filter->k) * (filter->p);
+	filter->p = (10000 - filter->k) * (filter->p);
     // printf("INT: p: %f\n", filter->p);
 
     // printf("INT -- k: %i, q: %i, r: %i, p: %i, x: %i\n", filter->k, filter->q, filter->r, filter->p, filter->x );
@@ -109,7 +107,7 @@ float fastKalmanUpdateF(fastKalmanF_t *filter, float input)
 
 	//measurement update
 	filter->k = filter->p / (filter->p + filter->r);
-    printf("FLT: k: %f\n", filter->k);
+    // printf("FLT: k: %f\n", filter->k);
 
 	filter->x += filter->k * (input - filter->x);
     // printf("FLT: x: %f\n", filter->x);
@@ -137,8 +135,9 @@ const char* getfield(char* line, int num)
 
 int main()
 {
-    int rawGyro;
+    fix16_t intGyro;
     int cleanGyro;
+    int floatGyro;
 
     FILE* stream = fopen("32data.csv", "r");
 
@@ -161,22 +160,23 @@ yaw rap = 88.0f
     fastKalmanInitF(&fastKalmanFloat, 25.0f, 88.0f, 40.0f, 0.0f);
     //0.8192
     //32768
-    fastKalmanInitI(&fastKalmanInt, 25, 88, 40);
+    fastKalmanInitI(&fastKalmanInt, fix16_from_float(25.001), fix16_from_int(88), fix16_from_int(40));
 
     volatile int retInt;
     volatile int retFloat;
-
+    fix16_t deg = fix16_from_float(16.4);
     while (fgets(line, 1024, stream))
     {
         char* tmp = strdup(line);
         cleanGyro = atoi( getfield(tmp, 3) );
+        floatGyro = atoi( getfield(tmp, 4) );
         tmp = strdup(line);
-        rawGyro = atoi( getfield(tmp, 4) );
+        intGyro = fix16_from_int(atoi( getfield(tmp, 4) ));
         // NOTE strtok clobbers tmp
         free(tmp);
 
-        retFloat = fastKalmanUpdateF(&fastKalmanFloat, (rawGyro/16.4f));
-        retInt = fastKalmanUpdateI(&fastKalmanInt, rawGyro);
+        retFloat = fastKalmanUpdateF(&fastKalmanFloat, (floatGyro/16.4f));
+        retInt = fastKalmanUpdateI(&fastKalmanInt, fix16_div(intGyro, deg));
 
         //printf("raw: %i, clean: %i, float: %i, int: %i\n", rawGyro, cleanGyro, (int)(retFloat*16.4), retInt );
 
