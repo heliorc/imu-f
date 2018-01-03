@@ -1,6 +1,5 @@
 #include "includes.h"
 #include "gyro_init.h"
-#include "shifty_kalman.h"
 
 void gyro_passthrough_init() 
 {
