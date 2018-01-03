@@ -3,6 +3,7 @@
     "files.associations": {
         "*.ld": "c",
         "includes.h": "c",
-        "clock.h": "c"
+        "clock.h": "c",
+        "passthrough_init.h": "c"
     }
 }

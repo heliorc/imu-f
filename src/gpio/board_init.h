@@ -1,4 +1,4 @@
 #pragma once
 #include "includes.h"
 
-extern int gyro_init(void);
+extern void gpio_board_init(void);
