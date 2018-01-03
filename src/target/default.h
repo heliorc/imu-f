@@ -2,8 +2,6 @@
 //springboard header file
 #include "includes.h"
 
-#define MOTOLAB
-
 #if defined(OMNIBUS)
     #include "omnibus.h"
 #elif defined(MOTOLAB)

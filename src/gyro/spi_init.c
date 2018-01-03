@@ -3,6 +3,9 @@
 
 SPI_HandleTypeDef gyroSpiHandle;
 SPI_HandleTypeDef outSpiHandle;
+IRQn_Type IRQn;
+uint32_t IRQPriority;
+uint32_t IRQSubPriority;
 
 void spi_init(uint32_t baudRatePrescaler) 
 {
@@ -33,4 +36,13 @@ void spi_init(uint32_t baudRatePrescaler)
     {
         inline_digital_hi(GYRO_CS_PORT, GYRO_CS_PIN);
     }
+    HAL_NVIC_SetPriority(IRQn, IRQPriority, IRQSubPriority);
+    HAL_NVIC_EnableIRQ(IRQn);
+}
+
+//what am I reading from SPI?
+void spi_de_init(void)
+{
+    HAL_SPI_DeInit(gyroSpiHandle);
+    HAL_NVIC_DisableIRQ(IRQn);
 }

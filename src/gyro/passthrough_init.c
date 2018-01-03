@@ -6,7 +6,6 @@ void gyro_passthrough_init()
     gyro_init();
     while(1) 
     {
-        //GET SHWIFTY/SHIFTY
         GPIOB->ODR = 0xFFFF;
         //InlineDigitalHi(GPIOB, GPIO_PIN_5);
         //mouse++;
