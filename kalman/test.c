@@ -6,24 +6,24 @@
 #include "./libfixmath/fix16.h"
 
 typedef struct fastKalmanI_s {
-    fix16_t q;       //process noise covariance
-    fix16_t r;       //measurement noise covariance
-    fix16_t p;       //estimation error covariance matrix
+    int q;       //process noise covariance
+    int r;       //measurement noise covariance
+    int p;       //estimation error covariance matrix
     fix16_t k;       //kalman gain
-    fix16_t x;       //state
-    fix16_t lastX;   //previous state
+    int x;       //state
+    int lastX;   //previous state
     fix16_t fixed1;   
 } fastKalmanI_t;
 
 //Fast two-state Kalman
-void fastKalmanInitI(fastKalmanI_t *filter, fix16_t q, fix16_t r, fix16_t p)
+void fastKalmanInitI(fastKalmanI_t *filter, int q, int r, int p)
 {
 	filter->q     = q;
-	filter->r     = r;
+	filter->r     = r * 1000;
 	filter->p     = p;
     // printf("INT: q: %f r: %f\n", fix16_to_float(filter->q), fix16_to_float(filter->r));
-	filter->x     = fix16_from_int(0);   //set intial value, can be zero if unknown
-	filter->lastX = fix16_from_int(0);   //set intial value, can be zero if unknown
+	filter->x     = 0;   //set intial value, can be zero if unknown
+	filter->lastX = 0;   //set intial value, can be zero if unknown
 	filter->k     = fix16_from_int(0);   //kalman gain, will be between 0-1
 	filter->fixed1= fix16_from_int(1);   
 }
@@ -32,22 +32,22 @@ fix16_t fastKalmanUpdateI(fastKalmanI_t *filter, fix16_t input)
 {
     
     //project the state ahead using acceleration
-    filter->x += fix16_sub(filter->x, filter->lastX);
+    filter->x += filter->x - filter->lastX;
 
     //update last state
     filter->lastX = filter->x;
 
 	//prediction update
-	filter->p = fix16_add(filter->p, filter->q);
+	filter->p = filter->p + filter->q;
 
 	//measurement update
-	filter->k = fix16_div(filter->p, fix16_add(filter->p, filter->r));
+	filter->k = fix16_div(fix16_from_int(filter->p), fix16_from_int(filter->p + filter->r));
     // printf("INT: k: %f\n", fix16_to_float(filter->k));
 
-	filter->x += fix16_mul(filter->k, fix16_sub(input, filter->x));
+	filter->x += fix16_to_int(filter->k * (fix16_to_int(input) - filter->x));
     // printf("INT: x: %f\n", fix16_to_float(filter->x));
     
-	filter->p = fix16_mul(fix16_sub(filter->fixed1, filter->k), (filter->p));
+	filter->p = fix16_to_int(fix16_sub(filter->fixed1, filter->k) * filter->p);
     // printf("INT: p: %f\n", fix16_to_float(filter->p));
     
 
