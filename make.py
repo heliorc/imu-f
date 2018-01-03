@@ -126,7 +126,7 @@ def configure_target(TARGET):
     RFBL_ADDRESS = str(0x08008000)
     APP_ADDRESS = str(0x08001800)
     MSP_ADDRESS = str(0x080E0000)
-    TARGET_SCRIPT = "stm32_flash_f30x_6k.ld"
+    TARGET_SCRIPT = "stm32_flash_f30x_8k.ld"
     THIS_ADDRESS = str(0x08000000)
 
     #extra D flags
