@@ -1,8 +1,7 @@
 .DS_Store
 output
 .vscode
-<<<<<<< Updated upstream
-redirection.junk
-=======
 redirection
->>>>>>> Stashed changes
+redirection.junk
+kalman/test
+.exe

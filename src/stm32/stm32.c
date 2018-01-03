@@ -58,12 +58,12 @@ inline void InlineDelayMs(uint32_t mSec)
 }
 
 
-inline void InlineDigitalHi(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
+inline void inline_digital_hi(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 {
 	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
 }
 
-inline void InlineDigitalLo(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
+inline void inline_digital_lo(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 {
 	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
 }
@@ -82,7 +82,7 @@ void DeInitGpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 	HAL_GPIO_DeInit(GPIOx, GPIO_Pin);
 }
 
-void InitGpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t on)
+void init_gpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t on)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -98,6 +98,20 @@ void InitGpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t on)
     GPIO_InitStructure.Mode  = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Pull  = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOx, &GPIO_InitStructure);
+
+}
+
+void init_gpio_input(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t GPIO_Pull)
+{
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    HAL_GPIO_DeInit(GPIOx, GPIO_Pin);
+
+    GPIO_InitStructure.Pin   = GPIO_Pin;
+    GPIO_InitStructure.Mode  = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStructure.Pull  = GPIO_Pull;
     HAL_GPIO_Init(GPIOx, &GPIO_InitStructure);
 
 }

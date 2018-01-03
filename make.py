@@ -100,12 +100,23 @@ def configure_target(TARGET):
     ################################################################################
     # Determine target variables and features
 
+
+    FC_NAME = "C3PU"
+
+    if TARGET == "F3":
+        PROJECT = "C3PU"
+
+    elif TARGET == "F3BL":
+        PROJECT = "C3PUBL"
+
+    else:
+        print("ERROR - Select a target")
+        exit(1)
+
     if (args.debug):
         os.system("PID=\"$(ps -elf | grep  openocd | grep -v 'grep' | sed -e 's/    / /g' | sed -e 's/   / /g' | sed -e 's/  / /g' | cut -d ' ' -f 3)\";kill $PID")
         os.system("openocd -s /usr/local/share/openocd/scripts -f /usr/local/share/openocd/scripts/interface/stlink-v2.cfg -f /usr/local/share/openocd/scripts/target/stm32f3x.cfg &> redirection &")
 
-    FC_NAME = "C3PU"
-    PROJECT = "C3PU"
     TARGET_DEVICE = "STM32F303xC"
     TARGET_PROCESSOR_TYPE = "F3"
     OPTIMIZE_FLAGS = "-Og"
@@ -113,13 +124,15 @@ def configure_target(TARGET):
     DFU_ADDRESS = str(0x1FF00000)
     RECOVERY_ADDRESS = str(0x08000000)
     RFBL_ADDRESS = str(0x08008000)
-    APP_ADDRESS = str(0x08020000)
+    APP_ADDRESS = str(0x08001800)
     MSP_ADDRESS = str(0x080E0000)
     TARGET_SCRIPT = "stm32_flash_f30x_6k.ld"
     THIS_ADDRESS = str(0x08000000)
 
     #extra D flags
     EXTRA_DEF_FLAGS = " -DUSE_HAL_DRIVER -DTHIS_ADDRESS="+THIS_ADDRESS
+
+
     #All include dirs
     INCLUDE_DIRS = [
         "src",
@@ -158,7 +171,7 @@ def configure_target(TARGET):
     EXTRA_DEF_FLAGS = EXTRA_DEF_FLAGS + " -D".join(FLAGS)
 
     DEF_FLAGS = "-DUSE_HAL_DRIVER -DHSE_VALUE=8000000 -D" + FC_NAME +" -D" + TARGET_DEVICE + " -DARM_MATH_CM4 -D" + TARGET + " -D" + TARGET_DEVICE.lower() + " -D" + TARGET_PROCESSOR_TYPE + EXTRA_DEF_FLAGS
-    print(DEF_FLAGS);
+    print(DEF_FLAGS)
 
     ARCH_FLAGS = "-mthumb -mcpu=cortex-m4 -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant"
 

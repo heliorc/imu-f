@@ -7,6 +7,7 @@
 #define BOOT_MAGIC_CHECKSUM (*((uint32_t *)0x20000000))
 #define BOOT_MAGIC_WORD 0xC001D00D
 
+extern int BootToAddress(uint32_t address);
 extern int BootHandler(void);
 extern unsigned int SetBootChecksum(void);
 extern unsigned int BootChecksum(void);
