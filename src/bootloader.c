@@ -7,6 +7,22 @@ static void bootloader_main(void);
 static void bootloader_main(void)
 {
     //bootloader code
+    //needs to accept certain commands
+    /*
+        erase all
+        erase page
+        erase address
+        report info
+            report hardware version
+            report firmware version
+            report bootloader version
+            report serial number
+        boot to app
+        boot to location
+        restart
+        write firmware
+        report info
+    */
 }
 
 void bootloader_start(void)
