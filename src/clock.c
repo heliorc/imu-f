@@ -1,5 +1,8 @@
 #include "includes.h"
 
+volatile uint32_t millisClock = 0;
+volatile uint32_t systemUsTicks;
+
 void init_clk(void) 
 {
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
@@ -37,3 +40,8 @@ void SystemClock_Config(void)
   systemUsTicks = (HAL_RCC_GetHCLKFreq()/1000000);
 }
 
+
+void UpdateMillisClock(void)
+{
+	millisClock = DWT->CYCCNT;
+}

@@ -1,5 +1,4 @@
 #include "includes.h"
-#include "../stm32/stm32.h"
 
 void init_handle(SPI_HandleTypeDef* spiHandle, IRQn_Type irq)
 {

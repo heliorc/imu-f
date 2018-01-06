@@ -1,5 +1,6 @@
 #include "includes.h"
 #include "gyro/passthrough_start.h"
+#include "gyro/gyro_init.h"
 #include "board.h"
 
 #ifdef C3PUBL

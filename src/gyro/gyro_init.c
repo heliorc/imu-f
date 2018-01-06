@@ -15,6 +15,6 @@ void gyro_init(void)
 
     if(!GYRO_CS_HARDWARE)
     {
-        inline_digital_hi(GYRO_CS_PORT, GYRO_CS_PIN);
+        HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
     }
 }
