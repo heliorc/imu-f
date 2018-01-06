@@ -18,4 +18,3 @@ extern void inline_digital_lo(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 extern int InlineIsPinStatusHi(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 extern void DeInitGpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 extern void init_gpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t on);
-extern void init_gpio_input(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t GPIO_Pull);

@@ -6,5 +6,4 @@ void board_init(void)
 {
     stm32_init();
     gpio_init();
-    gyro_init();
 }

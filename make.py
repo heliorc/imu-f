@@ -137,6 +137,7 @@ def configure_target(TARGET):
     INCLUDE_DIRS = [
         "src",
         os.path.join("src", "stm32"),
+        os.path.join("src", "bootloader"),
         os.path.join("src", "gpio"),
         os.path.join("src", "gyro"),
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Include",
@@ -147,6 +148,7 @@ def configure_target(TARGET):
     SOURCE_DIRS = [
         "src",
         os.path.join("src", "stm32"),
+        os.path.join("src", "bootloader"),
         os.path.join("src", "gpio"),
         os.path.join("src", "gyro"),
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Source",

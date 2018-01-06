@@ -1,4 +1,6 @@
 #include "includes.h"
+#include "boothandler.h"
+
 typedef void (*pFunction)(void);
 
 static int CheckBootChecksum(void)

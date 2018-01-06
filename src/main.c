@@ -5,6 +5,7 @@
 #ifdef C3PUBL
 int main(void)
 {
+    board_init();
     bootloader_start();
     return(0);
 }
@@ -12,6 +13,7 @@ int main(void)
 int main(void)
 {
     board_init();
+    gyro_init();
     gyro_passthrough_start();
     return(0);
 }
