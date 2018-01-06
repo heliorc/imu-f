@@ -1,43 +1,26 @@
 #include "includes.h"
 
+void hal_init(GPIO_TypeDef* port, uint32_t pin, uint32_t mode, uint32_t pull, uint32_t alternate) 
+{
+    HAL_GPIO_DeInit(port,  pin);
+	GPIO_InitTypeDef GPIO_InitStruct;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	GPIO_InitStruct.Pin   = pin;
+	GPIO_InitStruct.Mode  = mode;
+	GPIO_InitStruct.Pull  = pull;
+	GPIO_InitStruct.Alternate  = alternate;
+	HAL_GPIO_Init(port, &GPIO_InitStruct);
+}
+
 void gpio_board_init(void)
 {
-    GPIO_InitTypeDef GPIO_InitStruct;
-
-    HAL_GPIO_DeInit(GYRO_CS_PORT,  GYRO_CS_PIN);
-    HAL_GPIO_DeInit(GYRO_MISO_PORT,  GYRO_MISO_PIN);
-    HAL_GPIO_DeInit(GYRO_MOSI_PORT,  GYRO_MOSI_PIN);
-    HAL_GPIO_DeInit(GYRO_SCK_PORT,  GYRO_SCK_PIN);
-
-	GPIO_InitStruct.Pin   = GYRO_CS_PIN;
-	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull  = GPIO_PULLUP;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    if(GYRO_CS_HARDWARE)
+	uint32_t alt = 0;
+	if(GYRO_CS_HARDWARE)
     {
-        GPIO_InitStruct.Alternate = GYRO_CS_ALTERNATE;
+        alt = GYRO_CS_ALTERNATE;
     }
-	HAL_GPIO_Init(GYRO_CS_PORT, &GPIO_InitStruct);
-
-	GPIO_InitStruct.Pin   = GYRO_SCK_PIN;
-	GPIO_InitStruct.Mode  = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull  = GPIO_PULLDOWN;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-	GPIO_InitStruct.Alternate = GYRO_SCK_ALTERNATE;
-	HAL_GPIO_Init(GYRO_SCK_PORT, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin   = GYRO_MISO_PIN;
-	GPIO_InitStruct.Mode  = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull  = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-	GPIO_InitStruct.Alternate = GYRO_MISO_ALTERNATE;
-	HAL_GPIO_Init(GYRO_MISO_PORT, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin   = GYRO_MOSI_PIN;
-	GPIO_InitStruct.Mode  = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull  = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-	GPIO_InitStruct.Alternate = GYRO_MOSI_ALTERNATE;
-	HAL_GPIO_Init(GYRO_MOSI_PORT, &GPIO_InitStruct);
-
+	hal_init(GYRO_CS_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, alt);
+	hal_init(GYRO_SCK_PORT, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GYRO_SCK_ALTERNATE);
+	hal_init(GYRO_MISO_PORT, GPIO_MODE_AF_PP, GPIO_NOPULL, GYRO_MISO_ALTERNATE);
+	hal_init(GYRO_MOSI_PORT, GPIO_MODE_AF_PP, GPIO_NOPULL, GYRO_MOSI_ALTERNATE);
 }
