@@ -23,7 +23,6 @@ void erase_flash(uint32_t beginAddress, uint32_t endAddress)
 
 void erase_page(uint32_t pageAddress)
 {
-  //pFlash.ErrorCode = HAL_FLASH_ERROR_NONE;
     WRITE_REG(FLASH->AR, pageAddress);
     SET_BIT(FLASH->CR, FLASH_CR_STRT);
 }
