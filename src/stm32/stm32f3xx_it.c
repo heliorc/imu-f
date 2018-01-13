@@ -37,6 +37,17 @@
 #include "stm32f3xx.h"
 #include "stm32f3xx_it.h"
 
+extern SPI_HandleTypeDef SPI2Handle;
+
+void SPI2_IRQHandler(void)
+{
+ HAL_SPI_IRQHandler(&SPI2Handle);
+}
+
+void SPI3_IRQHandler(void)
+{
+ HAL_SPI_IRQHandler(&SPI2Handle);
+}
 
 /* External variables --------------------------------------------------------*/
 //extern PCD_HandleTypeDef hpcd_USB_FS;

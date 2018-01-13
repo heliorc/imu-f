@@ -9,8 +9,8 @@
 #elif defined(MOTOLAB)
     #include "motolab.h"
 #else
-    #define GYRO_SPI            SPI2
-    #define GYRO_SPI_IRQn       SPI2_IRQn
+    #define GYRO_SPI            SPI3
+    #define GYRO_SPI_IRQn       SPI3_IRQn
     #define GYRO_CS_HARDWARE    0
     #define GYRO_CS_PIN         GPIO_PIN_12
     #define GYRO_CS_PORT        GPIOB

@@ -1,8 +1,10 @@
 #include "includes.h"
-#include "bootloader_commands.h"
 
-void report_info(VersionInfoTypedef* info, char[]* buff, uint32_t bufferSize)
+VersionInfoTypedef info;
+
+void get_report_info(messageHandle, char* txData, char* rxData)
 {
-    snprintf(buff, bufferSize, "%i %i %i %i %i %i", 
-    info.hardware, info.firmware, info.bootloader, info.uid1, info.uid2, info.uid3);
+    // ensure that SPI resources are available, but don't block if they are not
+    while (HAL_SPI_GetState(messageHandle) != HAL_SPI_STATE_READY);
+    snprintf(txData, 256, "%i%i%i%i%i%i", info.hardware, info.firmware, info.bootloader, info.uid1, info.uid2, info.uid3);
 }

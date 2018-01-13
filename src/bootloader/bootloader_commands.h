@@ -3,7 +3,7 @@
 
 typedef enum 
 {
-    BL_NONE = 0,
+    BL_IDLE = 0,
     BL_ERASE_ALL = 1,
     BL_ERASE_PAGE = 2,
     BL_ERASE_ADDRESS_RANGE = 3,
@@ -12,14 +12,18 @@ typedef enum
     BL_BOOT_TO_LOCATION = 6,
     BL_RESTART = 7,
     BL_WRITE_FIRMWARE = 8
-}  BootloaderCommandTypdef;
+} BootloaderCommandTypdef;
 
-typedef struct VersionInfoTypedef
-{   
-    uint32_t hardware;
-    uint32_t firmware;
-    uint32_t bootloader;
-    uint32_t uid1;
-    uint32_t uid2;
-    uint32_t uid3;
-} VersionInfoTypedef_t;
+typedef struct bootloaderCommand {
+   uint8_t version;
+   BootloaderCommandTypdef command;
+   uint32_t param1;
+   uint32_t param2;
+   uint32_t param3;
+   uint32_t param4;
+   uint32_t param5;
+   uint32_t param6;
+   uint32_t param7;
+   uint32_t param8;
+   BootloaderCommandTypdef crc;
+} __attribute__ ((__packed__)) bootloaderCommand_t;
