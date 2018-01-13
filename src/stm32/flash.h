@@ -131,4 +131,4 @@
 #define ADDR_FLASH_PAGE_127   ((uint32_t)0x0803F800) /* Base address of Page 127, 2 Kbytes */
 
 extern void erase_flash(uint32_t beginAddress, uint32_t endAddress);
-extern void erase_page(uint32_t PageAddress);
+extern void erase_page(uint32_t pageAddress);
