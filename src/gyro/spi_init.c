@@ -12,7 +12,7 @@ void init_handle(SPI_HandleTypeDef* spiHandle, IRQn_Type irq)
     }
 }
 
-void spi_init(SPI_HandleTypeDef* spiHandle, SPI_TypeDef* instance, uint32_t baudscaler, uint32_t spi_mode, uint32_t irqp, uint32_t irqsp)
+void spi_init(SPI_HandleTypeDef* spiHandle, SPI_TypeDef* instance, uint32_t baudscaler, uint32_t spi_mode, uint32_t irqn, uint32_t irqp, uint32_t irqsp)
 {
     /*##-1- Configure the SPI peripheral #######################################*/
   /* Set the SPI parameters */
@@ -30,7 +30,7 @@ void spi_init(SPI_HandleTypeDef* spiHandle, SPI_TypeDef* instance, uint32_t baud
     spiHandle->Init.TIMode            = SPI_TIMODE_DISABLE;
     spiHandle->Init.NSSPMode          = SPI_NSS_PULSE_DISABLE;
     spiHandle->Init.CRCLength         = SPI_CRC_LENGTH_8BIT;
-    init_handle((spiHandle), GYRO_SPI_IRQn);
+    init_handle((spiHandle), irqn);
 
     HAL_NVIC_SetPriority(SPI1_IRQn, irqp, irqsp);
     HAL_NVIC_EnableIRQ(SPI1_IRQn);

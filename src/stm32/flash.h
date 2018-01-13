@@ -132,3 +132,4 @@
 
 extern void erase_flash(uint32_t beginAddress, uint32_t endAddress);
 extern void erase_page(uint32_t pageAddress);
+extern void erase_range(uint32_t beginAddress, uint32_t endAddress);

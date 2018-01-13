@@ -26,3 +26,24 @@ void erase_page(uint32_t pageAddress)
     WRITE_REG(FLASH->AR, pageAddress);
     SET_BIT(FLASH->CR, FLASH_CR_STRT);
 }
+
+void erase_range(uint32_t beginAddress, uint32_t endAddress)
+{
+    if (beginAddress > endAddress)
+    {
+        while (1)
+        {
+            //TODO add error handler
+        }
+    }
+    else if (beginAddress > RFBL_ADDRESS)
+    {
+        while (1)
+        {
+            //TODO add error handler
+        }
+    }
+    else{
+        erase_flash(beginAddress, endAddress);
+    }
+}

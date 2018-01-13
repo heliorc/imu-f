@@ -5,7 +5,7 @@ SPI_HandleTypeDef gyroHandle;
 
 void gyro_configure(uint32_t baudRatePrescaler)
 {
-    spi_init(&gyroHandle, GYRO_SPI, baudRatePrescaler, SPI_MODE_MASTER, 0, 0);
+    spi_init(&gyroHandle, GYRO_SPI, baudRatePrescaler, SPI_MODE_MASTER, GYRO_SPI_IRQn, 0, 0);
 }
 
 void gyro_init(void) 

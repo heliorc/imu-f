@@ -6,7 +6,7 @@ typedef enum
     BL_NONE = 0,
     BL_ERASE_ALL = 1,
     BL_ERASE_PAGE = 2,
-    BL_ERASE_ADDRESS = 3,
+    BL_ERASE_ADDRESS_RANGE = 3,
     BL_REPORT_INFO = 4,
     BL_BOOT_TO_APP = 5,
     BL_BOOT_TO_LOCATION = 6,
