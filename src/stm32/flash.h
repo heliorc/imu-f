@@ -130,6 +130,11 @@
 #define ADDR_FLASH_PAGE_126   ((uint32_t)0x0803F000) /* Base address of Page 126, 2 Kbytes */
 #define ADDR_FLASH_PAGE_127   ((uint32_t)0x0803F800) /* Base address of Page 127, 2 Kbytes */
 
+extern int flashUnlocked;
+
 extern void erase_flash(uint32_t beginAddress, uint32_t endAddress);
-extern void erase_page(uint32_t pageAddress);
+//extern void erase_page(uint32_t pageAddress);
 extern void erase_range(uint32_t beginAddress, uint32_t endAddress);
+extern void prepare_flash_for_program(void);
+extern void end_flash_for_program(void);
+extern int flash_program_word(uint32_t address, uint32_t data);

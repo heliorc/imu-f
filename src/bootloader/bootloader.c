@@ -10,32 +10,43 @@ char txBuffer[256];
 char rxBuffer[256];
 SPI_HandleTypeDef MESSAGE_HANDLE;
 
+volatile bootloaderCommand_t newCommand;
 volatile uint32_t flush;
 
-static void run_command(bootloaderCommand_t bl_command)
+void run_command(bootloaderCommand_t* bl_command)
 {
-    switch (bl_command.command)
+    switch (bl_command->command)
     {
         case BL_ERASE_ALL:
         erase_flash(APP_ADDRESS, FLASH_END);
         break;
-        case BL_ERASE_PAGE:
-        erase_page();
-        break;
+        // case BL_ERASE_PAGE:
+        // erase_page();
+        // break;
         case BL_ERASE_ADDRESS_RANGE:
-        erase_range();
+        erase_range(bl_command->param1, bl_command->param2);
         break;
         case BL_REPORT_INFO:
         memset(txBuffer, 0, 256);       
         get_report_info(MESSAGE_HANDLE, txBuffer, rxBuffer);
         break;
         case BL_BOOT_TO_APP:
+        BootToAddress(APP_ADDRESS);
         break;
         case BL_BOOT_TO_LOCATION:
+        BootToAddress(bl_command->param1);
         break;
         case BL_RESTART:
+        BootToAddress(THIS_ADDRESS);
         break;
         case BL_WRITE_FIRMWARE:
+        flash_program_word(bl_command->param1, bl_command->param2);
+        break;
+        case BL_PREPARE_PROGRAM:
+        prepare_flash_for_program();
+        break;
+        case BL_END_PROGRAM:
+        end_flash_for_program();
         break;
         case BL_NONE:
         default:
@@ -67,10 +78,9 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
     if(hspi->Instance == SPI2)
     {
         //parse! hspi->
-        bootloaderCommand_t newCommand;
-        memccpy(newCommand, rxBuffer, sizeOf(bootloaderCommand_t));
+        memccpy(&newCommand, rxBuffer, sizeOf(bootloaderCommand_t));
         if (newCommand.command && newCommand.command == newCommand.crc){
-            run_command(newCommand);
+            run_command(&newCommand);
         }
         memset(rxBuffer, 0, 256);
         HAL_SPI_TransmitReceive_IT(&MESSAGE_HANDLE, txData, rxData, 256);

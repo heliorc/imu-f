@@ -5,13 +5,15 @@ typedef enum
 {
     BL_IDLE = 0,
     BL_ERASE_ALL = 1,
-    BL_ERASE_PAGE = 2,
+    // BL_ERASE_PAGE = 2,
     BL_ERASE_ADDRESS_RANGE = 3,
     BL_REPORT_INFO = 4,
     BL_BOOT_TO_APP = 5,
     BL_BOOT_TO_LOCATION = 6,
     BL_RESTART = 7,
-    BL_WRITE_FIRMWARE = 8
+    BL_WRITE_FIRMWARE = 8,
+    BL_PREPARE_PROGRAM = 9,
+    BL_END_PROGRAM = 10
 } BootloaderCommandTypdef;
 
 typedef struct bootloaderCommand {
