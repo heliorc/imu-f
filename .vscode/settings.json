@@ -17,6 +17,7 @@
         "report.h": "c",
         "board.h": "c",
         "board_comm.h": "c",
-        "stm32f3xx_it.h": "c"
+        "stm32f3xx_it.h": "c",
+        "spi.h": "c"
     }
 }

@@ -7,9 +7,7 @@
 #include "flash.h"
 #include "report.h"
 
-
-volatile bootloaderCommand_t newCommand;
-volatile uint32_t flush;
+bootloaderCommand_t newCommand;
 
 void run_command(bootloaderCommand_t* bl_command)
 {
@@ -75,5 +73,11 @@ void bootloader_start(void)
 
 void bootloader_spi_callback(SPI_HandleTypeDef *hspi)
 {
-
+    memcpy(&newCommand, boardCommSpiRxBuffer, sizeof(bootloaderCommand_t));
+    if (newCommand.command && newCommand.command == newCommand.crc){
+        run_command(&newCommand);
+    }
+    memset(boardCommSpiRxBuffer, 0, 256);
+    //setup for next DMA transfer
+    HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 256);
 }

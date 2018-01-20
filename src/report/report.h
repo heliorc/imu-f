@@ -11,4 +11,4 @@ typedef struct VersionInfoTypedef
     uint32_t uid3;
 } VersionInfoTypedef_t;
 
-extern void get_report_info(SPI_HandleTypeDef* messageHandle, char* rxData, char* txData);
+extern void get_report_info(SPI_HandleTypeDef* messageHandle, uint8_t* rxData, uint8_t* txData);

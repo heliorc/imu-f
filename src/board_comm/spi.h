@@ -5,14 +5,14 @@
 extern SPI_HandleTypeDef gyroSPIHandle;
 extern DMA_HandleTypeDef hdmaGyroSPIRx;
 extern DMA_HandleTypeDef hdmaGyroSPITx;
-extern char gyroSpiRxBuffer[];
-extern char gyroSpiTxBuffer[];
+extern uint8_t gyroSpiRxBuffer[];
+extern uint8_t gyroSpiTxBuffer[];
 
 extern SPI_HandleTypeDef boardCommSPIHandle;
 extern DMA_HandleTypeDef hdmaBoardCommSPIRx;
 extern DMA_HandleTypeDef hdmaBoardCommSPITx;
-extern char boardCommSpiRxBuffer[];
-extern char boardCommSpiTxBuffer[];
+extern uint8_t boardCommSpiRxBuffer[];
+extern uint8_t boardCommSpiTxBuffer[];
 
 typedef void (*spi_callback_function_pointer)(SPI_HandleTypeDef *hspi);
 extern volatile spi_callback_function_pointer spiCallbackFunctionArray[];

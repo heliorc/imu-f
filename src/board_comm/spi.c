@@ -7,21 +7,22 @@
 SPI_HandleTypeDef gyroSPIHandle;
 DMA_HandleTypeDef hdmaGyroSPIRx;
 DMA_HandleTypeDef hdmaGyroSPITx;
-char gyroSpiRxBuffer[256];
-char gyroSpiTxBuffer[256];
+uint8_t gyroSpiRxBuffer[256];
+uint8_t gyroSpiTxBuffer[256];
 
 //SPI 3 is for the f4/f3
 SPI_HandleTypeDef boardCommSPIHandle;
 DMA_HandleTypeDef hdmaBoardCommSPIRx;
 DMA_HandleTypeDef hdmaBoardCommSPITx;
-char boardCommSpiRxBuffer[256];
-char boardCommSpiTxBuffer[256];
+uint8_t boardCommSpiRxBuffer[256];
+uint8_t boardCommSpiTxBuffer[256];
 
 volatile spi_callback_function_pointer spiCallbackFunctionArray[3] = {0,};
 volatile spi_irq_callback_function_pointer spiIrqCallbackFunctionArray[3] = {0,};
 
 static void init_handle(SPI_HandleTypeDef* spiHandle, IRQn_Type irq);
 
+// this function is called the the SPI transfer is complete. The registered callback function will then be called
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
     if(hspi->Instance == SPI1)
@@ -36,27 +37,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
     {
 		spiCallbackFunctionArray[2](hspi);
     }
-
-    //if(hspi->Instance == BOARD_COMM_SPI)
-    //{
-        //spiCallbackFunctionArray[3];
-        //#ifndef C3PUBL
-        //memcpy(&newCommand, rxBuffer, sizeOf(bootloaderCommand_t));
-        //if (newCommand.command && newCommand.command == newCommand.crc){
-        //    run_command(&newCommand);
-        //}
-        //memset(rxBuffer, 0, 256);
-        //HAL_SPI_TransmitReceive_IT(&MESSAGE_HANDLE, txData, rxData, 256);
-        //#else
-        //#endif
-        //HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 256);
-    //}
-    //else if(hspi->Instance == GYRO_SPI)
-    //{
-
-    //}
 }
-
 
 static void init_handle(SPI_HandleTypeDef* spiHandle, IRQn_Type irq)
 {
