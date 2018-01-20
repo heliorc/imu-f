@@ -1,6 +1,6 @@
 #include "includes.h"
 
-void hal_init(GPIO_TypeDef* port, uint16_t pin, uint32_t mode, uint32_t pull, uint32_t alternate) 
+void hal_gpio_init_pin(GPIO_TypeDef* port, uint16_t pin, uint32_t mode, uint32_t pull, uint32_t alternate) 
 {
     HAL_GPIO_DeInit(port,  pin);
 	GPIO_InitTypeDef GPIO_InitStruct;

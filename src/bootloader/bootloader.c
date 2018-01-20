@@ -1,7 +1,7 @@
 #include "includes.h"
 #include "boothandler.h"
 #include "bootloader_commands.h"
-#include "hal_init.h"
+#include "hal_gpio_init.h"
 #include "flash.h"
 #include "report.h"
 
@@ -46,7 +46,7 @@ static void run_command(bootloaderCommand_t bl_command)
 void bootloader_start(void)
 {
     bootloaderCommand = BL_NONE;
-    hal_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, GPIO_MODE_INPUT, GPIO_PULLDOWN, 0); 
+    hal_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, GPIO_MODE_INPUT, GPIO_PULLDOWN, 0); 
     HAL_Delay(500);
     if (HAL_GPIO_ReadPin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) == (uint32_t)GPIO_PIN_RESET)
     {
