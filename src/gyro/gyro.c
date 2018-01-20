@@ -24,7 +24,8 @@ static void gyro_spi_setup(uint32_t baudratePrescaler)
 void gyro_init(void) 
 {
 
-    spiCallbackFunctionArray[BOARD_COMM_SPI_NUM] = gyro_rx_complete_callback;
+    spiIrqCallbackFunctionArray[GYRO_SPI_NUM] = gyro_spi_irq_callback;
+    spiCallbackFunctionArray[GYRO_SPI_NUM] = gyro_rx_complete_callback;
 
     //setup SPI at low speed
     gyro_spi_setup(SPI_BAUDRATEPRESCALER_32);

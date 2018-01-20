@@ -1,6 +1,7 @@
 #include "includes.h"
 #include "gyro.h"
-#include "board_commm.h"
+#include "spi.h"
+#include "board_comm.h"
 
 //SPI 2 is for the gyro
 SPI_HandleTypeDef gyroSPIHandle;
@@ -17,6 +18,7 @@ char boardCommSpiRxBuffer[256];
 char boardCommSpiTxBuffer[256];
 
 volatile spi_callback_function_pointer spiCallbackFunctionArray[3] = {0,};
+volatile spi_irq_callback_function_pointer spiIrqCallbackFunctionArray[3] = {0,};
 
 static void init_handle(SPI_HandleTypeDef* spiHandle, IRQn_Type irq);
 
@@ -24,15 +26,15 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
     if(hspi->Instance == SPI1)
     {
-		callbackFunctionArray[0](&hspi);
+		spiCallbackFunctionArray[0](hspi);
     }
     else if(hspi->Instance == SPI2)
     {
-		callbackFunctionArray[1](&hspi);
+		spiCallbackFunctionArray[1](hspi);
     }
     else if(hspi->Instance == SPI3)
     {
-		callbackFunctionArray[2](&hspi);
+		spiCallbackFunctionArray[2](hspi);
     }
 
     //if(hspi->Instance == BOARD_COMM_SPI)
@@ -54,8 +56,6 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 
     //}
 }
-
-
 
 
 static void init_handle(SPI_HandleTypeDef* spiHandle, IRQn_Type irq)
@@ -94,7 +94,7 @@ void spi_init(SPI_HandleTypeDef* spiHandle, SPI_TypeDef* instance, uint32_t baud
     HAL_NVIC_EnableIRQ(SPI1_IRQn);
 }
 
-void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, DMA_HandleTypeDef* hdma_spi_tx, DMA_Channel_TypeDef rxDmaChannel, DMA_Channel_TypeDef txDmaChannel)
+void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, DMA_HandleTypeDef* hdma_spi_tx, DMA_Channel_TypeDef* rxDmaChannel, DMA_Channel_TypeDef* txDmaChannel)
 {
 
     (*hdma_spi_rx).Instance = rxDmaChannel;
@@ -130,4 +130,16 @@ void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, 
 
     __HAL_LINKDMA(spiHandle,hdmatx,*hdma_spi_tx);
 
+}
+
+void board_comm_spi_irq_callback(void)
+{
+    //irq handler
+    HAL_SPI_IRQHandler(&boardCommSPIHandle);
+}
+
+void gyro_spi_irq_callback(void)
+{
+    //irq handler
+    HAL_SPI_IRQHandler(&gyroSPIHandle);
 }
