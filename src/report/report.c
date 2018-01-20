@@ -1,8 +1,9 @@
 #include "includes.h"
+#include "report.h"
 
-VersionInfoTypedef info;
+VersionInfoTypedef_t info;
 
-void get_report_info(messageHandle, char* txData, char* rxData)
+void get_report_info(SPI_HandleTypeDef* messageHandle, char* rxData, char* txData)
 {
     // ensure that SPI resources are available, but don't block if they are not
     while (HAL_SPI_GetState(messageHandle) != HAL_SPI_STATE_READY);

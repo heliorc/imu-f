@@ -1,17 +1,45 @@
 #include "includes.h"
-#include "gyro_init.h"
+#include "gyro.h"
+#include "spi.h"
 
-DMA_HandleTypeDef gyroRx;
-DMA_HandleTypeDef gyroTx;
+
+static void gyro_configure(void);
+static void gyro_spi_setup(uint32_t baudratePrescaler);
+
+static void gyro_configure(void)
+{
+    //config gyro here
+}
+
+static void gyro_spi_setup(uint32_t baudratePrescaler)
+{
+    spi_init(&gyroSPIHandle, GYRO_SPI, baudratePrescaler, SPI_MODE_MASTER, GYRO_SPI_IRQn, 1, 2);
+    spi_dma_init(&gyroSPIHandle, &hdmaGyroSPIRx, &hdmaGyroSPITx, GYRO_RX_DMA, GYRO_TX_DMA);
+    if(!GYRO_CS_HARDWARE)
+    {
+        HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
+    }
+}
+
+void gyro_init(void) 
+{
+
+    spiCallbackFunctionArray[BOARD_COMM_SPI_NUM] = gyro_rx_complete_callback;
+
+    //setup SPI at low speed
+    gyro_spi_setup(SPI_BAUDRATEPRESCALER_32);
+
+    //reset and configure gyro
+    gyro_configure();
+
+    //setup SPI again at faster speed
+    gyro_spi_setup(SPI_BAUDRATEPRESCALER_2);
+
+}
 
 void gyro_passthrough_start() 
 {
-    gyroTx->Instance GYRO
-    
-    HAL_DMA_Init(&gyroTx)
-    HAL_DMA_Init(&gyroRx)
-
-    
+    /*
     while(1) 
     {
         GPIOB->ODR = 0xFFFF;
@@ -19,11 +47,18 @@ void gyro_passthrough_start()
         GPIOB->ODR = 0x0000;
         //InlineDigitalLo(GPIOB, GPIO_PIN_5);
     }
+    */
 }
 
+void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
+{
 
+}
+
+//todo register callback function
 void imuRxCallback(void)
 {
+    /*
 	gyroData[0] = (int32_t)(int16_t)((gyroRxFrame.gyroX_H << 8) | gyroRxFrame.gyroX_L);
 	gyroData[1] = (int32_t)(int16_t)((gyroRxFrame.gyroY_H << 8) | gyroRxFrame.gyroY_L);
 	gyroData[2] = (int32_t)(int16_t)((gyroRxFrame.gyroZ_H << 8) | gyroRxFrame.gyroZ_L);
@@ -46,4 +81,5 @@ void imuRxCallback(void)
             InlineUpdateAcc( accelData, 0.00048828125f); //  1/2048 is 0.00048828125f
 
 	}
+    */
 }

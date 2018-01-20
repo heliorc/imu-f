@@ -10,6 +10,11 @@
         "fix16.h": "c",
         "hal_gpio_init.h": "c",
         "flash.h": "c",
-        "spi_init.h": "c"
+        "spi_init.h": "c",
+        "gpio_init.h": "c",
+        "gyro_start.h": "c",
+        "gyro.h": "c",
+        "report.h": "c",
+        "board.h": "c"
     }
 }

@@ -1,7 +1,8 @@
 #include "includes.h"
-#include "gyro/gyro_start.h"
-#include "gyro/gyro_init.h"
+#include "gyro.h"
 #include "board.h"
+#include "board_comm.h"
+#include "spi.h"
 
 #ifdef C3PUBL
 int main(void)
@@ -14,6 +15,8 @@ int main(void)
 int main(void)
 {
     board_init();
+    spiCallbackFunctionArray[BOARD_COMM_SPI_NUM] = board_comm_callback_function;
+    board_comm_init();
     gyro_init();
     gyro_passthrough_start();
     return(0);
