@@ -15,6 +15,8 @@
     #define GYRO_CS_PIN         GPIO_PIN_12
     #define GYRO_CS_PORT        GPIOB
     #define GYRO_CS_ALTERNATE   GPIO_AF5_SPI2
+    #define GYRO_RX_DMA         DMA1_Channel1
+    #define GYRO_TX_DMA         DMA1_Channel2
     #define GYRO_MISO_PIN       GPIO_PIN_14
     #define GYRO_MISO_PORT      GPIOB
     #define GYRO_MISO_ALTERNATE GPIO_AF5_SPI2

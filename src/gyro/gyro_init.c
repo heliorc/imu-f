@@ -1,11 +1,12 @@
 #include "includes.h"
 #include "spi_init.h"
+#include "gyro_start.h"
 
-SPI_HandleTypeDef gyroHandle;
+SPI_HandleTypeDef gyroSPIHandle;
 
 void gyro_configure(uint32_t baudRatePrescaler)
 {
-    spi_init(&gyroHandle, GYRO_SPI, baudRatePrescaler, SPI_MODE_MASTER, GYRO_SPI_IRQn, 0, 0);
+    spi_init(&gyroSPIHandle, GYRO_SPI, baudRatePrescaler, SPI_MODE_MASTER, GYRO_SPI_IRQn, 0, 0);
 }
 
 void gyro_init(void) 
