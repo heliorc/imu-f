@@ -8,6 +8,8 @@
         "gyro_init.h": "c",
         "board_init.h": "c",
         "fix16.h": "c",
-        "hal_gpio_init.h": "c"
+        "hal_gpio_init.h": "c",
+        "flash.h": "c",
+        "spi_init.h": "c"
     }
 }
