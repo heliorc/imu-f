@@ -5,7 +5,7 @@
 #include "spi_init.h"
 #include "board_comm_init.h"
 #include "flash.h"
-//#include "report.h"
+#include "report.h"
 
 
 char txBuffer[256];

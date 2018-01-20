@@ -141,6 +141,8 @@ def configure_target(TARGET):
         os.path.join("src", "bootloader"),
         os.path.join("src", "gpio"),
         os.path.join("src", "gyro"),
+        os.path.join("src", "report"),
+        os.path.join("src", "board_comm"),
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Include",
         LIBRARY_PATH + "/STM32F3xx_HAL_Driver/Inc",
         LIBRARY_PATH + "/CMSIS/Include"
@@ -152,6 +154,8 @@ def configure_target(TARGET):
         os.path.join("src", "bootloader"),
         os.path.join("src", "gpio"),
         os.path.join("src", "gyro"),
+        os.path.join("src", "report"),
+        os.path.join("src", "board_comm"),
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Source",
         LIBRARY_PATH + "/STM32F3xx_HAL_Driver/Src"
     ]
