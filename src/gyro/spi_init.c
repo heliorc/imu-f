@@ -35,3 +35,41 @@ void spi_init(SPI_HandleTypeDef* spiHandle, SPI_TypeDef* instance, uint32_t baud
     HAL_NVIC_SetPriority(SPI1_IRQn, irqp, irqsp);
     HAL_NVIC_EnableIRQ(SPI1_IRQn);
 }
+
+void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, DMA_HandleTypeDef* hdma_spi_tx, DMA_Channel_TypeDef rxDmaChannel, DMA_Channel_TypeDef txDmaChannel)
+{
+
+    (*hdma_spi_rx).Instance = rxDmaChannel;
+    (*hdma_spi_rx).Init.Direction = DMA_PERIPH_TO_MEMORY;
+    (*hdma_spi_rx).Init.PeriphInc = DMA_PINC_DISABLE;
+    (*hdma_spi_rx).Init.MemInc = DMA_MINC_ENABLE;
+    (*hdma_spi_rx).Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    (*hdma_spi_rx).Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    (*hdma_spi_rx).Init.Mode = DMA_NORMAL;
+    (*hdma_spi_rx).Init.Priority = DMA_PRIORITY_LOW;
+    if (HAL_DMA_Init(hdma_spi_rx) != HAL_OK)
+    {
+        //todo error handler
+        while(1);
+    }
+
+    __HAL_LINKDMA(spiHandle,hdmarx,*hdma_spi_rx);
+
+    /* SPI3_TX Init */
+    (*hdma_spi_tx).Instance = txDmaChannel;
+    (*hdma_spi_tx).Init.Direction = DMA_MEMORY_TO_PERIPH;
+    (*hdma_spi_tx).Init.PeriphInc = DMA_PINC_DISABLE;
+    (*hdma_spi_tx).Init.MemInc = DMA_MINC_ENABLE;
+    (*hdma_spi_tx).Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    (*hdma_spi_tx).Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    (*hdma_spi_tx).Init.Mode = DMA_NORMAL;
+    (*hdma_spi_tx).Init.Priority = DMA_PRIORITY_LOW;
+    if (HAL_DMA_Init(hdma_spi_tx) != HAL_OK)
+    {
+        //todo error handler
+        while(1);
+    }
+
+    __HAL_LINKDMA(spiHandle,hdmatx,*hdma_spi_tx);
+
+}
