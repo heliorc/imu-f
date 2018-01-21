@@ -212,9 +212,9 @@ static void gyro_exti_init(void)
     HAL_NVIC_EnableIRQ(GYRO_EXTI_IRQn);
 }
 
-void gyro_passthrough_start(void) 
-{
-}
+// void gyro_passthrough_start(void) 
+// {
+// }
 
 inline void gyro_exti_callback(void)
 {

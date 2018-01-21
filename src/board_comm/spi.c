@@ -6,8 +6,6 @@
 volatile spi_callback_function_pointer spiCallbackFunctionArray[3] = {0,};
 volatile spi_irq_callback_function_pointer spiIrqCallbackFunctionArray[3] = {0,};
 
-static void init_handle(SPI_HandleTypeDef* spiHandle, IRQn_Type irq);
-
 // this function is called the the SPI transfer is complete. The registered callback function will then be called
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {

@@ -9,6 +9,19 @@ DMA_HandleTypeDef hdmaBoardCommSPITx;
 uint8_t boardCommSpiRxBuffer[COM_BUFFER_SIZE];
 uint8_t boardCommSpiTxBuffer[COM_BUFFER_SIZE];
 
+
+void board_comm_init(void) 
+{
+    spiIrqCallbackFunctionArray[BOARD_COMM_SPI_NUM] = board_comm_spi_irq_callback;
+    spi_init(&boardCommSPIHandle, BOARD_COMM_SPI, SPI_BAUDRATEPRESCALER_2, SPI_MODE_SLAVE, BOARD_COMM_SPI_IRQn, BOARD_COMM_SPI_ISR_PRE_PRI, BOARD_COMM_SPI_ISR_SUB_PRI);
+    spi_dma_init(&boardCommSPIHandle, &hdmaBoardCommSPIRx, &hdmaBoardCommSPITx, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA);
+
+    if(!BOARD_COMM_CS_HARDWARE)
+    {
+        HAL_GPIO_WritePin(BOARD_COMM_CS_PORT, BOARD_COMM_CS_PIN, GPIO_PIN_SET);
+    }
+}
+
 void parse_imuf_command(imufCommand_t* newCommand, uint8_t* buffer){
     //copy received data into command structure
     memcpy(newCommand, boardCommSpiRxBuffer, sizeof(imufCommand_t));
@@ -25,18 +38,6 @@ static void run_command(imufCommand_t* newCommand)
         break;
         default:
         break;
-    }
-}
-
-void board_comm_init(void) 
-{
-    spiIrqCallbackFunctionArray[BOARD_COMM_SPI_NUM] = board_comm_spi_irq_callback;
-    spi_init(&boardCommSPIHandle, BOARD_COMM_SPI, SPI_BAUDRATEPRESCALER_2, SPI_MODE_SLAVE, BOARD_COMM_SPI_IRQn, BOARD_COMM_SPI_ISR_PRE_PRI, BOARD_COMM_SPI_ISR_SUB_PRI);
-    spi_dma_init(&boardCommSPIHandle, &hdmaBoardCommSPIRx, &hdmaBoardCommSPITx, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA);
-
-    if(!BOARD_COMM_CS_HARDWARE)
-    {
-        HAL_GPIO_WritePin(BOARD_COMM_CS_PORT, BOARD_COMM_CS_PIN, GPIO_PIN_SET);
     }
 }
 

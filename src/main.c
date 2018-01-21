@@ -28,7 +28,7 @@ int main(void)
     gyro_passthrough_start();
     while(1)
     {
-        //what do we do in main loop, or de we keep everthing event based?
+        //what do we do in main loop, or do we keep everthing event based?
     }
 }
 #endif
