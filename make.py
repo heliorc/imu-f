@@ -141,6 +141,7 @@ def configure_target(TARGET):
         os.path.join("src", "bootloader"),
         os.path.join("src", "gpio"),
         os.path.join("src", "gyro"),
+        os.path.join("src", "kalman"),
         os.path.join("src", "report"),
         os.path.join("src", "board_comm"),
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Include",
@@ -154,6 +155,7 @@ def configure_target(TARGET):
         os.path.join("src", "bootloader"),
         os.path.join("src", "gpio"),
         os.path.join("src", "gyro"),
+        os.path.join("src", "kalman"),
         os.path.join("src", "report"),
         os.path.join("src", "board_comm"),
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Source",
@@ -570,10 +572,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
