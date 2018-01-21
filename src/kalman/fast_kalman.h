@@ -3,14 +3,14 @@
 
 
 
-typedef enum 
+typedef enum filterAxisTypedef
 {
     PITCH = 0,
     YAW = 1,
     ROLL = 2
-} filterAxisTypedef;
+} filterAxisTypedef_t;
 
-typedef struct fastKalman_s {
+typedef struct fastKalman {
     float q;       //process noise covariance
     float r;       //measurement noise covariance
     float p;       //estimation error covariance matrix
@@ -21,12 +21,12 @@ typedef struct fastKalman_s {
     float gyroDfkfData[32];
 } fastKalman_t;
 
-typedef enum 
+typedef enum filterTypedef
 {
     NO_ESTIMATION = 0,
     STD_DEV_ESTIMATION = 1,
     DISTANCE_ESTIMATION = 2
-} filterTypedef;
+} filterTypedef_t;
 
-extern void fastKalmanInit(float q, float r, float p, float intialValue, filterTypedef type);
-extern float fastKalmanUpdate(filterAxisTypeDef axis, float input);
+extern void fastKalmanInit(float q, float r, float p, float intialValue, filterTypedef_t type);
+extern float fastKalmanUpdate(fastKalman_t *filter, float input);

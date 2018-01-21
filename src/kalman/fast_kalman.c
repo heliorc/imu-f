@@ -1,11 +1,10 @@
 #include <math.h>
-#include <arm_math.h>
 #include "fast_kalman.h"
 #include "includes.h"
 
 
 fastKalman_t filter[3];
-filterTypedef filterType;
+filterTypedef_t filterType;
 
 void initFilter(fastKalman_t *filter, float q, float r, float p, float intialValue) {
     filter->q     = q * 0.001f; //add multiplier to make tuning easier
@@ -17,7 +16,7 @@ void initFilter(fastKalman_t *filter, float q, float r, float p, float intialVal
     filter->gyroDfkfDataPtr = 0;  
 }
 
-void fastKalmanInit(float q, float r, float p, float intialValue, filterTypedef type)
+void fastKalmanInit(float q, float r, float p, float intialValue, filterTypedef_t type)
 {
     filterType = type;
 	initFilter(&filter[0], q, r, p, intialValue);
@@ -49,11 +48,11 @@ float distanceEstimate(float data[], uint32_t size)
 	//find the range
 	for(int x=size;x>=0;x--)
 	{
-		if(array[x]>largest)
-			largest = array[x];
+		if(data[x]>largest)
+			largest = data[x];
 
-		if(array[x]<smallest)
-			smallest = array[x];
+		if(data[x]<smallest)
+			smallest = data[x];
 	}
 
 	range = largest - smallest;
@@ -61,7 +60,7 @@ float distanceEstimate(float data[], uint32_t size)
 	return (range * 0.001f);
 }
 
-float _fastKalmanUpdate(fastKalman_t *axisFilter)
+static void _fastKalmanUpdate(fastKalman_t *axisFilter, float input)
 {
     //project the state ahead using acceleration
     axisFilter->x += (axisFilter->x - axisFilter->lastX);
@@ -76,22 +75,26 @@ float _fastKalmanUpdate(fastKalman_t *axisFilter)
 	axisFilter->k = axisFilter->p / (axisFilter->p + axisFilter->r);
 	axisFilter->x += axisFilter->k * (input - axisFilter->x);
 	axisFilter->p = (1.0f - axisFilter->k) * axisFilter->p;
-    return axisFilter->x;
 }
 
-float fastKalmanUpdate(filterAxisTypeDef axis, float input)
+//for(int x=2;x>=0;x--)
+//{
+//	fastKalmanUpdate(&filter[x], input[x]);
+//}
+
+float fastKalmanUpdate(fastKalman_t *filter, float input)
 {
     if (filterType == STD_DEV_ESTIMATION) {
-        filter[axis]->r = noiseEstimate(filter[axis]->gyroDfkfData, 6);
+        filter->r = noiseEstimate(filter->gyroDfkfData, 6);
     } else if (filterType == DISTANCE_ESTIMATION) {
-        filter[axis]->r = distanceEstimate(filter[axis]->gyroDfkfData, 6);
+        filter->r = distanceEstimate(filter->gyroDfkfData, 6);
     } 
-    filter[axis]->gyroDfkfData[filter[axis]->gyroDfkfDataPtr] = input;
-    _fastKalmanUpdate(&filter[axis]);
-    filter[axis]->gyroDfkfDataPtr++;
-	if (filter[axis]->gyroDfkfDataPtr > 5)
+    filter->gyroDfkfData[filter->gyroDfkfDataPtr] = input;
+    _fastKalmanUpdate(filter, input);
+    filter->gyroDfkfDataPtr++;
+	if (filter->gyroDfkfDataPtr > 5)
     {
-		filter[axis]->gyroDfkfDataPtr=0;
+		filter->gyroDfkfDataPtr=0;
     }
-    return filter[axis]->x;
+    return filter->x;
 }

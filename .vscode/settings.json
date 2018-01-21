@@ -18,6 +18,8 @@
         "board.h": "c",
         "board_comm.h": "c",
         "stm32f3xx_it.h": "c",
-        "spi.h": "c"
+        "spi.h": "c",
+        "fast_kalman.h": "c",
+        "arm_math.h": "c"
     }
 }
