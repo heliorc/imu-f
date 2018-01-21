@@ -37,6 +37,7 @@
 #include "stm32f3xx.h"
 #include "stm32f3xx_it.h"
 
+#include "board_comm.h"
 #include "spi.h" //spiIrqCallbackFunctionArray lives here
 #include "gyro.h" //gyro exti callback lives here
 

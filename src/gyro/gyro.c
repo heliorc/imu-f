@@ -4,6 +4,15 @@
 #include "invensense_register_map.h"
 #include "hal_gpio_init.h"
 
+#define GYRO_BUFFER_SIZE 256
+
+//SPI 2 is for the gyro
+SPI_HandleTypeDef gyroSPIHandle;
+DMA_HandleTypeDef hdmaGyroSPIRx;
+DMA_HandleTypeDef hdmaGyroSPITx;
+uint8_t gyroSpiRxBuffer[GYRO_BUFFER_SIZE];
+uint8_t gyroSpiTxBuffer[GYRO_BUFFER_SIZE];
+
 gyro_device_config_t gyroConfig;
 int skipGyro;
 float gyroAccData[3];

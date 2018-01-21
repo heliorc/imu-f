@@ -9,6 +9,12 @@ typedef struct gyro_data {
     uint8_t accDenom;
 } gyro_device_config_t;
 
+extern SPI_HandleTypeDef gyroSPIHandle;
+extern DMA_HandleTypeDef hdmaGyroSPIRx;
+extern DMA_HandleTypeDef hdmaGyroSPITx;
+extern uint8_t gyroSpiRxBuffer[];
+extern uint8_t gyroSpiTxBuffer[];
+
 extern gyro_device_config_t gyroConfig;
 extern int skipGyro;
 

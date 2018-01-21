@@ -1,5 +1,4 @@
 #pragma once
-#include "bootloader_commands.h"
 
 typedef struct VersionInfoTypedef
 {   

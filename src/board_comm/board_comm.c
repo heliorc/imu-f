@@ -2,17 +2,27 @@
 #include "spi.h"
 #include "board_comm.h"
 
-boardCommand_t boardCommand;
+//SPI 3 is for the f4/f3
+SPI_HandleTypeDef boardCommSPIHandle;
+DMA_HandleTypeDef hdmaBoardCommSPIRx;
+DMA_HandleTypeDef hdmaBoardCommSPITx;
+uint8_t boardCommSpiRxBuffer[COM_BUFFER_SIZE];
+uint8_t boardCommSpiTxBuffer[COM_BUFFER_SIZE];
 
-static void run_command(boardCommand_t* boardCommand);
+void parse_imuf_command(imufCommand_t* newCommand, uint8_t* buffer){
+    //copy received data into command structure
+    memcpy(newCommand, boardCommSpiRxBuffer, sizeof(imufCommand_t));
+    if (!(newCommand->command && newCommand->command == newCommand->crc)){
+        newCommand->command = NONE;
+    }
+}
 
-static void run_command(boardCommand_t* boardCommand)
+static void run_command(imufCommand_t* newCommand)
 {
-    switch (boardCommand->command)
+    switch (newCommand->command)
     {
         case BC_GYRO_SETUP:
         break;
-        case BC_NONE:
         default:
         break;
     }
@@ -32,12 +42,10 @@ void board_comm_init(void)
 
 void board_comm_callback_function(SPI_HandleTypeDef *hspi)
 {
-    //what we do after the transfer completes
-    memcpy(&boardCommand, boardCommSpiRxBuffer, sizeof(boardCommand_t));
-    if (boardCommand.command && boardCommand.command == boardCommand.crc){
-        run_command(&boardCommand);
-    }
-    memset(boardCommSpiRxBuffer, 0, SPI_BUFFER_SIZE);
+    imufCommand_t newCommand;
+    parse_imuf_command(&newCommand, boardCommSpiRxBuffer);
+    run_command(&newCommand);
+    memset(boardCommSpiRxBuffer, 0, COM_BUFFER_SIZE);
     //setup for next DMA transfer
-    HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, SPI_BUFFER_SIZE);
+    HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, COM_BUFFER_SIZE);
 }

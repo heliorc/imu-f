@@ -3,20 +3,6 @@
 #include "spi.h"
 #include "board_comm.h"
 
-//SPI 2 is for the gyro
-SPI_HandleTypeDef gyroSPIHandle;
-DMA_HandleTypeDef hdmaGyroSPIRx;
-DMA_HandleTypeDef hdmaGyroSPITx;
-uint8_t gyroSpiRxBuffer[SPI_BUFFER_SIZE];
-uint8_t gyroSpiTxBuffer[SPI_BUFFER_SIZE];
-
-//SPI 3 is for the f4/f3
-SPI_HandleTypeDef boardCommSPIHandle;
-DMA_HandleTypeDef hdmaBoardCommSPIRx;
-DMA_HandleTypeDef hdmaBoardCommSPITx;
-uint8_t boardCommSpiRxBuffer[SPI_BUFFER_SIZE];
-uint8_t boardCommSpiTxBuffer[SPI_BUFFER_SIZE];
-
 volatile spi_callback_function_pointer spiCallbackFunctionArray[3] = {0,};
 volatile spi_irq_callback_function_pointer spiIrqCallbackFunctionArray[3] = {0,};
 
