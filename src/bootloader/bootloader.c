@@ -2,18 +2,12 @@
 #include "boothandler.h"
 #include "bootloader_commands.h"
 #include "hal_gpio_init.h"
-#include "spi_init.h"
-#include "board_comm_init.h"
+#include "spi.h"
+#include "board_comm.h"
 #include "flash.h"
-//#include "report.h"
+#include "report.h"
 
-
-char txBuffer[256];
-char rxBuffer[256];
-SPI_HandleTypeDef MESSAGE_HANDLE;
-
-volatile bootloaderCommand_t newCommand;
-volatile uint32_t flush;
+bootloaderCommand_t newCommand;
 
 void run_command(bootloaderCommand_t* bl_command)
 {
@@ -29,8 +23,8 @@ void run_command(bootloaderCommand_t* bl_command)
         erase_range(bl_command->param1, bl_command->param2);
         break;
         case BL_REPORT_INFO:
-        memset(txBuffer, 0, 256);       
-        get_report_info(MESSAGE_HANDLE, txBuffer, rxBuffer);
+        memset(boardCommSpiTxBuffer, 0, 256);       
+        get_report_info(&boardCommSPIHandle, boardCommSpiRxBuffer, boardCommSpiTxBuffer);
         break;
         case BL_BOOT_TO_APP:
         BootToAddress(APP_ADDRESS);
@@ -58,13 +52,15 @@ void run_command(bootloaderCommand_t* bl_command)
 
 void bootloader_start(void)
 {
-    bootloaderCommand = BL_NONE;
+    newCommand.command = BL_NONE;
+    memset(boardCommSpiRxBuffer, 0, 256);   
+    memset(boardCommSpiTxBuffer, 0, 256);   
     hal_gpio_init_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, GPIO_MODE_INPUT, GPIO_PULLDOWN, 0); 
     HAL_Delay(500);
-    if (HAL_GPIO_ReadPin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) == (uint32_t)GPIO_PIN_RESET)
+    if ( HAL_GPIO_ReadPin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) == (uint32_t)GPIO_PIN_RESET )
     {
-        spi_init(&MESSAGE_HANDLE, SPI2, SPI_BAUDRATEPRESCALER_2, SPI_MODE_SLAVE, SPI2_IRQn, 1, 0);
-        HAL_SPI_TransmitReceive_IT(&MESSAGE_HANDLE, txData, rxData, 256);
+        spiCallbackFunctionArray[BOARD_COMM_SPI_NUM] = bootloader_spi_callback;
+        board_comm_init();
         while(1){
 
         }
@@ -75,16 +71,13 @@ void bootloader_start(void)
     }
 }
 
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+void bootloader_spi_callback(SPI_HandleTypeDef *hspi)
 {
-    if(hspi->Instance == SPI2)
-    {
-        //parse! hspi->
-        memccpy(&newCommand, rxBuffer, sizeOf(bootloaderCommand_t));
-        if (newCommand.command && newCommand.command == newCommand.crc){
-            run_command(&newCommand);
-        }
-        memset(rxBuffer, 0, 256);
-        HAL_SPI_TransmitReceive_IT(&MESSAGE_HANDLE, txData, rxData, 256);
+    memcpy(&newCommand, boardCommSpiRxBuffer, sizeof(bootloaderCommand_t));
+    if (newCommand.command && newCommand.command == newCommand.crc){
+        run_command(&newCommand);
     }
+    memset(boardCommSpiRxBuffer, 0, 256);
+    //setup for next DMA transfer
+    HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 256);
 }

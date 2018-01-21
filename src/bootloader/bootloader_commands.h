@@ -3,7 +3,7 @@
 
 typedef enum 
 {
-    BL_IDLE = 0,
+    BL_NONE = 0,
     BL_ERASE_ALL = 1,
     // BL_ERASE_PAGE = 2,
     BL_ERASE_ADDRESS_RANGE = 3,

@@ -1,6 +1,45 @@
 #include "includes.h"
+#include "gyro.h"
+#include "spi.h"
+#include "board_comm.h"
 
-void init_handle(SPI_HandleTypeDef* spiHandle, IRQn_Type irq)
+//SPI 2 is for the gyro
+SPI_HandleTypeDef gyroSPIHandle;
+DMA_HandleTypeDef hdmaGyroSPIRx;
+DMA_HandleTypeDef hdmaGyroSPITx;
+uint8_t gyroSpiRxBuffer[256];
+uint8_t gyroSpiTxBuffer[256];
+
+//SPI 3 is for the f4/f3
+SPI_HandleTypeDef boardCommSPIHandle;
+DMA_HandleTypeDef hdmaBoardCommSPIRx;
+DMA_HandleTypeDef hdmaBoardCommSPITx;
+uint8_t boardCommSpiRxBuffer[256];
+uint8_t boardCommSpiTxBuffer[256];
+
+volatile spi_callback_function_pointer spiCallbackFunctionArray[3] = {0,};
+volatile spi_irq_callback_function_pointer spiIrqCallbackFunctionArray[3] = {0,};
+
+static void init_handle(SPI_HandleTypeDef* spiHandle, IRQn_Type irq);
+
+// this function is called the the SPI transfer is complete. The registered callback function will then be called
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+    if(hspi->Instance == SPI1)
+    {
+		spiCallbackFunctionArray[0](hspi);
+    }
+    else if(hspi->Instance == SPI2)
+    {
+		spiCallbackFunctionArray[1](hspi);
+    }
+    else if(hspi->Instance == SPI3)
+    {
+		spiCallbackFunctionArray[2](hspi);
+    }
+}
+
+static void init_handle(SPI_HandleTypeDef* spiHandle, IRQn_Type irq)
 {
     HAL_SPI_DeInit(spiHandle);
     HAL_NVIC_DisableIRQ(irq);
@@ -36,7 +75,7 @@ void spi_init(SPI_HandleTypeDef* spiHandle, SPI_TypeDef* instance, uint32_t baud
     HAL_NVIC_EnableIRQ(SPI1_IRQn);
 }
 
-void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, DMA_HandleTypeDef* hdma_spi_tx, DMA_Channel_TypeDef rxDmaChannel, DMA_Channel_TypeDef txDmaChannel)
+void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, DMA_HandleTypeDef* hdma_spi_tx, DMA_Channel_TypeDef* rxDmaChannel, DMA_Channel_TypeDef* txDmaChannel)
 {
 
     (*hdma_spi_rx).Instance = rxDmaChannel;
@@ -72,4 +111,16 @@ void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, 
 
     __HAL_LINKDMA(spiHandle,hdmatx,*hdma_spi_tx);
 
+}
+
+void board_comm_spi_irq_callback(void)
+{
+    //irq handler
+    HAL_SPI_IRQHandler(&boardCommSPIHandle);
+}
+
+void gyro_spi_irq_callback(void)
+{
+    //irq handler
+    HAL_SPI_IRQHandler(&gyroSPIHandle);
 }

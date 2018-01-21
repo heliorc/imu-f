@@ -37,16 +37,16 @@
 #include "stm32f3xx.h"
 #include "stm32f3xx_it.h"
 
-extern SPI_HandleTypeDef SPI2Handle;
+#include "spi.h" //spiIrqCallbackFunctionArray lives here
 
 void SPI2_IRQHandler(void)
 {
- HAL_SPI_IRQHandler(&SPI2Handle);
+    spiIrqCallbackFunctionArray[1]();
 }
 
 void SPI3_IRQHandler(void)
 {
- HAL_SPI_IRQHandler(&SPI2Handle);
+    spiIrqCallbackFunctionArray[2]();
 }
 
 /* External variables --------------------------------------------------------*/

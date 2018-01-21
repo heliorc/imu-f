@@ -11,6 +11,7 @@
 #else
 
     #define BOARD_COMM_SPI            SPI3
+    #define BOARD_COMM_SPI_NUM        2   //SPI3 = 2, SPI2 = 1, SPI1 = 0,
     #define BOARD_COMM_SPI_IRQn       SPI3_IRQn
     #define BOARD_COMM_RX_DMA         DMA1_Channel2
     #define BOARD_COMM_TX_DMA         DMA1_Channel3
@@ -29,6 +30,7 @@
     #define BOARD_COMM_SCK_ALTERNATE  GPIO_AF5_SPI3
 
     #define GYRO_SPI            SPI2
+    #define GYRO_SPI_NUM        1   //SPI3 = 2, SPI2 = 1, SPI1 = 0,
     #define GYRO_SPI_IRQn       SPI2_IRQn
     #define GYRO_RX_DMA         DMA1_Channel4
     #define GYRO_TX_DMA         DMA1_Channel5

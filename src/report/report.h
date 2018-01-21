@@ -1,9 +1,6 @@
 #pragma once
 #include "bootloader_commands.h"
 
-extern void get_report_info(VersionInfoTypedef* info);
-
-
 typedef struct VersionInfoTypedef
 {   
     uint32_t hardware;
@@ -13,3 +10,5 @@ typedef struct VersionInfoTypedef
     uint32_t uid2;
     uint32_t uid3;
 } VersionInfoTypedef_t;
+
+extern void get_report_info(SPI_HandleTypeDef* messageHandle, uint8_t* rxData, uint8_t* txData);
