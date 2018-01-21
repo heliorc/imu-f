@@ -10,24 +10,27 @@
     #include "motolab.h"
 #else
 
-    #define BOARD_COMM_SPI            SPI3
-    #define BOARD_COMM_SPI_NUM        2   //SPI3 = 2, SPI2 = 1, SPI1 = 0,
-    #define BOARD_COMM_SPI_IRQn       SPI3_IRQn
-    #define BOARD_COMM_RX_DMA         DMA1_Channel2
-    #define BOARD_COMM_TX_DMA         DMA1_Channel3
-    #define BOARD_COMM_CS_HARDWARE    1
-    #define BOARD_COMM_CS_PIN         GPIO_PIN_4
-    #define BOARD_COMM_CS_PORT        GPIOA
-    #define BOARD_COMM_CS_ALTERNATE   GPIO_AF5_SPI3
-    #define BOARD_COMM_MISO_PIN       GPIO_PIN_4
-    #define BOARD_COMM_MISO_PORT      GPIOB
-    #define BOARD_COMM_MISO_ALTERNATE GPIO_AF5_SPI3
-    #define BOARD_COMM_MOSI_PIN       GPIO_PIN_5
-    #define BOARD_COMM_MOSI_PORT      GPIOB
-    #define BOARD_COMM_MOSI_ALTERNATE GPIO_AF5_SPI3
-    #define BOARD_COMM_SCK_PIN        GPIO_PIN_3
-    #define BOARD_COMM_SCK_PORT       GPIOB
-    #define BOARD_COMM_SCK_ALTERNATE  GPIO_AF5_SPI3
+    #define TARGET_HSE                      RCC_HSE_BYPASS
+    #define TARGET_PLL_MUL                  RCC_PLL_MUL12
+
+    #define BOARD_COMM_SPI                  SPI3
+    #define BOARD_COMM_SPI_NUM              2   //SPI3 = 2, SPI2 = 1, SPI1 = 0,
+    #define BOARD_COMM_SPI_IRQn             SPI3_IRQn
+    #define BOARD_COMM_RX_DMA               DMA1_Channel2
+    #define BOARD_COMM_TX_DMA               DMA1_Channel3
+    #define BOARD_COMM_CS_HARDWARE          1
+    #define BOARD_COMM_CS_PIN               GPIO_PIN_4
+    #define BOARD_COMM_CS_PORT              GPIOA
+    #define BOARD_COMM_CS_ALTERNATE         GPIO_AF5_SPI3
+    #define BOARD_COMM_MISO_PIN             GPIO_PIN_4
+    #define BOARD_COMM_MISO_PORT            GPIOB
+    #define BOARD_COMM_MISO_ALTERNATE       GPIO_AF5_SPI3
+    #define BOARD_COMM_MOSI_PIN             GPIO_PIN_5
+    #define BOARD_COMM_MOSI_PORT            GPIOB
+    #define BOARD_COMM_MOSI_ALTERNATE       GPIO_AF5_SPI3
+    #define BOARD_COMM_SCK_PIN              GPIO_PIN_3
+    #define BOARD_COMM_SCK_PORT             GPIOB
+    #define BOARD_COMM_SCK_ALTERNATE        GPIO_AF5_SPI3
     #define BOARD_COMM_SPI_RX_DMA_HANDLER   DMA1_Channel2_IRQHandler
     #define BOARD_COMM_SPI_TX_DMA_HANDLER   DMA1_Channel3_IRQHandler
 
@@ -57,8 +60,7 @@
     #define GYRO_EXTI_IRQn          EXTI3_IRQn
     #define GYRO_EXTI_HANDLER       EXTI3_IRQHandler
     
-
-    #define BOOTLOADER_CHECK_PORT  GPIOB
-    #define BOOTLOADER_CHECK_PIN   GPIO_PIN_5
+    #define BOOTLOADER_CHECK_PORT   GPIOB
+    #define BOOTLOADER_CHECK_PIN    GPIO_PIN_5
 
 #endif

@@ -107,11 +107,25 @@ def configure_target(TARGET):
         PROJECT = "C3PU"
         TARGET_SCRIPT = "stm32_flash_f30x_22k.ld"
         OPTIMIZE_FLAGS = "-O2"
+        HSE_SPEED = str(16000000)
 
     elif TARGET == "F3BL":
         PROJECT = "C3PUBL"
         TARGET_SCRIPT = "stm32_flash_f30x_12k.ld"
         OPTIMIZE_FLAGS = "-Og"
+        HSE_SPEED = str(16000000)
+
+    elif TARGET == "F3_TEST":
+        PROJECT = "C3PU"
+        TARGET_SCRIPT = "stm32_flash_f30x_22k.ld"
+        OPTIMIZE_FLAGS = "-O2"
+        HSE_SPEED = str(8000000)
+
+    elif TARGET == "F3BL_TEST":
+        PROJECT = "C3PUBL"
+        TARGET_SCRIPT = "stm32_flash_f30x_12k.ld"
+        OPTIMIZE_FLAGS = "-Og"
+        HSE_SPEED = str(8000000)
 
     else:
         print("ERROR - Select a target")
@@ -184,7 +198,7 @@ def configure_target(TARGET):
     # BOOT_MODE_DEF_FLAGS = " -DPROJECT="+PROJECT+" -DTHIS_ADDRESS="+THIS_ADDRESS+" -DMSP_ADDRESS="+MSP_ADDRESS+" -DDFU_ADDRESS="+DFU_ADDRESS+" -DRECOVERY_ADDRESS="+RECOVERY_ADDRESS+" -DRFBL_ADDRESS="+RFBL_ADDRESS+" -DAPP_ADDRESS="+APP_ADDRESS
     EXTRA_DEF_FLAGS = EXTRA_DEF_FLAGS + " -D".join(FLAGS)
 
-    DEF_FLAGS = "-DUSE_HAL_DRIVER -DHSE_VALUE=8000000 -D" + FC_NAME +" -D" + TARGET_DEVICE + " -DARM_MATH_CM4 -D" + TARGET + " -D" + TARGET_DEVICE.lower() + " -D" + TARGET_PROCESSOR_TYPE + EXTRA_DEF_FLAGS
+    DEF_FLAGS = "-DUSE_HAL_DRIVER -DHSE_VALUE="+HSE_SPEED+" -D" + FC_NAME +" -D" + TARGET_DEVICE + " -DARM_MATH_CM4 -D" + TARGET + " -D" + TARGET_DEVICE.lower() + " -D" + TARGET_PROCESSOR_TYPE + EXTRA_DEF_FLAGS
 
     ARCH_FLAGS = "-mthumb -mcpu=cortex-m4 -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant -mtune=cortex-m4"
 

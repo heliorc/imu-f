@@ -21,11 +21,11 @@ void init_osc(void)
   RCC_OscInitTypeDef RCC_OscInitStruct;
   /* Enable HSE Oscillator and activate PLL with HSE as source */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState       = RCC_HSE_ON;
+  RCC_OscInitStruct.HSEState       = TARGET_HSE;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.PLL.PLLState   = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource  = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL     = RCC_PLL_MUL16;
+  RCC_OscInitStruct.PLL.PLLMUL     = TARGET_PLL_MUL;
   HAL_RCC_OscConfig(&RCC_OscInitStruct);
 }
 
