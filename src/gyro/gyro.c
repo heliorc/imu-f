@@ -1,14 +1,47 @@
 #include "includes.h"
 #include "gyro.h"
 #include "spi.h"
+#include "invensense_register_map.h"
 
+gyro_device_config_t gyroConfig;
+
+typedef struct gyroFrame
+{
+    uint8_t accAddress;  // needed to start rx/tx transfer when sending address
+    uint8_t accelX_H;
+    uint8_t accelX_L;
+    uint8_t accelY_H;
+    uint8_t accelY_L;
+    uint8_t accelZ_H;
+    uint8_t accelZ_L;
+    uint8_t temp_H;
+    uint8_t temp_L;
+    uint8_t gyroX_H;
+    uint8_t gyroX_L;
+    uint8_t gyroY_H;
+    uint8_t gyroY_L;
+    uint8_t gyroZ_H;
+    uint8_t gyroZ_L;
+} __attribute__((__packed__)) gyroFrame_t;
+
+//multiple configs can go here, just need one right now
+static const gyro_device_config_t mpu6500GyroConfig[] =
+{
+    [0] = {1, 0, INVENS_CONST_GYRO_FCB_32_8800, 0, INVENS_CONST_ACC_FCB_ENABLE, 8},
+};
+
+
+static gyroFrame_t gyroRxFrame;
+static gyroFrame_t gyroTxFrame;
+int32_t deviceWhoAmI;
 
 static void gyro_configure(void);
 static void gyro_spi_setup(uint32_t baudratePrescaler);
 
 static void gyro_configure(void)
 {
-    //config gyro here
+    deviceWhoAmI = 0;
+    gyroConfig = mpu6500GyroConfig[0];
 }
 
 static void gyro_spi_setup(uint32_t baudratePrescaler)
