@@ -82,19 +82,19 @@ static void _fastKalmanUpdate(fastKalman_t *axisFilter, float input)
 //	fastKalmanUpdate(&filter[x], input[x]);
 //}
 
-float fastKalmanUpdate(fastKalman_t *filter, float input)
+float fastKalmanUpdate(filterAxisTypedef_t axis, float input)
 {
     if (filterType == STD_DEV_ESTIMATION) {
-        filter->r = noiseEstimate(filter->gyroDfkfData, 6);
+        filter[axis].r = noiseEstimate(filter[axis].gyroDfkfData, 6);
     } else if (filterType == DISTANCE_ESTIMATION) {
-        filter->r = distanceEstimate(filter->gyroDfkfData, 6);
+        filter[axis].r = distanceEstimate(filter[axis].gyroDfkfData, 6);
     } 
-    filter->gyroDfkfData[filter->gyroDfkfDataPtr] = input;
-    _fastKalmanUpdate(filter, input);
-    filter->gyroDfkfDataPtr++;
-	if (filter->gyroDfkfDataPtr > 5)
+    filter[axis].gyroDfkfData[filter[axis].gyroDfkfDataPtr] = input;
+    _fastKalmanUpdate(&filter[axis], input);
+    filter[axis].gyroDfkfDataPtr++;
+	if (filter[axis].gyroDfkfDataPtr > 5)
     {
-		filter->gyroDfkfDataPtr=0;
+		filter[axis].gyroDfkfDataPtr=0;
     }
-    return filter->x;
+    return filter[axis].x;
 }
