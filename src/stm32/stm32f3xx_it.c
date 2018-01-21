@@ -39,6 +39,7 @@
 
 #include "spi.h" //spiIrqCallbackFunctionArray lives here
 
+//SPI IRQ handlers handled with callback function pointer
 void SPI2_IRQHandler(void)
 {
     spiIrqCallbackFunctionArray[1]();
@@ -49,12 +50,28 @@ void SPI3_IRQHandler(void)
     spiIrqCallbackFunctionArray[2]();
 }
 
-/* External variables --------------------------------------------------------*/
-//extern PCD_HandleTypeDef hpcd_USB_FS;
 
-/******************************************************************************/
-/*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
-/******************************************************************************/
+//DMA IRQ handlers handled with defines
+void GYRO_SPI_TX_DMA_HANDLER(void)
+{
+    HAL_DMA_IRQHandler(&hdmaGyroSPITx);
+}
+
+void GYRO_SPI_RX_DMA_HANDLER(void)
+{
+    HAL_DMA_IRQHandler(&hdmaGyroSPIRx);
+}
+
+void BOARD_COMM_SPI_TX_DMA_HANDLER(void)
+{
+    HAL_DMA_IRQHandler(&hdmaBoardCommSPITx);
+}
+
+void BOARD_COMM_SPI_RX_DMA_HANDLER(void)
+{
+    HAL_DMA_IRQHandler(&hdmaBoardCommSPIRx);
+}
+
 
 /**
 * @brief This function handles Non maskable interrupt.

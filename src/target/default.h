@@ -28,6 +28,8 @@
     #define BOARD_COMM_SCK_PIN        GPIO_PIN_3
     #define BOARD_COMM_SCK_PORT       GPIOB
     #define BOARD_COMM_SCK_ALTERNATE  GPIO_AF5_SPI3
+    #define BOARD_COMM_SPI_RX_DMA_HANDLER   DMA1_Channel2_IRQHandler
+    #define BOARD_COMM_SPI_TX_DMA_HANDLER   DMA1_Channel3_IRQHandler
 
     #define GYRO_SPI            SPI2
     #define GYRO_SPI_NUM        1   //SPI3 = 2, SPI2 = 1, SPI1 = 0,
@@ -47,6 +49,8 @@
     #define GYRO_SCK_PIN        GPIO_PIN_1
     #define GYRO_SCK_PORT       GPIOF
     #define GYRO_SCK_ALTERNATE  GPIO_AF5_SPI2
+    #define GYRO_SPI_RX_DMA_HANDLER   DMA1_Channel4_IRQHandler
+    #define GYRO_SPI_TX_DMA_HANDLER   DMA1_Channel5_IRQHandler
 
     #define BOOTLOADER_CHECK_PORT  GPIOB
     #define BOOTLOADER_CHECK_PIN   GPIO_PIN_5
