@@ -36,7 +36,7 @@ void SystemClock_Config(void)
 	/* Enable Power Clock */
   __HAL_RCC_PWR_CLK_ENABLE();
   /* SysTick_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(SysTick_IRQn, SYSTICK_ISR_PRE_PRI, SYSTICK_ISR_SUB_PRI);
   systemUsTicks = (HAL_RCC_GetHCLKFreq()/1000000);
 }
 

@@ -9,6 +9,7 @@ typedef enum errorMask
     SPI_INIT_FAILIURE = 1 << 2,
     SPI_RX_DMA_INIT_FAILIURE = 1 << 3,
     SPI_TX_DMA_INIT_FAILIURE = 1 << 4,
+    GYRO_DETECT_FAILURE = 1 << 5,
 } errorMask_t;
 
 extern void error_handler(errorMask_t error);

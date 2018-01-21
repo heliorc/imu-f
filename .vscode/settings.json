@@ -22,6 +22,7 @@
         "fast_kalman.h": "c",
         "arm_math.h": "c",
         "bootloader.h": "c",
-        "error_handler.h": "c"
+        "error_handler.h": "c",
+        "invensense_register_map.h": "c"
     }
 }

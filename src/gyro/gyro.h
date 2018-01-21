@@ -10,7 +10,9 @@ typedef struct gyro_data {
 } gyro_device_config_t;
 
 extern gyro_device_config_t gyroConfig;
+extern int skipGyro;
 
 extern void gyro_init(void);
 extern void gyro_passthrough_start(void);
 extern void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi);
+extern void gyro_exti_callback(void);

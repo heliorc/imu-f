@@ -38,6 +38,7 @@
 #include "stm32f3xx_it.h"
 
 #include "spi.h" //spiIrqCallbackFunctionArray lives here
+#include "gyro.h" //gyro exti callback lives here
 
 //SPI IRQ handlers handled with callback function pointer
 void SPI2_IRQHandler(void)
@@ -72,6 +73,10 @@ void BOARD_COMM_SPI_RX_DMA_HANDLER(void)
     HAL_DMA_IRQHandler(&hdmaBoardCommSPIRx);
 }
 
+void GYRO_EXTI_HANDLER(void)
+{
+    gyro_exti_callback();
+}
 
 /**
 * @brief This function handles Non maskable interrupt.
