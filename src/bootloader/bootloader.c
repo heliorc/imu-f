@@ -79,10 +79,13 @@ void bootloader_start(void)
 
 void bootloader_spi_callback(SPI_HandleTypeDef *hspi)
 {
+    //copy received data into command structure
     memcpy(&newCommand, boardCommSpiRxBuffer, sizeof(bootloaderCommand_t));
     if (newCommand.command && newCommand.command == newCommand.crc){
+        //if valid we parse the command
         run_command(&newCommand);
     }
+    //clear buffer. not really needed, but we can spare the cycles
     memset(boardCommSpiRxBuffer, 0, SPI_BUFFER_SIZE);
     //setup for next DMA transfer
     HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, SPI_BUFFER_SIZE);
