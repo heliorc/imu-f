@@ -9,7 +9,9 @@
 
 bootloaderCommand_t newCommand;
 
-void run_command(bootloaderCommand_t* bl_command)
+static void run_command(bootloaderCommand_t* bl_command);
+
+static void run_command(bootloaderCommand_t* bl_command)
 {
     switch (bl_command->command)
     {

@@ -4,9 +4,9 @@
 
 boardCommand_t boardCommand;
 
-static void run_board_command(boardCommand_t* boardCommand);
+static void run_command(boardCommand_t* boardCommand);
 
-static void run_board_command(boardCommand_t* boardCommand)
+static void run_command(boardCommand_t* boardCommand)
 {
     switch (boardCommand->command)
     {
@@ -35,7 +35,7 @@ void board_comm_callback_function(SPI_HandleTypeDef *hspi)
     //what we do after the transfer completes
     memcpy(&boardCommand, boardCommSpiRxBuffer, sizeof(boardCommand_t));
     if (boardCommand.command && boardCommand.command == boardCommand.crc){
-        run_board_command(&boardCommand);
+        run_command(&boardCommand);
     }
     memset(boardCommSpiRxBuffer, 0, SPI_BUFFER_SIZE);
     //setup for next DMA transfer
