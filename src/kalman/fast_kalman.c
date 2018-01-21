@@ -1,8 +1,11 @@
 #include <math.h>
+#include <arm_math.h>
 #include "fast_kalman.h"
+#include "includes.h"
+
 
 fastKalman_t filter[3];
-filterTypdef filterType;
+filterTypedef filterType;
 
 void initFilter(fastKalman_t *filter, float q, float r, float p, float intialValue) {
     filter->q     = q * 0.001f; //add multiplier to make tuning easier
@@ -14,7 +17,7 @@ void initFilter(fastKalman_t *filter, float q, float r, float p, float intialVal
     filter->gyroDfkfDataPtr = 0;  
 }
 
-void fastKalmanInit(float q, float r, float p, float intialValue, filterTypdef type)
+void fastKalmanInit(float q, float r, float p, float intialValue, filterTypedef type)
 {
     filterType = type;
 	initFilter(&filter[0], q, r, p, intialValue);

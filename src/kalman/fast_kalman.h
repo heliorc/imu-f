@@ -1,5 +1,7 @@
 #pragma once
-#include <math.h>
+#include "includes.h"
+
+
 
 typedef enum 
 {
@@ -26,5 +28,5 @@ typedef enum
     DISTANCE_ESTIMATION = 2
 } filterTypedef;
 
-extern void fastKalmanInit(float q, float r, float p, float intialValue, filterTypdef type);
+extern void fastKalmanInit(float q, float r, float p, float intialValue, filterTypedef type);
 extern float fastKalmanUpdate(filterAxisTypeDef axis, float input);
