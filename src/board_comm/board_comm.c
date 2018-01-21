@@ -37,7 +37,7 @@ void board_comm_callback_function(SPI_HandleTypeDef *hspi)
     if (boardCommand.command && boardCommand.command == boardCommand.crc){
         run_board_command(&boardCommand);
     }
-    memset(boardCommSpiRxBuffer, 0, 256);
+    memset(boardCommSpiRxBuffer, 0, SPI_BUFFER_SIZE);
     //setup for next DMA transfer
-    HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 256);
+    HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, SPI_BUFFER_SIZE);
 }

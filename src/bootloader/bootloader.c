@@ -23,7 +23,7 @@ void run_command(bootloaderCommand_t* bl_command)
         erase_range(bl_command->param1, bl_command->param2);
         break;
         case BL_REPORT_INFO:
-        memset(boardCommSpiTxBuffer, 0, 256);       
+        memset(boardCommSpiTxBuffer, 0, SPI_BUFFER_SIZE);       
         get_report_info(&boardCommSPIHandle, boardCommSpiRxBuffer, boardCommSpiTxBuffer);
         break;
         case BL_BOOT_TO_APP:
@@ -52,21 +52,27 @@ void run_command(bootloaderCommand_t* bl_command)
 
 void bootloader_start(void)
 {
-    newCommand.command = BL_NONE;
-    memset(boardCommSpiRxBuffer, 0, 256);   
-    memset(boardCommSpiTxBuffer, 0, 256);   
+    //setup bootloader pin then wait 500 ms
     hal_gpio_init_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, GPIO_MODE_INPUT, GPIO_PULLDOWN, 0); 
     HAL_Delay(500);
+    //If pin is hi, we enter BL mode
     if ( HAL_GPIO_ReadPin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) == (uint32_t)GPIO_PIN_RESET )
     {
+        //default command
+        newCommand.command = BL_NONE;
+        //clear buffers
+        memset(boardCommSpiRxBuffer, 0, SPI_BUFFER_SIZE);   
+        memset(boardCommSpiTxBuffer, 0, SPI_BUFFER_SIZE);
+        //register callback for transfer complete
         spiCallbackFunctionArray[BOARD_COMM_SPI_NUM] = bootloader_spi_callback;
+        //init board comm SPI
         board_comm_init();
-        while(1){
-
-        }
+        //that's it, everything else is event based
+        while(1);
     }
     else 
     {
+        //boot to app
         BootToAddress(APP_ADDRESS);
     }
 }
@@ -77,7 +83,7 @@ void bootloader_spi_callback(SPI_HandleTypeDef *hspi)
     if (newCommand.command && newCommand.command == newCommand.crc){
         run_command(&newCommand);
     }
-    memset(boardCommSpiRxBuffer, 0, 256);
+    memset(boardCommSpiRxBuffer, 0, SPI_BUFFER_SIZE);
     //setup for next DMA transfer
-    HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 256);
+    HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, SPI_BUFFER_SIZE);
 }

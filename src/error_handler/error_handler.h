@@ -1,10 +1,14 @@
 #pragma once
 #include "includes.h"
 
-enum
+//error is a bitmask
+typedef enum errorMask
 {
     UNKNOWN_ERROR = 1 << 0,
     GYRO_SETUP_COMMUNICATION_FAILIURE = 1 << 1,
-};
+    SPI_INIT_FAILIURE = 1 << 2,
+    SPI_RX_DMA_INIT_FAILIURE = 1 << 3,
+    SPI_TX_DMA_INIT_FAILIURE = 1 << 4,
+} errorMask_t;
 
-extern void error_handler(uint32_t error);
+extern void error_handler(errorMask_t error);

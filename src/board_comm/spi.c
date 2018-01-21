@@ -7,15 +7,15 @@
 SPI_HandleTypeDef gyroSPIHandle;
 DMA_HandleTypeDef hdmaGyroSPIRx;
 DMA_HandleTypeDef hdmaGyroSPITx;
-uint8_t gyroSpiRxBuffer[256];
-uint8_t gyroSpiTxBuffer[256];
+uint8_t gyroSpiRxBuffer[SPI_BUFFER_SIZE];
+uint8_t gyroSpiTxBuffer[SPI_BUFFER_SIZE];
 
 //SPI 3 is for the f4/f3
 SPI_HandleTypeDef boardCommSPIHandle;
 DMA_HandleTypeDef hdmaBoardCommSPIRx;
 DMA_HandleTypeDef hdmaBoardCommSPITx;
-uint8_t boardCommSpiRxBuffer[256];
-uint8_t boardCommSpiTxBuffer[256];
+uint8_t boardCommSpiRxBuffer[SPI_BUFFER_SIZE];
+uint8_t boardCommSpiTxBuffer[SPI_BUFFER_SIZE];
 
 volatile spi_callback_function_pointer spiCallbackFunctionArray[3] = {0,};
 volatile spi_irq_callback_function_pointer spiIrqCallbackFunctionArray[3] = {0,};
@@ -46,8 +46,7 @@ static void init_handle(SPI_HandleTypeDef* spiHandle, IRQn_Type irq)
 
     if (HAL_SPI_Init(spiHandle) != HAL_OK)
     {
-        //TODO: handle this error.
-        while(1);
+        error_handler(SPI_INIT_FAILIURE);
     }
 }
 
@@ -88,8 +87,7 @@ void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, 
     (*hdma_spi_rx).Init.Priority = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(hdma_spi_rx) != HAL_OK)
     {
-        //todo error handler
-        while(1);
+        error_handler(SPI_RX_DMA_INIT_FAILIURE);
     }
 
     __HAL_LINKDMA(spiHandle,hdmarx,*hdma_spi_rx);
@@ -105,8 +103,7 @@ void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, 
     (*hdma_spi_tx).Init.Priority = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(hdma_spi_tx) != HAL_OK)
     {
-        //todo error handler
-        while(1);
+        error_handler(SPI_TX_DMA_INIT_FAILIURE);
     }
 
     __HAL_LINKDMA(spiHandle,hdmatx,*hdma_spi_tx);

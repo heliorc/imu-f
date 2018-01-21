@@ -2,6 +2,8 @@
 
 #include "includes.h"
 
+#define SPI_BUFFER_SIZE 256
+
 extern SPI_HandleTypeDef gyroSPIHandle;
 extern DMA_HandleTypeDef hdmaGyroSPIRx;
 extern DMA_HandleTypeDef hdmaGyroSPITx;
