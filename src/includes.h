@@ -8,4 +8,5 @@
 #include "stm32f3xx_hal_conf.h"
 #include "clock.h"
 #include "bootloader.h"
+#include "error_handler.h"
 #include <arm_math.h>

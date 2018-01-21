@@ -105,9 +105,13 @@ def configure_target(TARGET):
 
     if TARGET == "F3":
         PROJECT = "C3PU"
+        TARGET_SCRIPT = "stm32_flash_f30x_22k.ld"
+        OPTIMIZE_FLAGS = "-O2"
 
     elif TARGET == "F3BL":
         PROJECT = "C3PUBL"
+        TARGET_SCRIPT = "stm32_flash_f30x_12k.ld"
+        OPTIMIZE_FLAGS = "-Og"
 
     else:
         print("ERROR - Select a target")
@@ -119,14 +123,12 @@ def configure_target(TARGET):
 
     TARGET_DEVICE = "STM32F303xC"
     TARGET_PROCESSOR_TYPE = "F3"
-    OPTIMIZE_FLAGS = "-Og"
 
     DFU_ADDRESS = str(0x1FF00000)
     RECOVERY_ADDRESS = str(0x08000000)
     RFBL_ADDRESS = str(0x08008000)
     APP_ADDRESS = str(0x08001800)
     MSP_ADDRESS = str(0x080E0000)
-    TARGET_SCRIPT = "stm32_flash_f30x_8k.ld"
     THIS_ADDRESS = str(0x08000000)
     FLASH_END = str(0x08008000)
 
@@ -144,6 +146,7 @@ def configure_target(TARGET):
         os.path.join("src", "kalman"),
         os.path.join("src", "report"),
         os.path.join("src", "board_comm"),
+        os.path.join("src", "error_handler"),
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Include",
         LIBRARY_PATH + "/STM32F3xx_HAL_Driver/Inc",
         LIBRARY_PATH + "/CMSIS/Include"
@@ -158,6 +161,7 @@ def configure_target(TARGET):
         os.path.join("src", "kalman"),
         os.path.join("src", "report"),
         os.path.join("src", "board_comm"),
+        os.path.join("src", "error_handler"),
         LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Source",
         LIBRARY_PATH + "/STM32F3xx_HAL_Driver/Src"
     ]
