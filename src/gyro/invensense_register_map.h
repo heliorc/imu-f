@@ -56,26 +56,26 @@
 #define INVENS_CONST_TEMP_DIS   0x08
 
 // value returned on WHO_AM_I register
-#define MPU6000_WHO_AM_I    0x68
-#define MPU6500_WHO_AM_I    0x70
-#define MPU6555_WHO_AM_I    0x7C
-#define MPU9250_WHO_AM_I    0x71
-#define ICM20689_WHO_AM_I   0x98
-#define ICM20608G_WHO_AM_I  0xAF
+// #define MPU6000_WHO_AM_I    0x68
+// #define MPU6500_WHO_AM_I    0x70
+// #define MPU6555_WHO_AM_I    0x7C
+// #define MPU9250_WHO_AM_I    0x71
+// #define ICM20689_WHO_AM_I   0x98
+// #define ICM20608G_WHO_AM_I  0xAF
 #define ICM20602_WHO_AM_I   0x12
 #define ICM20601_WHO_AM_I   0xAC
 
 // Product ID Description for MPU6000
 // Product Name Product Revision
-#define MPU6000ES_REV_C4    0x14
-#define MPU6000ES_REV_C5    0x15
-#define MPU6000ES_REV_D6    0x16
-#define MPU6000ES_REV_D7    0x17
-#define MPU6000ES_REV_D8    0x18
-#define MPU6000_REV_C4      0x54
-#define MPU6000_REV_C5      0x55
-#define MPU6000_REV_D6      0x56
-#define MPU6000_REV_D7      0x57
-#define MPU6000_REV_D8      0x58
-#define MPU6000_REV_D9      0x59
-#define MPU6000_REV_D10     0x5A
+// #define MPU6000ES_REV_C4    0x14
+// #define MPU6000ES_REV_C5    0x15
+// #define MPU6000ES_REV_D6    0x16
+// #define MPU6000ES_REV_D7    0x17
+// #define MPU6000ES_REV_D8    0x18
+// #define MPU6000_REV_C4      0x54
+// #define MPU6000_REV_C5      0x55
+// #define MPU6000_REV_D6      0x56
+// #define MPU6000_REV_D7      0x57
+// #define MPU6000_REV_D8      0x58
+// #define MPU6000_REV_D9      0x59
+// #define MPU6000_REV_D10     0x5A

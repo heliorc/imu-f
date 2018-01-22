@@ -4,7 +4,6 @@
 #include "invensense_register_map.h"
 #include "hal_gpio_init.h"
 
-#define GYRO_BUFFER_SIZE 256
 
 //SPI 2 is for the gyro
 SPI_HandleTypeDef gyroSPIHandle;
@@ -13,44 +12,19 @@ DMA_HandleTypeDef hdmaGyroSPITx;
 uint8_t gyroSpiRxBuffer[GYRO_BUFFER_SIZE];
 uint8_t gyroSpiTxBuffer[GYRO_BUFFER_SIZE];
 
-gyro_device_config_t gyroConfig;
 int skipGyro;
 float gyroAccData[3];
-float gyroTempData;
+float gyroTempData = 0.0030599755201958f;
 float gyroRateData[3];
-float gyroRateMultiplier;
-float gyroTempMultiplier;
-float gyroAccMultiplier;
-
-typedef struct gyroFrame
-{
-    uint8_t accAddress;  // needed to start rx/tx transfer when sending address
-    uint8_t accelX_H;
-    uint8_t accelX_L;
-    uint8_t accelY_H;
-    uint8_t accelY_L;
-    uint8_t accelZ_H;
-    uint8_t accelZ_L;
-    uint8_t temp_H;
-    uint8_t temp_L;
-    uint8_t gyroX_H;
-    uint8_t gyroX_L;
-    uint8_t gyroY_H;
-    uint8_t gyroY_L;
-    uint8_t gyroZ_H;
-    uint8_t gyroZ_L;
-} __attribute__((__packed__)) gyroFrame_t;
+float gyroRateMultiplier = GYRO_DPS_SCALE_2000;
+float gyroAccMultiplier = ACC_DPS_SCALE_2000;
 
 //multiple configs can go here, just need one right now
-static const gyro_device_config_t mpu6500GyroConfig[] =
-{
-    [0] = {1, 0, INVENS_CONST_GYRO_FCB_32_8800, 0, INVENS_CONST_ACC_FCB_ENABLE, 8},
-};
-
+static const gyro_device_config_t gyroConfig = {1, 0, INVENS_CONST_GYRO_FCB_32_8800, 0, INVENS_CONST_ACC_FCB_ENABLE, 8};
 
 static gyroFrame_t gyroRxFrame;
 static gyroFrame_t gyroTxFrame;
-int32_t deviceWhoAmI;
+int32_t deviceWhoAmI = 0;
 
 static void gyro_configure(void);
 static void gyro_spi_setup(uint32_t baudratePrescaler);
@@ -65,16 +39,11 @@ static uint32_t gyro_dma_read_write_data(uint8_t *txData, uint8_t *rxData, uint8
 
 static void gyro_configure(void)
 {
-    deviceWhoAmI = 0;
-    gyroConfig = mpu6500GyroConfig[0];
-
     HAL_Delay(5);
-
     if (!gyro_device_detect())
     {
         error_handler(GYRO_DETECT_FAILURE);
     }
-
     // reset gyro
 	gyro_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_H_RESET);
 	HAL_Delay(80);
@@ -103,30 +72,14 @@ static void gyro_configure(void)
 
     if (deviceWhoAmI == ICM20601_WHO_AM_I)
     {
-        gyroRateMultiplier = 0.1219512195121951f;
-        gyroAccMultiplier  = 0.0009765625f;
+        gyroRateMultiplier = GYRO_DPS_SCALE_4000;
+        gyroAccMultiplier  = ACC_DPS_SCALE_4000;
     }
-    else
-    {
-        gyroRateMultiplier = 0.060975609756098f;
-        gyroAccMultiplier  = 0.00048828125f;
-    }
-    gyroTempData = 0.0030599755201958f;
-
-    if (deviceWhoAmI != MPU6000_WHO_AM_I) //6000 is only gyro not to have this function
-    {
-    	// set the accelerometer dlpf
-    	gyro_verify_write_reg(INVENS_RM_ACCEL_CONFIG2, gyroConfig.accDlpfBypass << 3 | gyroConfig.accDlpf);
-    	//this function varies between 6000 and 6500+ family
-    	// set interrupt pin PP, 50uS pulse, status cleared on INT_STATUS read
-    	gyro_verify_write_reg(INVENS_RM_INT_PIN_CFG, INVENS_CONST_INT_RD_CLEAR | INVENS_CONST_BYPASS_EN);
-    }
-    else
-    {
-        // set interrupt pin PP, 50uS pulse, status cleared on INT_STATUS read
-    	gyro_verify_write_reg(INVENS_RM_INT_PIN_CFG, INVENS_CONST_INT_RD_CLEAR);
-    }
-
+    // set the accelerometer dlpf
+    gyro_verify_write_reg(INVENS_RM_ACCEL_CONFIG2, gyroConfig.accDlpfBypass << 3 | gyroConfig.accDlpf);
+    //this function varies between 6000 and 6500+ family
+    // set interrupt pin PP, 50uS pulse, status cleared on INT_STATUS read
+    gyro_verify_write_reg(INVENS_RM_INT_PIN_CFG, INVENS_CONST_INT_RD_CLEAR | INVENS_CONST_BYPASS_EN);
     // enable data ready interrupt
     gyro_verify_write_reg(INVENS_RM_INT_ENABLE, INVENS_CONST_DATA_RDY_EN);
 
@@ -159,14 +112,8 @@ static int gyro_device_detect(void)
         gyro_read_data(INVENS_RM_WHO_AM_I, &data, 1);
         switch (data)
         {
-        	case MPU6000_WHO_AM_I:
-            case MPU6555_WHO_AM_I:
-		    case MPU9250_WHO_AM_I:
-            case ICM20689_WHO_AM_I:
-            case ICM20608G_WHO_AM_I:
 		    case ICM20602_WHO_AM_I:
             case ICM20601_WHO_AM_I:
-		    case MPU6500_WHO_AM_I:
             	deviceWhoAmI = data;
                 return data;
 			break;
@@ -359,10 +306,8 @@ static uint32_t gyro_verify_write_reg(uint8_t reg, uint8_t data)
     return 0;  // this is never reached
 }
 
-static uint32_t gyro_read_data(uint8_t reg, uint8_t *data, uint8_t length)
+void writeGyroPin(void) 
 {
-    reg |= 0x80;
-
     // poll until SPI is ready in case of ongoing DMA
     while (HAL_SPI_GetState(&gyroSPIHandle) != HAL_SPI_STATE_READY);
 
@@ -370,40 +315,33 @@ static uint32_t gyro_read_data(uint8_t reg, uint8_t *data, uint8_t length)
     {
         HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_RESET);
     }
+}
 
+void hal_spi_gyro_tx_rx(uint8_t reg, uint8_t *data, uint8_t length) 
+{
     HAL_SPI_Transmit(&gyroSPIHandle, &reg, 1, 100);
     HAL_SPI_Receive(&gyroSPIHandle, data, length, 100);
-
     if(!GYRO_CS_HARDWARE)
     {
         HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
     }
+}
 
+static uint32_t gyro_read_data(uint8_t reg, uint8_t *data, uint8_t length)
+{
+    reg |= 0x80;
+    writeGyroPin(); 
+    hal_spi_gyro_tx_rx(reg, data, length);
     return 1;
 }
 
 static uint32_t gyro_slow_read_data(uint8_t reg, uint8_t *data, uint8_t length)
 {
     reg |= 0x80;
-
-    // poll until SPI is ready in case of ongoing DMA
-    while (HAL_SPI_GetState(&gyroSPIHandle) != HAL_SPI_STATE_READY);
-
-    if(!GYRO_CS_HARDWARE)
-    {
-        HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_RESET);
-    }
+    writeGyroPin(); 
     HAL_Delay(1);
-
-    HAL_SPI_Transmit(&gyroSPIHandle, &reg, 1, 100);
-    HAL_SPI_Receive(&gyroSPIHandle, data, length, 100);
-
-    if(!GYRO_CS_HARDWARE)
-    {
-        HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
-    }
+    hal_spi_gyro_tx_rx(reg, data, length);
     HAL_Delay(1);
-
     return 1;
 }
 

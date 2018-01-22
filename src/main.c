@@ -25,7 +25,7 @@ int main(void)
     //init gyro and its spi
     gyro_init();
     //not used, replace with flight code init maybe
-    gyro_passthrough_start();
+    // gyro_passthrough_start();
     while(1)
     {
         //what do we do in main loop, or do we keep everthing event based?
