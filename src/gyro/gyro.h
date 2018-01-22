@@ -31,6 +31,7 @@ typedef struct gyro_data {
 
 
 #define GYRO_BUFFER_SIZE 256
+#define GYRO_TEMP_MULTIPLIER 0.0030599755201958f
 #define GYRO_DPS_SCALE_4000 0.1219512195121951f
 #define ACC_DPS_SCALE_4000 0.0009765625f
 #define GYRO_DPS_SCALE_2000 0.060975609756098f
@@ -39,8 +40,6 @@ typedef struct gyro_data {
 extern SPI_HandleTypeDef gyroSPIHandle;
 extern DMA_HandleTypeDef hdmaGyroSPIRx;
 extern DMA_HandleTypeDef hdmaGyroSPITx;
-extern uint8_t gyroSpiRxBuffer[];
-extern uint8_t gyroSpiTxBuffer[];
 
 extern int skipGyro;
 

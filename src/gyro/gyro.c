@@ -9,12 +9,10 @@
 SPI_HandleTypeDef gyroSPIHandle;
 DMA_HandleTypeDef hdmaGyroSPIRx;
 DMA_HandleTypeDef hdmaGyroSPITx;
-uint8_t gyroSpiRxBuffer[GYRO_BUFFER_SIZE];
-uint8_t gyroSpiTxBuffer[GYRO_BUFFER_SIZE];
 
 int skipGyro;
+float gyroTempData;
 float gyroAccData[3];
-float gyroTempData = 0.0030599755201958f;
 float gyroRateData[3];
 float gyroRateMultiplier = GYRO_DPS_SCALE_2000;
 float gyroAccMultiplier = ACC_DPS_SCALE_2000;
@@ -129,8 +127,8 @@ static int gyro_device_detect(void)
 void gyro_init(void) 
 {
     skipGyro = 0;
-    bzero(gyroAccData,sizeof(gyroAccData));
     gyroTempData = 0;
+    bzero(gyroAccData,sizeof(gyroAccData));
     bzero(gyroRateData,sizeof(gyroRateData));
 
     spiIrqCallbackFunctionArray[GYRO_SPI_NUM] = gyro_spi_irq_callback;
@@ -196,12 +194,12 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
         gyroAccData[0] = ((int16_t)((gyroRxFrame.accelX_H << 8) | gyroRxFrame.accelX_L)) * gyroAccMultiplier;
 		gyroAccData[1] = ((int16_t)((gyroRxFrame.accelY_H << 8) | gyroRxFrame.accelY_L)) * gyroAccMultiplier;
 		gyroAccData[2] = ((int16_t)((gyroRxFrame.accelZ_H << 8) | gyroRxFrame.accelZ_L)) * gyroAccMultiplier;
-        gyroTempData   = ((int16_t)((gyroRxFrame.temp_H << 8)   | gyroRxFrame.temp_L))   * gyroTempData + 25;
+        gyroTempData   = ((int16_t)((gyroRxFrame.temp_H << 8)   | gyroRxFrame.temp_L))   * GYRO_TEMP_MULTIPLIER + 25;
         //= (TEMP_OUT[15:0]/Temp_Sensitivity) +
         //RoomTemp_Offset
         //where Temp_Sensitivity = 326.8 LSB/ºC and
         //RoomTemp_Offset = 25ºC
-        //gyroTempData is gyro temp in C
+        //gyroTempMultiplier is gyro temp in C
     }
 
     gyroRateData[0] = ((int16_t)((gyroRxFrame.gyroX_H << 8) | gyroRxFrame.gyroX_L)) * gyroRateMultiplier;
