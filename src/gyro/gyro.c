@@ -229,48 +229,29 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
     {
         HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
     }
+    //default rateData
+    uint32_t* memptr = (uint32_t*)&filteredData.rateData[0];
 
-    //if mode passthrough, tell F4 that data is ready and make sure data is in the right buffer
-    //TODO: use boardCommState.bufferSize and vallidate these are proper
-    switch(boardCommState.commMode)
+    if (boardCommState.commMode == GTBCM_GYRO_ONLY_PASSTHRU) 
     {
-        case GTBCM_GYRO_ONLY_PASSTHRU:
-            memcpy(boardCommSpiTxBuffer, &gyroTxFrame.gyroX_H, 6);
-            HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 6);
-            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET);
-        break;
-        case GTBCM_GYRO_ACC_PASSTHRU:
-            memcpy(boardCommSpiTxBuffer, &gyroTxFrame.accAddress, 15);
-            HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 6);
-            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET);
-        break;
-        case GTBCM_GYRO_ONLY_FILTER_F:
-            gyro_int_to_float();
-            filter_data(gyroRateData,gyroAccData,gyroTempData,&filteredData);
-            memcpy(boardCommSpiTxBuffer, &filteredData.rateData[0], 12);
-            HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 12);
-            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET);
-        break;
-        case GTBCM_GYRO_ACC_FILTER_F:
-            gyro_int_to_float();
-            filter_data(gyroRateData,gyroAccData,gyroTempData,&filteredData);
-            memcpy(boardCommSpiTxBuffer, &filteredData.rateData[0], 28);
-            HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 28);
-            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET);
-        break;
-        case GTBCM_GYRO_ACC_QUAT_FILTER_F:
-            gyro_int_to_float();
-            filter_data(gyroRateData,gyroAccData,gyroTempData,&filteredData);
-            generate_quaterions(gyroRateData,gyroAccData,&filteredData);
-            memcpy(boardCommSpiTxBuffer, &filteredData.rateData[0], 44); //3 gyro floats, 1 temp float, 3 acc floats, 4 quat floats
-            HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 44);
-            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET);
-        break;
-        default:
-            //do nuttin'
-        break;
+        memptr = (uint32_t*)&gyroTxFrame.gyroX_H;
+    } else if (boardCommState.commMode == GTBCM_GYRO_ACC_PASSTHRU) 
+    {
+        memptr = (uint32_t*)&gyroTxFrame.accAddress;
     }
-    
+
+    if (boardCommState.commMode == GTBCM_GYRO_ACC_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ONLY_FILTER_F){
+        gyro_int_to_float();
+        filter_data(gyroRateData,gyroAccData,gyroTempData,&filteredData);
+    }
+
+    if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F){
+        generate_quaterions(gyroRateData,gyroAccData,&filteredData);
+    }
+
+    memcpy(boardCommSpiTxBuffer, memptr, boardCommState.commMode);
+    HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, boardCommState.commMode);
+    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET);
 }
 
 static void gyro_device_read(void)
