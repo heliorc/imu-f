@@ -2,10 +2,11 @@
 #include "includes.h"
 
 #define COM_BUFFER_SIZE 48
+#define DEFAULT_COM_SIZE 32
 
 typedef enum gyroToBoardCommMode
 {
-    GTBCM_UNKNOWN                = 0,
+    GTBCM_SETUP                  = 0,
     GTBCM_GYRO_ONLY_PASSTHRU     = 1,
     GTBCM_GYRO_ACC_PASSTHRU      = 2,
     GTBCM_GYRO_ONLY_FILTER_F     = 3,
@@ -14,7 +15,7 @@ typedef enum gyroToBoardCommMode
 } gyroToBoardCommMode_t;
 
 typedef struct boardCommState {
-   gyroToBoardCommMode_t gyroPassMode;
+   gyroToBoardCommMode_t commMode;
    int commEnabled;
    uint32_t bufferSize;
 } boardCommState_t;

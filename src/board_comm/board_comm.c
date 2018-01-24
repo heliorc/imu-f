@@ -14,8 +14,11 @@ volatile boardCommState_t boardCommState;
 void board_comm_init(void) 
 {
     //default states for boardCommState
-    boardCommState.gyroPassMode = GTBCM_UNKNOWN; 
+    boardCommState.commMode     = GTBCM_SETUP; 
     boardCommState.commEnabled  = 0; 
+
+    //set this pin to high since we're set at the default buffer size of DEFAULT_COM_SIZE
+    HAL_GPIO_WritePin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, GPIO_PIN_SET);
 
     spiIrqCallbackFunctionArray[BOARD_COMM_SPI_NUM] = board_comm_spi_irq_callback;
     spi_init(&boardCommSPIHandle, BOARD_COMM_SPI, SPI_BAUDRATEPRESCALER_2, SPI_MODE_SLAVE, BOARD_COMM_SPI_IRQn, BOARD_COMM_SPI_ISR_PRE_PRI, BOARD_COMM_SPI_ISR_SUB_PRI);
@@ -28,12 +31,11 @@ void board_comm_init(void)
     //}
 
     //if slave mode:
-    while(!boardCommState.commEnabled || !boardCommState.gyroPassMode)
-    {
-        //check each byte, we have no idea how arge the buffers are going to need to be yet
-        HAL_SPI_TransmitReceive(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 1, 100);
-        //
-    }
+    //comm works likes this, each commMode state has  a known size,
+    //the Data Rdy pin goes high when the F3 is ready to communicate via SPI
+    //the F3 has to know which mode it's in, it does this using 
+    HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, DEFAULT_COM_SIZE);
+    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET); //ready to communicate
 }
 
 void parse_imuf_command(imufCommand_t* newCommand, uint8_t* buffer){
@@ -49,9 +51,16 @@ static void run_command(imufCommand_t* newCommand)
     switch (newCommand->command)
     {
         case BC_GYRO_SETUP:
-            boardCommState.gyroPassMode = newCommand->param1;
-            //if settings are valid we do this, else return an error
-            boardCommState.commEnabled  = 1;
+            boardCommState.commMode   = newCommand->param1;
+            boardCommState.bufferSize = newCommand->param2;
+
+            //todo: validate params
+            if(boardCommState.commMode != GTBCM_SETUP)
+            {
+                HAL_GPIO_WritePin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, GPIO_PIN_RESET); //buffer size  is now set by ""
+                boardCommState.commEnabled = 1; //if settings are valid we do this, else return an error
+                //gyro will now handle communication
+            }
         break;
         default:
         break;
@@ -67,6 +76,11 @@ void board_comm_callback_function(SPI_HandleTypeDef *hspi)
     parse_imuf_command(&newCommand, boardCommSpiRxBuffer);
     run_command(&newCommand);
     memset(boardCommSpiRxBuffer, 0, COM_BUFFER_SIZE);
-    //setup for next DMA transfer
-    //HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, COM_BUFFER_SIZE);
+
+    if(boardCommState.commMode == GTBCM_SETUP)
+    {
+        //setup next command and notify F4 we're ready to talk
+        HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, DEFAULT_COM_SIZE);
+        HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET); //ready to communicate
+    }
 }

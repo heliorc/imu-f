@@ -77,7 +77,7 @@ void bootloader_spi_callback(SPI_HandleTypeDef *hspi)
     imufCommand_t newCommand;
     parse_imuf_command(&newCommand, boardCommSpiRxBuffer);
     run_command(&newCommand);
-    memset(boardCommSpiRxBuffer, 0, COM_BUFFER_SIZE);
+    memset(boardCommSpiRxBuffer, 0, DEFAULT_COM_SIZE);
     //setup for next DMA transfer
-    HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, COM_BUFFER_SIZE);
+    HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, DEFAULT_COM_SIZE);
 }

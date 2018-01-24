@@ -231,7 +231,8 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
     }
 
     //if mode passthrough, tell F4 that data is ready and make sure data is in the right buffer
-    switch(boardCommState.gyroPassMode)
+    //TODO: use boardCommState.bufferSize and vallidate these are proper
+    switch(boardCommState.commMode)
     {
         case GTBCM_GYRO_ONLY_PASSTHRU:
             memcpy(boardCommSpiTxBuffer, &gyroTxFrame.gyroX_H, 6);
