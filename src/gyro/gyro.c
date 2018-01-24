@@ -147,7 +147,7 @@ void gyro_init(void)
     gyro_configure();
 
     //setup SPI again at faster speed
-    gyro_spi_setup(SPI_BAUDRATEPRESCALER_2);
+    gyro_spi_setup(SPI_BAUDRATEPRESCALER_4);
 
     //init gyro external interupt
     gyro_exti_init();
