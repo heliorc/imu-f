@@ -29,4 +29,4 @@ typedef enum filterTypedef
 
 extern void fastKalmanInit(float q, float r, float p, float intialValue, filterTypedef_t type);
 extern float fastKalmanUpdate(filterAxisTypedef_t axis, float input);
-extern void filter_data(axisData_t gyroRateData,axisData_t gyroAccData,float gyroTempData, filteredData_t* filteredData);
+extern void filter_data(axisData_t* gyroRateData,axisData_t* gyroAccData,float gyroTempData, filteredData_t* filteredData);

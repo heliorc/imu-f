@@ -240,11 +240,11 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
 
     if (boardCommState.commMode == GTBCM_GYRO_ACC_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ONLY_FILTER_F){
         gyro_int_to_float();
-        filter_data(rawRateData,rawAccData,gyroTempData,&filteredData);
+        filter_data(&rawRateData,&rawAccData,gyroTempData,&filteredData);
     }
 
     if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F){
-        generate_quaterions(rawRateData,rawAccData,&filteredData);
+        generate_quaterions(&rawRateData,&rawAccData,&filteredData);
     }
 
     memcpy(boardCommSpiTxBuffer, memptr, boardCommState.commMode);
