@@ -100,7 +100,7 @@ float fastKalmanUpdate(filterAxisTypedef_t axis, float input)
     return filter[axis].x;
 }
 
-void filter_data(float gyroRateData[],float gyroAccData[],float gyroTempData, filteredData_t* filteredData)
+void filter_data(axisData_t gyroRateData, axisData_t gyroAccData,float gyroTempData, filteredData_t* filteredData)
 {
 	//what's insie the filteredData_t typedef
 	//float rateData[3];
@@ -111,13 +111,13 @@ void filter_data(float gyroRateData[],float gyroAccData[],float gyroTempData, fi
 	//filter data here
 
 	//set filterData
-	filteredData->rateData[0] = gyroRateData[0];
-	filteredData->rateData[1] = gyroRateData[1];
-	filteredData->rateData[2] = gyroRateData[2];
+	filteredData->rateData.x = gyroRateData.x;
+	filteredData->rateData.y = gyroRateData.y;
+	filteredData->rateData.z = gyroRateData.z;
 
-	filteredData->accData[0]  = gyroAccData[0];
-	filteredData->accData[1]  = gyroAccData[1];
-	filteredData->accData[2]  = gyroAccData[2];
+	filteredData->accData.x  = gyroAccData.x;
+	filteredData->accData.y  = gyroAccData.y;
+	filteredData->accData.z  = gyroAccData.z;
 
 	filteredData->tempC       = gyroTempData;
 

@@ -21,8 +21,8 @@ int skipGyro;
 float gyroTempData;
 filteredData_t filteredData;
 
-float gyroAccData[3];
-float gyroRateData[3];
+axisData_t rawAccData;
+axisData_t rawRateData;
 float gyroRateMultiplier = GYRO_DPS_SCALE_2000;
 float gyroAccMultiplier = ACC_DPS_SCALE_2000;
 
@@ -141,8 +141,6 @@ void gyro_init(void)
 {
     skipGyro = 0;
     gyroTempData = 0;
-    bzero(gyroAccData,sizeof(gyroAccData));
-    bzero(gyroRateData,sizeof(gyroRateData));
 
     spiIrqCallbackFunctionArray[GYRO_SPI_NUM] = gyro_spi_irq_callback;
     spiCallbackFunctionArray[GYRO_SPI_NUM] = gyro_rx_complete_callback;
@@ -204,9 +202,9 @@ static void gyro_int_to_float(void)
     {
         //if accDenom is 8, then we should do a switch case for quatenrion math.
         gyroLoopCounter = gyroConfig.accDenom;
-        gyroAccData[0] = ((int16_t)((gyroRxFrame.accelX_H << 8) | gyroRxFrame.accelX_L)) * gyroAccMultiplier;
-		gyroAccData[1] = ((int16_t)((gyroRxFrame.accelY_H << 8) | gyroRxFrame.accelY_L)) * gyroAccMultiplier;
-		gyroAccData[2] = ((int16_t)((gyroRxFrame.accelZ_H << 8) | gyroRxFrame.accelZ_L)) * gyroAccMultiplier;
+        rawAccData.x = ((int16_t)((gyroRxFrame.accelX_H << 8) | gyroRxFrame.accelX_L)) * gyroAccMultiplier;
+		rawAccData.y = ((int16_t)((gyroRxFrame.accelY_H << 8) | gyroRxFrame.accelY_L)) * gyroAccMultiplier;
+		rawAccData.z = ((int16_t)((gyroRxFrame.accelZ_H << 8) | gyroRxFrame.accelZ_L)) * gyroAccMultiplier;
         gyroTempData   = ((int16_t)((gyroRxFrame.temp_H << 8)   | gyroRxFrame.temp_L))   * GYRO_TEMP_MULTIPLIER + 25;
         //= (TEMP_OUT[15:0]/Temp_Sensitivity) +
         //RoomTemp_Offset
@@ -215,9 +213,9 @@ static void gyro_int_to_float(void)
         //gyroTempMultiplier is gyro temp in C
     }
 
-    gyroRateData[0] = ((int16_t)((gyroRxFrame.gyroX_H << 8) | gyroRxFrame.gyroX_L)) * gyroRateMultiplier;
-	gyroRateData[1] = ((int16_t)((gyroRxFrame.gyroY_H << 8) | gyroRxFrame.gyroY_L)) * gyroRateMultiplier;
-	gyroRateData[2] = ((int16_t)((gyroRxFrame.gyroZ_H << 8) | gyroRxFrame.gyroZ_L)) * gyroRateMultiplier;
+    rawRateData.x = ((int16_t)((gyroRxFrame.gyroX_H << 8) | gyroRxFrame.gyroX_L)) * gyroRateMultiplier;
+	rawRateData.y = ((int16_t)((gyroRxFrame.gyroY_H << 8) | gyroRxFrame.gyroY_L)) * gyroRateMultiplier;
+	rawRateData.z = ((int16_t)((gyroRxFrame.gyroZ_H << 8) | gyroRxFrame.gyroZ_L)) * gyroRateMultiplier;
 
 }
 
@@ -230,7 +228,7 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
         HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
     }
     //default rateData
-    uint8_t* memptr = (uint8_t*)&filteredData.rateData[0];
+    uint8_t* memptr = (uint8_t*)&filteredData.rateData;
 
     if (boardCommState.commMode == GTBCM_GYRO_ONLY_PASSTHRU) 
     {
@@ -242,11 +240,11 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
 
     if (boardCommState.commMode == GTBCM_GYRO_ACC_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ONLY_FILTER_F){
         gyro_int_to_float();
-        filter_data(gyroRateData,gyroAccData,gyroTempData,&filteredData);
+        filter_data(rawRateData,rawAccData,gyroTempData,&filteredData);
     }
 
     if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F){
-        generate_quaterions(gyroRateData,gyroAccData,&filteredData);
+        generate_quaterions(rawRateData,rawAccData,&filteredData);
     }
 
     memcpy(boardCommSpiTxBuffer, memptr, boardCommState.commMode);
