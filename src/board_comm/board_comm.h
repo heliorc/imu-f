@@ -1,7 +1,7 @@
 #pragma once
 #include "includes.h"
 
-#define COM_BUFFER_SIZE 256
+#define COM_BUFFER_SIZE 48
 
 typedef enum 
 {

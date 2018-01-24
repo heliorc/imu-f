@@ -5,6 +5,9 @@
 #include "hal_gpio_init.h"
 
 
+volatile uint32_t debug1=0;
+volatile uint32_t debug2=0;
+
 //SPI 2 is for the gyro
 SPI_HandleTypeDef gyroSPIHandle;
 DMA_HandleTypeDef hdmaGyroSPIRx;
@@ -38,6 +41,7 @@ static uint32_t gyro_dma_read_write_data(uint8_t *txData, uint8_t *rxData, uint8
 static void gyro_configure(void)
 {
     HAL_Delay(5);
+
     if (!gyro_device_detect())
     {
         error_handler(GYRO_DETECT_FAILURE);
@@ -86,8 +90,9 @@ static void gyro_configure(void)
 static void gyro_spi_setup(uint32_t baudratePrescaler)
 {
     spi_init(&gyroSPIHandle, GYRO_SPI, baudratePrescaler, SPI_MODE_MASTER, GYRO_SPI_IRQn, GYRO_SPI_ISR_PRE_PRI, GYRO_SPI_ISR_SUB_PRI);
-    spi_dma_init(&gyroSPIHandle, &hdmaGyroSPIRx, &hdmaGyroSPITx, GYRO_RX_DMA, GYRO_TX_DMA);
-    if(!GYRO_CS_HARDWARE)
+    spi_dma_init(&gyroSPIHandle, &hdmaGyroSPIRx, &hdmaGyroSPITx, GYRO_RX_DMA, GYRO_TX_DMA, GYRO_SPI_RX_DMA_IRQn, GYRO_SPI_TX_DMA_IRQn);
+
+    if(GYRO_CS_TYPE  == NSS_SOFT)
     {
         HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
     }
@@ -97,13 +102,14 @@ static int gyro_device_detect(void)
 {
     uint8_t attempt, data;
 
+    data = 0;
     // reset gyro
     gyro_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_H_RESET);
     HAL_Delay(80);
     gyro_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_H_RESET);
 
     // poll for the who am i register while device resets
-    for (attempt = 0; attempt < 25; attempt++)
+    for (attempt = 0; attempt < 250; attempt++)
     {
         HAL_Delay(80);
 
@@ -187,6 +193,11 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
     (void)(hspi);
     static int gyroLoopCounter = 0;
 
+    if(GYRO_CS_TYPE  == NSS_SOFT)
+    {
+        HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
+    }
+
     if (gyroLoopCounter-- <= 0)
     {
         //if accDenom is 8, then we should do a switch case for quatenrion math.
@@ -207,36 +218,9 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
 	gyroRateData[2] = ((int16_t)((gyroRxFrame.gyroZ_H << 8) | gyroRxFrame.gyroZ_L)) * gyroRateMultiplier;
 
     //gyro read is completes
+    //if mode passthrough,
 
-}
 
-//todo register callback function
-void imuRxCallback(void)
-{
-    /*
-	gyroData[0] = (int32_t)(int16_t)((gyroRxFrame.gyroX_H << 8) | gyroRxFrame.gyroX_L);
-	gyroData[1] = (int32_t)(int16_t)((gyroRxFrame.gyroY_H << 8) | gyroRxFrame.gyroY_L);
-	gyroData[2] = (int32_t)(int16_t)((gyroRxFrame.gyroZ_H << 8) | gyroRxFrame.gyroZ_L);
-
-    if (deviceWhoAmI == ICM20601_WHO_AM_I)
-        InlineUpdateGyro( gyroData, 0.1219512195121951f ); // 1/8.2 is 0.1219512195121951
-    else
-        InlineUpdateGyro( gyroData, 0.060975609756098f ); // 1/16.4 is 0.060975609756098
-
-        //32,767
-    if (accelUpdate)
-    {
-		accelData[0] = (int32_t)(int16_t)((gyroRxFrame.accelX_H << 8) | gyroRxFrame.accelX_L);
-		accelData[1] = (int32_t)(int16_t)((gyroRxFrame.accelY_H << 8) | gyroRxFrame.accelY_L);
-		accelData[2] = (int32_t)(int16_t)((gyroRxFrame.accelZ_H << 8) | gyroRxFrame.accelZ_L);
-
-        if (deviceWhoAmI == ICM20601_WHO_AM_I)
-            InlineUpdateAcc( accelData, 0.0009765625f); //  1/1024 is 0.0009765625f
-        else
-            InlineUpdateAcc( accelData, 0.00048828125f); //  1/2048 is 0.00048828125f
-
-	}
-    */
 }
 
 static void gyro_device_read(void)
@@ -264,7 +248,7 @@ static uint32_t gyro_write_reg(uint8_t reg, uint8_t data)
 		return 0;
 	}
 
-    if(!GYRO_CS_HARDWARE)
+    if(GYRO_CS_TYPE  == NSS_SOFT)
     {
         HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_RESET);
     }
@@ -274,7 +258,7 @@ static uint32_t gyro_write_reg(uint8_t reg, uint8_t data)
     HAL_SPI_Transmit(&gyroSPIHandle, &reg, 1, 25);
     HAL_SPI_Transmit(&gyroSPIHandle, &data, 1, 25);
 
-    if(!GYRO_CS_HARDWARE)
+    if(GYRO_CS_TYPE  == NSS_SOFT)
     {
         HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
     }
@@ -309,7 +293,7 @@ void writeGyroPin(void)
     // poll until SPI is ready in case of ongoing DMA
     while (HAL_SPI_GetState(&gyroSPIHandle) != HAL_SPI_STATE_READY);
 
-    if(!GYRO_CS_HARDWARE)
+    if(GYRO_CS_TYPE  == NSS_SOFT)
     {
         HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_RESET);
     }
@@ -319,7 +303,7 @@ void hal_spi_gyro_tx_rx(uint8_t reg, uint8_t *data, uint8_t length)
 {
     HAL_SPI_Transmit(&gyroSPIHandle, &reg, 1, 100);
     HAL_SPI_Receive(&gyroSPIHandle, data, length, 100);
-    if(!GYRO_CS_HARDWARE)
+    if(GYRO_CS_TYPE  == NSS_SOFT)
     {
         HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
     }
@@ -351,17 +335,19 @@ static uint32_t gyro_dma_read_write_data(uint8_t *txData, uint8_t *rxData, uint8
     // ensure that both SPI and DMA resources are available, but don't block if they are not
     if (dmaState == HAL_DMA_STATE_READY && spiState == HAL_SPI_STATE_READY)
     {
-        if(!GYRO_CS_HARDWARE)
+        if(GYRO_CS_TYPE  == NSS_SOFT)
         {
             HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_RESET);
         }
 
         HAL_SPI_TransmitReceive_DMA(&gyroSPIHandle, txData, rxData, length);
 
+        debug1++;
         return 1;
     }
     else
     {
+        debug2++;
         return 0;
     }
 }

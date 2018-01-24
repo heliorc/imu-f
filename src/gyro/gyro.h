@@ -1,5 +1,7 @@
 #pragma once
 
+extern volatile uint32_t debug1;
+extern volatile uint32_t debug2;
 
 typedef struct gyroFrame
 {

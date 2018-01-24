@@ -49,11 +49,11 @@ static void run_command(imufCommand_t* command)
 
 void bootloader_start(void)
 {
-    //setup bootloader pin then wait 500 ms
+    //setup bootloader pin then wait 50 ms
     hal_gpio_init_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, GPIO_MODE_INPUT, GPIO_PULLDOWN, 0); 
-    HAL_Delay(500);
-    //If pin is hi, we enter BL mode
-    if ( HAL_GPIO_ReadPin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) == (uint32_t)GPIO_PIN_RESET )
+    HAL_Delay(50);
+    //If boothandler tells us to, or if pin is hi, we enter BL mode
+    if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || HAL_GPIO_ReadPin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) == (uint32_t)GPIO_PIN_RESET )
     {
         //clear buffers
         memset(boardCommSpiRxBuffer, 0, COM_BUFFER_SIZE);   
@@ -79,5 +79,5 @@ void bootloader_spi_callback(SPI_HandleTypeDef *hspi)
     run_command(&newCommand);
     memset(boardCommSpiRxBuffer, 0, COM_BUFFER_SIZE);
     //setup for next DMA transfer
-    HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, COM_BUFFER_SIZE);
+    HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, COM_BUFFER_SIZE);
 }

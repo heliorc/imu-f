@@ -10,9 +10,9 @@ void init_clk(void)
   clocks dividers */
   RCC_ClkInitStruct.ClockType      = RCC_ALL_CLK;
   RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.AHBCLKDivider  = TARGET_AHB_DIV;
+  RCC_ClkInitStruct.APB1CLKDivider = TARGET_APBH1_DIV;
+  RCC_ClkInitStruct.APB2CLKDivider = TARGET_APBH2_DIV;
   HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2);
 }
 

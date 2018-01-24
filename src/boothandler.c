@@ -6,12 +6,11 @@ typedef void (*pFunction)(void);
 static int CheckBootChecksum(void)
 {
     return(BOOT_MAGIC_CHECKSUM == BootChecksum());
-    // return(0);
-    
 }
 
 int BootToAddress(uint32_t address)
 {
+    //do an actual reboot to the right address
     __disable_irq();
     BOOT_MAGIC_CODE = BOOT_MAGIC_WORD;
     BOOT_MAGIC_ADDRESS = address;
@@ -33,15 +32,11 @@ int ClearBootMagic(void)
 unsigned int SetBootChecksum(void)
 {
     return(BOOT_MAGIC_CHECKSUM = BootChecksum());
-    // return(0);
-    
 }
 
 unsigned int BootChecksum(void)
 {
     return(BOOT_MAGIC_CODE + BOOT_MAGIC_ADDRESS + BOOT_MAGIC_COUNTER);
-    // return(0);
-    
 }
 
 int BootHandler(void)
@@ -58,20 +53,21 @@ int BootHandler(void)
         ClearBootMagic();
         return(0);
     }
-    else if (THIS_ADDRESS == (0x08000000))
+    else if (THIS_ADDRESS == (BL_ADDRESS))
     {
-        //Checksum passed and we're in the recovery loader
-        BOOT_MAGIC_COUNTER++; //increment boot counter and set boot Checksum
+        //Checksum passed and we're in the bootloader
+        BOOT_MAGIC_COUNTER++; //increment boot counter and set boot Checksum, we only do this when THIS_ADDRESS is BL_ADDRESS, so it doesn't happen multiple times in a single boot
         SetBootChecksum(); //reset the boot Checksum
 
         if(BOOT_MAGIC_COUNTER > 3)
         {
-            //we're boot looping, clear ram and continue boot as wer're in recovery already
+            //we're boot looping, clear ram and continue boot as we're in recovery already, set BOOT_MAGIC_ADDRESS to BL_ADDRESS to keep bootloader in recovery mode
             ClearBootMagic();
+            BOOT_MAGIC_ADDRESS = BL_ADDRESS; //the boot loader will check this address. If (BOOT_MAGIC_ADDRESS == THIS_ADDRESS), then the recovery loader doesn't continue the boot
+            SetBootChecksum();
             return(0);
         }
     }
-
 
     //Checksum matches, check mem location, if the magic word is set we check if the boot location matches the code location
     if(BOOT_MAGIC_CODE == BOOT_MAGIC_WORD)
@@ -79,12 +75,18 @@ int BootHandler(void)
         if(BOOT_MAGIC_ADDRESS == DFU_ADDRESS)
         {
             //boot to DFU requested, set DFU address, clear RAM and continue app
-            address = DFU_ADDRESS;
+            //this needs to be disabled on the F3, but allowed on the F4
+            #if defined(C3PUBL) || defined(C3PU)
+                address = BL_ADDRESS;  //no DFU allowed on F3
+            #else
+                address = DFU_ADDRESS; //DFU okay on F4 for now
+            #endif
             ClearBootMagic();
         }
         else if ( (BOOT_MAGIC_ADDRESS == 0) || (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) )
         {
             //we're in the right spot, return 0 to continue boot, boot magic is to be cleared in the app
+            //0 is a norma boot to app, which is handled by the bootloader. BOOT_MAGIC_ADDRESS == THIS_ADDRESS means we're in the right spot
             return(0);
         }
         else
@@ -92,6 +94,12 @@ int BootHandler(void)
             //wrong spot, let's reboot to new address, boot magic will clear in app
             address = BOOT_MAGIC_ADDRESS;
         }
+    }
+    else
+    {
+        //checksum is right, but boot magic word is not set, clear boot magic and continue to boot
+        ClearBootMagic();
+        return(0);
     }
 
     //we got here so we need to jump

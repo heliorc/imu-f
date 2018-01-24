@@ -50,15 +50,13 @@ void spi_init(SPI_HandleTypeDef* spiHandle, SPI_TypeDef* instance, uint32_t baud
     spiHandle->Init.FirstBit          = SPI_FIRSTBIT_MSB;
     spiHandle->Init.NSS               = SPI_NSS_SOFT;
     spiHandle->Init.TIMode            = SPI_TIMODE_DISABLE;
-    spiHandle->Init.NSSPMode          = SPI_NSS_PULSE_DISABLE;
-    spiHandle->Init.CRCLength         = SPI_CRC_LENGTH_8BIT;
     init_handle((spiHandle), irqn);
 
-    HAL_NVIC_SetPriority(SPI1_IRQn, irqp, irqsp);
-    HAL_NVIC_EnableIRQ(SPI1_IRQn);
+    HAL_NVIC_SetPriority(irqn, irqp, irqsp);
+    HAL_NVIC_EnableIRQ(irqn);
 }
 
-void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, DMA_HandleTypeDef* hdma_spi_tx, DMA_Channel_TypeDef* rxDmaChannel, DMA_Channel_TypeDef* txDmaChannel)
+void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, DMA_HandleTypeDef* hdma_spi_tx, DMA_Channel_TypeDef* rxDmaChannel, DMA_Channel_TypeDef* txDmaChannel, uint32_t rxDmaIrqn, uint32_t txDmaIrqn)
 {
 
     (*hdma_spi_rx).Instance = rxDmaChannel;
@@ -76,6 +74,9 @@ void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, 
 
     __HAL_LINKDMA(spiHandle,hdmarx,*hdma_spi_rx);
 
+    HAL_NVIC_SetPriority(rxDmaIrqn, 0, 0);
+    HAL_NVIC_EnableIRQ(rxDmaIrqn);
+
     /* SPI3_TX Init */
     (*hdma_spi_tx).Instance = txDmaChannel;
     (*hdma_spi_tx).Init.Direction = DMA_MEMORY_TO_PERIPH;
@@ -92,6 +93,8 @@ void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, 
 
     __HAL_LINKDMA(spiHandle,hdmatx,*hdma_spi_tx);
 
+    HAL_NVIC_SetPriority(txDmaIrqn, 0, 0);
+    HAL_NVIC_EnableIRQ(txDmaIrqn);
 }
 
 void board_comm_spi_irq_callback(void)
