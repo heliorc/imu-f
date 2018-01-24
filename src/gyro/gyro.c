@@ -230,14 +230,14 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
         HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
     }
     //default rateData
-    uint32_t* memptr = (uint32_t*)&filteredData.rateData[0];
+    uint8_t* memptr = (uint8_t*)&filteredData.rateData[0];
 
     if (boardCommState.commMode == GTBCM_GYRO_ONLY_PASSTHRU) 
     {
-        memptr = (uint32_t*)&gyroTxFrame.gyroX_H;
+        memptr = (uint8_t*)&gyroTxFrame.gyroX_H;
     } else if (boardCommState.commMode == GTBCM_GYRO_ACC_PASSTHRU) 
     {
-        memptr = (uint32_t*)&gyroTxFrame.accAddress;
+        memptr = (uint8_t*)&gyroTxFrame.accAddress;
     }
 
     if (boardCommState.commMode == GTBCM_GYRO_ACC_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ONLY_FILTER_F){
