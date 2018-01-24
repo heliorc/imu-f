@@ -3,6 +3,9 @@
 #include "spi.h"
 #include "invensense_register_map.h"
 #include "hal_gpio_init.h"
+#include "fast_kalman.h"
+#include "quaternions.h"
+#include "board_comm.h"
 
 
 volatile uint32_t debug1=0;
@@ -14,7 +17,10 @@ DMA_HandleTypeDef hdmaGyroSPIRx;
 DMA_HandleTypeDef hdmaGyroSPITx;
 
 int skipGyro;
+
 float gyroTempData;
+filteredData_t filteredData;
+
 float gyroAccData[3];
 float gyroRateData[3];
 float gyroRateMultiplier = GYRO_DPS_SCALE_2000;
@@ -37,6 +43,7 @@ static uint32_t gyro_verify_write_reg(uint8_t reg, uint8_t data);
 static uint32_t gyro_read_data(uint8_t reg, uint8_t *data, uint8_t length);
 static uint32_t gyro_slow_read_data(uint8_t reg, uint8_t *data, uint8_t length);
 static uint32_t gyro_dma_read_write_data(uint8_t *txData, uint8_t *rxData, uint8_t length);
+static void gyro_int_to_float(void);
 
 static void gyro_configure(void)
 {
@@ -188,15 +195,10 @@ inline void gyro_exti_callback(void)
     }
 }
 
-void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
+static void gyro_int_to_float(void)
 {
-    (void)(hspi);
-    static int gyroLoopCounter = 0;
 
-    if(GYRO_CS_TYPE  == NSS_SOFT)
-    {
-        HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
-    }
+    static int gyroLoopCounter = 0;
 
     if (gyroLoopCounter-- <= 0)
     {
@@ -217,10 +219,57 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
 	gyroRateData[1] = ((int16_t)((gyroRxFrame.gyroY_H << 8) | gyroRxFrame.gyroY_L)) * gyroRateMultiplier;
 	gyroRateData[2] = ((int16_t)((gyroRxFrame.gyroZ_H << 8) | gyroRxFrame.gyroZ_L)) * gyroRateMultiplier;
 
-    //gyro read is completes
-    //if mode passthrough,
+}
 
+void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
+{
+    (void)(hspi); //we don't care about which handle this is as we only have one gyro
 
+    if(GYRO_CS_TYPE  == NSS_SOFT)
+    {
+        HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
+    }
+
+    //if mode passthrough, tell F4 that data is ready and make sure data is in the right buffer
+    switch(boardCommState.gyroPassMode)
+    {
+        case GTBCM_GYRO_ONLY_PASSTHRU:
+            memcpy(boardCommSpiTxBuffer, &gyroTxFrame.gyroX_H, 6);
+            HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 6);
+            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET);
+        break;
+        case GTBCM_GYRO_ACC_PASSTHRU:
+            memcpy(boardCommSpiTxBuffer, &gyroTxFrame.accAddress, 15);
+            HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 6);
+            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET);
+        break;
+        case GTBCM_GYRO_ONLY_FILTER_F:
+            gyro_int_to_float();
+            filter_data(gyroRateData,gyroAccData,gyroTempData,&filteredData);
+            memcpy(boardCommSpiTxBuffer, &filteredData.rateData[0], 12);
+            HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 12);
+            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET);
+        break;
+        case GTBCM_GYRO_ACC_FILTER_F:
+            gyro_int_to_float();
+            filter_data(gyroRateData,gyroAccData,gyroTempData,&filteredData);
+            memcpy(boardCommSpiTxBuffer, &filteredData.rateData[0], 28);
+            HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 28);
+            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET);
+        break;
+        case GTBCM_GYRO_ACC_QUAT_FILTER_F:
+            gyro_int_to_float();
+            filter_data(gyroRateData,gyroAccData,gyroTempData,&filteredData);
+            generate_quaterions(gyroRateData,gyroAccData,&filteredData);
+            memcpy(boardCommSpiTxBuffer, &filteredData.rateData[0], 44); //3 gyro floats, 1 temp float, 3 acc floats, 4 quat floats
+            HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, 44);
+            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET);
+        break;
+        default:
+            //do nuttin'
+        break;
+    }
+    
 }
 
 static void gyro_device_read(void)

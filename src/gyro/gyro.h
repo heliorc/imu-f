@@ -3,6 +3,14 @@
 extern volatile uint32_t debug1;
 extern volatile uint32_t debug2;
 
+typedef struct filteredData
+{
+    float rateData[3];
+    float accData[3];
+    float tempC;
+    float quaternion[4];
+} __attribute__((__packed__)) filteredData_t;
+
 typedef struct gyroFrame
 {
     uint8_t accAddress;  // needed to start rx/tx transfer when sending address

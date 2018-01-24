@@ -3,6 +3,22 @@
 
 #define COM_BUFFER_SIZE 48
 
+typedef enum gyroToBoardCommMode
+{
+    GTBCM_UNKNOWN                = 0,
+    GTBCM_GYRO_ONLY_PASSTHRU     = 1,
+    GTBCM_GYRO_ACC_PASSTHRU      = 2,
+    GTBCM_GYRO_ONLY_FILTER_F     = 3,
+    GTBCM_GYRO_ACC_FILTER_F      = 4,
+    GTBCM_GYRO_ACC_QUAT_FILTER_F = 5,
+} gyroToBoardCommMode_t;
+
+typedef struct boardCommState {
+   gyroToBoardCommMode_t gyroPassMode;
+   int commEnabled;
+   uint32_t bufferSize;
+} boardCommState_t;
+
 typedef enum 
 {
     NONE = 0,
@@ -37,8 +53,10 @@ typedef struct imufCommand {
 extern SPI_HandleTypeDef boardCommSPIHandle;
 extern DMA_HandleTypeDef hdmaBoardCommSPIRx;
 extern DMA_HandleTypeDef hdmaBoardCommSPITx;
-uint8_t boardCommSpiRxBuffer[COM_BUFFER_SIZE];
-uint8_t boardCommSpiTxBuffer[COM_BUFFER_SIZE];
+extern uint8_t boardCommSpiRxBuffer[COM_BUFFER_SIZE];
+extern uint8_t boardCommSpiTxBuffer[COM_BUFFER_SIZE];
+
+extern volatile boardCommState_t boardCommState;
 
 extern void board_comm_init(void);
 extern void board_comm_callback_function(SPI_HandleTypeDef *hspi);

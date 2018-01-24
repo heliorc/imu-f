@@ -23,6 +23,7 @@
         "arm_math.h": "c",
         "bootloader.h": "c",
         "error_handler.h": "c",
-        "invensense_register_map.h": "c"
+        "invensense_register_map.h": "c",
+        "quaternions.h": "c"
     }
 }

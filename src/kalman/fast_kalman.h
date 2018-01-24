@@ -1,7 +1,6 @@
 #pragma once
 #include "includes.h"
-
-
+#include "gyro.h"
 
 typedef enum filterAxisTypedef
 {
@@ -30,3 +29,4 @@ typedef enum filterTypedef
 
 extern void fastKalmanInit(float q, float r, float p, float intialValue, filterTypedef_t type);
 extern float fastKalmanUpdate(filterAxisTypedef_t axis, float input);
+extern void filter_data(float gyroRateData[],float gyroAccData[],float gyroTempData, filteredData_t* filteredData);

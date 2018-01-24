@@ -1,5 +1,6 @@
 #include <math.h>
 #include "fast_kalman.h"
+#include "gyro.h"
 #include "includes.h"
 
 
@@ -97,4 +98,27 @@ float fastKalmanUpdate(filterAxisTypedef_t axis, float input)
 		filter[axis].gyroDfkfDataPtr=0;
     }
     return filter[axis].x;
+}
+
+void filter_data(float gyroRateData[],float gyroAccData[],float gyroTempData, filteredData_t* filteredData)
+{
+	//what's insie the filteredData_t typedef
+	//float rateData[3];
+    //float accData[3];
+    //float tempC;
+    //float quaternion[4];
+
+	//filter data here
+
+	//set filterData
+	filteredData->rateData[0] = gyroRateData[0];
+	filteredData->rateData[1] = gyroRateData[1];
+	filteredData->rateData[2] = gyroRateData[2];
+
+	filteredData->accData[0]  = gyroAccData[0];
+	filteredData->accData[1]  = gyroAccData[1];
+	filteredData->accData[2]  = gyroAccData[2];
+
+	filteredData->tempC       = gyroTempData;
+
 }
