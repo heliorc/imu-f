@@ -36,6 +36,15 @@ static void run_command(imufCommand_t* command)
         case BL_WRITE_FIRMWARE:
         flash_program_word(command->param1, command->param2);
         break;
+        case BL_WRITE_FIRMWARES:
+        flash_program_word(command->param1, command->param2);
+        flash_program_word(command->param1, command->param3);
+        flash_program_word(command->param1, command->param4);
+        flash_program_word(command->param1, command->param5);
+        flash_program_word(command->param1, command->param6);
+        flash_program_word(command->param1, command->param7);
+        flash_program_word(command->param1, command->param8);
+        break;
         case BL_PREPARE_PROGRAM:
         prepare_flash_for_program();
         break;
@@ -77,7 +86,7 @@ void bootloader_spi_callback(SPI_HandleTypeDef *hspi)
     imufCommand_t newCommand;
     parse_imuf_command(&newCommand, boardCommSpiRxBuffer);
     run_command(&newCommand);
-    memset(boardCommSpiRxBuffer, 0, DEFAULT_COM_SIZE);
+    memset(boardCommSpiRxBuffer, 0, GTBCM_SETUP);
     //setup for next DMA transfer
-    HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, DEFAULT_COM_SIZE);
+    HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, GTBCM_SETUP);
 }

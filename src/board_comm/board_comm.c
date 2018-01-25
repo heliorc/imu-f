@@ -1,6 +1,7 @@
 #include "includes.h"
 #include "spi.h"
 #include "board_comm.h"
+#include "includes.h"
 
 //SPI 3 is for the f4/f3
 SPI_HandleTypeDef boardCommSPIHandle;
@@ -17,7 +18,7 @@ void board_comm_init(void)
     boardCommState.commMode     = GTBCM_SETUP; 
     boardCommState.commEnabled  = 0; 
 
-    //set this pin to high since we're set at the default buffer size of DEFAULT_COM_SIZE
+    //set this pin to high since we're set at the default buffer size of GTBCM_SETUP
     HAL_GPIO_WritePin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, GPIO_PIN_SET);
 
     spiIrqCallbackFunctionArray[BOARD_COMM_SPI_NUM] = board_comm_spi_irq_callback;
@@ -34,15 +35,16 @@ void board_comm_init(void)
     //comm works likes this, each commMode state has  a known size,
     //the Data Rdy pin goes high when the F3 is ready to communicate via SPI
     //the F3 has to know which mode it's in, it does this using 
-    HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, DEFAULT_COM_SIZE);
-    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET); //ready to communicate
+    HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, GTBCM_SETUP);
+    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //ready to communicate
 }
 
 void parse_imuf_command(imufCommand_t* newCommand, uint8_t* buffer){
     //copy received data into command structure
-    memcpy(newCommand, boardCommSpiRxBuffer, sizeof(imufCommand_t));
-    if (!(newCommand->command && newCommand->command == newCommand->crc)){
-        newCommand->command = NONE;
+    memcpy(newCommand, buffer, sizeof(imufCommand_t));
+    if (!(newCommand->command && newCommand->command == newCommand->crc))
+    {
+        newCommand->command = BC_NONE;
     }
 }
 
@@ -50,7 +52,11 @@ static void run_command(imufCommand_t* newCommand)
 {
     switch (newCommand->command)
     {
-        case BC_GYRO_SETUP:
+        case BC_IMUF_REPORT_INFO:
+            memcpy(boardCommSpiTxBuffer, &flightVerson, sizeof(flightVerson));
+            //callback handler will init the spi and pin for transmission
+        break;
+        case BC_IMUF_SETUP:
             boardCommState.commMode   = newCommand->param1;
             boardCommState.bufferSize = newCommand->param2;
 
@@ -71,7 +77,7 @@ void board_comm_callback_function(SPI_HandleTypeDef *hspi)
 {
     imufCommand_t newCommand;
 
-    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
 
     parse_imuf_command(&newCommand, boardCommSpiRxBuffer);
     run_command(&newCommand);
@@ -80,7 +86,9 @@ void board_comm_callback_function(SPI_HandleTypeDef *hspi)
     if(boardCommState.commMode == GTBCM_SETUP)
     {
         //setup next command and notify F4 we're ready to talk
-        HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, DEFAULT_COM_SIZE);
-        HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET); //ready to communicate
+        snprintf(boardCommSpiTxBuffer, 10, "Helio!");
+        HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, GTBCM_SETUP);
+        HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //ready to communicate
     }
+
 }

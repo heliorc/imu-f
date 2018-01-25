@@ -2,11 +2,10 @@
 #include "includes.h"
 
 #define COM_BUFFER_SIZE 48
-#define DEFAULT_COM_SIZE 32
 
 typedef enum gyroToBoardCommMode
 {
-    GTBCM_SETUP                  = 32,
+    GTBCM_SETUP                  = 40,
     GTBCM_GYRO_ONLY_PASSTHRU     = 6,
     GTBCM_GYRO_ACC_PASSTHRU      = 15,
     GTBCM_GYRO_ONLY_FILTER_F     = 12,
@@ -22,24 +21,26 @@ typedef struct boardCommState {
 
 typedef enum 
 {
-    NONE = 0,
-    BC_GYRO_SETUP = 1,
-    BL_ERASE_ALL = 2,
-    // BL_ERASE_PAGE = 2,
-    BL_ERASE_ADDRESS_RANGE = 3,
-    BL_REPORT_INFO = 4,
-    BL_BOOT_TO_APP = 5,
-    BL_BOOT_TO_LOCATION = 6,
-    BL_RESTART = 7,
-    BL_WRITE_FIRMWARE = 8,
-    BL_PREPARE_PROGRAM = 9,
-    BL_END_PROGRAM = 10   
+    BC_NONE                 = 0,
+    BL_ERASE_ALL            = 22,
+    BL_ERASE_ADDRESS_RANGE  = 23,
+    BL_REPORT_INFO          = 24,
+    BL_BOOT_TO_APP          = 25,
+    BL_BOOT_TO_LOCATION     = 26,
+    BL_RESTART              = 27,
+    BL_WRITE_FIRMWARE       = 28,
+    BL_WRITE_FIRMWARES      = 29,
+    BL_PREPARE_PROGRAM      = 30,
+    BL_END_PROGRAM          = 31,
+    BC_IMUF_REPORT_INFO     = 121,
+    BC_IMUF_SETUP           = 122,
+    BC_IMUF_CALIBRATE_START = 123,
+    BC_IMUF_CALIBRATE_END   = 124,
 } imufCommandsList_t;
 
 
 typedef struct imufCommand {
-   uint8_t version;
-   imufCommandsList_t command;
+   uint32_t command;
    uint32_t param1;
    uint32_t param2;
    uint32_t param3;
@@ -48,7 +49,7 @@ typedef struct imufCommand {
    uint32_t param6;
    uint32_t param7;
    uint32_t param8;
-   imufCommandsList_t crc;
+   uint32_t crc;
 } __attribute__ ((__packed__)) imufCommand_t;
 
 extern SPI_HandleTypeDef boardCommSPIHandle;

@@ -10,4 +10,5 @@
 #include "bootloader.h"
 #include "isr_priority.h"
 #include "error_handler.h"
+#include "config.h"
 #include <arm_math.h>

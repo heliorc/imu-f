@@ -146,13 +146,18 @@ void gyro_init(void)
     spiCallbackFunctionArray[GYRO_SPI_NUM] = gyro_rx_complete_callback;
 
     //setup SPI at low speed
-    gyro_spi_setup(SPI_BAUDRATEPRESCALER_32);
+    //ICM20601/2 doesn't need slower SPI for this part.
+    gyro_spi_setup(SPI_BAUDRATEPRESCALER_8);
 
     //reset and configure gyro
     gyro_configure();
 
     //setup SPI again at faster speed
-    gyro_spi_setup(SPI_BAUDRATEPRESCALER_4);
+    //SPI_BAUDRATEPRESCALER_2  = 24
+    //SPI_BAUDRATEPRESCALER_4  = 16
+    //SPI_BAUDRATEPRESCALER_8  = 8
+    //SPI_BAUDRATEPRESCALER_16 = 4
+    gyro_spi_setup(SPI_BAUDRATEPRESCALER_8);
 
     //init gyro external interupt
     gyro_exti_init();
