@@ -20,6 +20,16 @@
                 "-D"
             ],
             "isShellCommand": true
+		},
+        {
+            "taskName": "F3 SING",
+            "command": "python",
+            "args": [
+                "make.py",
+                "-TF3SING",
+                "-D"
+            ],
+            "isShellCommand": true
 		}
     ]
 }

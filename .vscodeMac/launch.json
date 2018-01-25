@@ -19,19 +19,19 @@
                 "monitor sleep 100",
                 "set debug remote 0",
                 "mon version",
-                "file ${workspaceRoot}/output/F3BL.elf",
+                "file ${workspaceRoot}/output/F3.elf",
                 "load",
                 "monitor reset init",
                 "break main"
             ],
-            "gdbpath": "/gcc-arm-none-eabi-6-2017-q1-update/bin/arm-none-eabi-gdb"
+            "gdbpath": "arm-none-eabi-gdb"
         },
         {
-            "name": "F3 C3PU OpenOCD Debug",
-            "preLaunchTask": "F3 C3PU",
+            "name": "F3 SING Debug",
+            "preLaunchTask": "F3 SING",
             "type": "gdb",
             "request": "attach",
-            "executable": "./output/F3.elf",
+            "executable": "./output/F3SING.elf",
             "target": "127.0.0.1:3333",
             "remote": true,
             "cwd": "${workspaceRoot}",
@@ -45,12 +45,12 @@
                 "monitor sleep 100",
                 "set debug remote 0",
                 "mon version",
-                "file ${workspaceRoot}/output/F3.elf",
+                "file ${workspaceRoot}/output/F3SING.elf",
                 "load",
                 "monitor reset init",
                 "break main"
             ],
-            "gdbpath": "/gcc-arm-none-eabi-6-2017-q1-update/bin/arm-none-eabi-gdb"
+            "gdbpath": "arm-none-eabi-gdb"
         }
     ]
 }
