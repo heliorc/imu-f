@@ -167,7 +167,7 @@ void gyro_init(void)
 static void gyro_exti_init(void)
 {
     //setup GPIO for EXTI
-    hal_gpio_init_pin(GYRO_EXTI_PORT, GYRO_EXTI_PIN, GPIO_MODE_IT_RISING, GPIO_PULLDOWN, 0);
+    hal_gpio_init_pin(GYRO_EXTI_PORT, GYRO_EXTI_PIN, GPIO_MODE_IT_RISING, GPIO_PULLUP, 0);
     //EXTI interrupt init
     HAL_NVIC_SetPriority(GYRO_EXTI_IRQn, GYRO_EXTI_ISR_PRE_PRI, GYRO_EXTI_ISR_SUB_PRI);
     HAL_NVIC_EnableIRQ(GYRO_EXTI_IRQn);

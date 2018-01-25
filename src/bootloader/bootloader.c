@@ -59,7 +59,7 @@ static void run_command(imufCommand_t* command)
 void bootloader_start(void)
 {
     //setup bootloader pin then wait 50 ms
-    hal_gpio_init_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, GPIO_MODE_INPUT, GPIO_PULLDOWN, 0); 
+    hal_gpio_init_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, GPIO_MODE_INPUT, GPIO_PULLUP, 0); 
     HAL_Delay(50);
     //If boothandler tells us to, or if pin is hi, we enter BL mode
     if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || HAL_GPIO_ReadPin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) == (uint32_t)GPIO_PIN_RESET )
