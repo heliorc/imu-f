@@ -141,7 +141,7 @@ def configure_target(TARGET):
         os.system("PID=\"$(ps -elf | grep  openocd | grep -v 'grep' | sed -e 's/    / /g' | sed -e 's/   / /g' | sed -e 's/  / /g' | cut -d ' ' -f 3)\";kill $PID")
         os.system("openocd -s /usr/local/share/openocd/scripts -f /usr/local/share/openocd/scripts/interface/stlink-v2.cfg -f /usr/local/share/openocd/scripts/target/stm32f3x.cfg &> redirection &")
 
-    TARGET_DEVICE = "STM32F303xC"
+    TARGET_DEVICE = "STM32F301x8"
     TARGET_PROCESSOR_TYPE = "F3"
 
     DFU_ADDRESS = str(0x1FF00000)

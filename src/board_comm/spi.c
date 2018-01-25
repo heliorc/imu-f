@@ -9,15 +9,16 @@ volatile spi_irq_callback_function_pointer spiIrqCallbackFunctionArray[3] = {0,}
 // this function is called the the SPI transfer is complete. The registered callback function will then be called
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-    if(hspi->Instance == SPI1)
+    /* if(hspi->Instance == SPI1)
     {
 		spiCallbackFunctionArray[0](hspi);
     }
-    else if(hspi->Instance == SPI2)
+    else  */
+    if(hspi->Instance == BOARD_COMM_SPI)
     {
 		spiCallbackFunctionArray[1](hspi);
     }
-    else if(hspi->Instance == SPI3)
+    else if(hspi->Instance == GYRO_SPI)
     {
 		spiCallbackFunctionArray[2](hspi);
     }

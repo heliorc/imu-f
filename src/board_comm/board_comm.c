@@ -86,7 +86,7 @@ void board_comm_callback_function(SPI_HandleTypeDef *hspi)
     if(boardCommState.commMode == GTBCM_SETUP)
     {
         //setup next command and notify F4 we're ready to talk
-        snprintf(boardCommSpiTxBuffer, 10, "Helio!");
+        // snprintf(boardCommSpiTxBuffer, 10, "Helio!");
         HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, GTBCM_SETUP);
         HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //ready to communicate
     }
