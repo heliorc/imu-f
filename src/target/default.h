@@ -18,7 +18,7 @@ enum
 #else
 
     #define TARGET_HSE                      RCC_HSE_BYPASS
-    #define TARGET_PLL_MUL                  RCC_PLL_MUL6
+    #define TARGET_PLL_MUL                  RCC_PLL_MUL7
     #define TARGET_AHB_DIV                  RCC_SYSCLK_DIV1
     #define TARGET_APBH1_DIV                RCC_HCLK_DIV2
     #define TARGET_APBH2_DIV                RCC_HCLK_DIV1

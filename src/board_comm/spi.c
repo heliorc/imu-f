@@ -43,8 +43,16 @@ void spi_init(SPI_HandleTypeDef* spiHandle, SPI_TypeDef* instance, uint32_t baud
     spiHandle->Init.Mode              = spi_mode;
     spiHandle->Init.BaudRatePrescaler = baudscaler;
     spiHandle->Init.Direction         = SPI_DIRECTION_2LINES;
+    if(instance == BOARD_COMM_SPI)
+    {
+    spiHandle->Init.CLKPhase          = SPI_PHASE_1EDGE;
+    spiHandle->Init.CLKPolarity       = SPI_POLARITY_LOW;
+    }
+    else
+    {
     spiHandle->Init.CLKPhase          = SPI_PHASE_2EDGE;
     spiHandle->Init.CLKPolarity       = SPI_POLARITY_HIGH;
+    }
     spiHandle->Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
     spiHandle->Init.CRCPolynomial     = 7;
     spiHandle->Init.DataSize          = SPI_DATASIZE_8BIT;
@@ -66,8 +74,16 @@ void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, 
     (*hdma_spi_rx).Init.MemInc = DMA_MINC_ENABLE;
     (*hdma_spi_rx).Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     (*hdma_spi_rx).Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    (*hdma_spi_rx).Init.Mode = DMA_NORMAL;
-    (*hdma_spi_rx).Init.Priority = DMA_PRIORITY_LOW;
+    if(spiHandle->Instance == BOARD_COMM_SPI)
+    {
+        (*hdma_spi_rx).Init.Mode = DMA_CIRCULAR;
+    }
+    else
+    {
+        (*hdma_spi_rx).Init.Mode = DMA_NORMAL;
+    }
+    
+    (*hdma_spi_rx).Init.Priority = DMA_PRIORITY_HIGH;
     if (HAL_DMA_Init(hdma_spi_rx) != HAL_OK)
     {
         error_handler(SPI_RX_DMA_INIT_FAILIURE);
@@ -75,8 +91,16 @@ void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, 
 
     __HAL_LINKDMA(spiHandle,hdmarx,*hdma_spi_rx);
 
-    HAL_NVIC_SetPriority(rxDmaIrqn, 0, 0);
-    HAL_NVIC_EnableIRQ(rxDmaIrqn);
+    if(spiHandle->Instance == BOARD_COMM_SPI)
+    {
+        HAL_NVIC_SetPriority(rxDmaIrqn, 1, 0);
+        HAL_NVIC_EnableIRQ(rxDmaIrqn);
+    }
+    else
+    {
+        HAL_NVIC_SetPriority(rxDmaIrqn, 1, 2);
+        HAL_NVIC_EnableIRQ(rxDmaIrqn);
+    }
 
     /* SPI3_TX Init */
     (*hdma_spi_tx).Instance = txDmaChannel;
@@ -85,8 +109,15 @@ void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, 
     (*hdma_spi_tx).Init.MemInc = DMA_MINC_ENABLE;
     (*hdma_spi_tx).Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     (*hdma_spi_tx).Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    (*hdma_spi_tx).Init.Mode = DMA_NORMAL;
-    (*hdma_spi_tx).Init.Priority = DMA_PRIORITY_LOW;
+    if(spiHandle->Instance == BOARD_COMM_SPI)
+    {
+        (*hdma_spi_tx).Init.Mode = DMA_CIRCULAR;
+    }
+    else
+    {
+        (*hdma_spi_tx).Init.Mode = DMA_NORMAL;
+    }
+    (*hdma_spi_tx).Init.Priority = DMA_PRIORITY_HIGH;
     if (HAL_DMA_Init(hdma_spi_tx) != HAL_OK)
     {
         error_handler(SPI_TX_DMA_INIT_FAILIURE);
@@ -94,8 +125,16 @@ void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, 
 
     __HAL_LINKDMA(spiHandle,hdmatx,*hdma_spi_tx);
 
-    HAL_NVIC_SetPriority(txDmaIrqn, 0, 0);
-    HAL_NVIC_EnableIRQ(txDmaIrqn);
+    if(spiHandle->Instance == BOARD_COMM_SPI)
+    {
+        HAL_NVIC_SetPriority(txDmaIrqn, 1, 1);
+        HAL_NVIC_EnableIRQ(txDmaIrqn);
+    }
+    else
+    {
+        HAL_NVIC_SetPriority(txDmaIrqn, 1, 3);
+        HAL_NVIC_EnableIRQ(txDmaIrqn);
+    }
 }
 
 void board_comm_spi_irq_callback(void)

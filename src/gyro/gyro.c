@@ -252,9 +252,9 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
         generate_quaterions(&rawRateData,&rawAccData,&filteredData);
     }
 
-    memcpy(boardCommSpiTxBuffer, memptr, boardCommState.commMode);
-    HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, boardCommState.commMode);
-    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET);
+    //memcpy(boardCommSpiTxBuffer, memptr, boardCommState.commMode);
+    //HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, boardCommState.commMode);
+    //HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET);
 }
 
 static void gyro_device_read(void)
