@@ -18,7 +18,12 @@ enum
 #else
 
     #define TARGET_HSE                      RCC_HSE_BYPASS
-    #define TARGET_PLL_MUL                  RCC_PLL_MUL7
+    //#define TARGET_PLL_MUL                  RCC_PLL_MUL10
+    //#define TARGET_AHB_DIV                  RCC_SYSCLK_DIV2
+    //#define TARGET_APBH1_DIV                RCC_HCLK_DIV2
+    //#define TARGET_APBH2_DIV                RCC_HCLK_DIV1
+
+    #define TARGET_PLL_MUL                  RCC_PLL_MUL8
     #define TARGET_AHB_DIV                  RCC_SYSCLK_DIV1
     #define TARGET_APBH1_DIV                RCC_HCLK_DIV2
     #define TARGET_APBH2_DIV                RCC_HCLK_DIV1
@@ -55,8 +60,11 @@ enum
     #define BOARD_COMM_SPI                  SPI2
     #define BOARD_COMM_SPI_NUM              1   //SPI3 = 2, SPI2 = 1, SPI1 = 0,
     #define BOARD_COMM_SPI_IRQn             SPI2_IRQn
+    #define BOARD_COMM_SPI_RST_MSK          RCC_APB1RSTR_SPI2RST
     #define BOARD_COMM_RX_DMA               DMA1_Channel4
     #define BOARD_COMM_TX_DMA               DMA1_Channel5
+    #define BOARD_COMM_RX_DMA_FLAG          DMA_IFCR_CGIF4
+    #define BOARD_COMM_TX_DMA_FLAG          DMA_IFCR_CGIF5
     #define BOARD_COMM_CS_TYPE              NSS_NONE
     #define BOARD_COMM_CS_PIN               GPIO_PIN_9
     #define BOARD_COMM_CS_PORT              GPIOA

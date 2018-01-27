@@ -6,6 +6,7 @@
 #include "target/default.h"
 #include "stm32f3xx.h"
 #include "stm32f3xx_hal_conf.h"
+#include "stm32f3xx_it.h"
 #include "clock.h"
 #include "bootloader.h"
 #include "isr_priority.h"

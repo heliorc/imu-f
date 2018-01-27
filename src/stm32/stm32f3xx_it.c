@@ -41,6 +41,8 @@
 #include "spi.h" //spiIrqCallbackFunctionArray lives here
 #include "gyro.h" //gyro exti callback lives here
 
+int volatile debug[10] = {0,};
+
 //SPI IRQ handlers handled with callback function pointer
 void SPI2_IRQHandler(void)
 {

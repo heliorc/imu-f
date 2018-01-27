@@ -50,4 +50,5 @@ void PendSV_Handler(void);
 void SysTick_Handler(void);
 void USB_LP_CAN_RX0_IRQHandler(void);
 
+extern volatile int debug[];
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

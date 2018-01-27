@@ -25,6 +25,7 @@
         "error_handler.h": "c",
         "invensense_register_map.h": "c",
         "quaternions.h": "c",
-        "adc.h": "c"
+        "adc.h": "c",
+        "stm32f3xx_hal_conf.h": "c"
     }
 }

@@ -5,17 +5,16 @@
 
 typedef enum gyroToBoardCommMode
 {
-    GTBCM_SETUP                  = 40,
-    GTBCM_GYRO_ONLY_PASSTHRU     = 6,
-    GTBCM_GYRO_ACC_PASSTHRU      = 15,
-    GTBCM_GYRO_ONLY_FILTER_F     = 12,
-    GTBCM_GYRO_ACC_FILTER_F      = 28,
-    GTBCM_GYRO_ACC_QUAT_FILTER_F = 44,
+    GTBCM_SETUP                  = 41,
+    GTBCM_GYRO_ONLY_PASSTHRU     = 7,
+    GTBCM_GYRO_ACC_PASSTHRU      = 16,
+    GTBCM_GYRO_ONLY_FILTER_F     = 17,
+    GTBCM_GYRO_ACC_FILTER_F      = 29,
+    GTBCM_GYRO_ACC_QUAT_FILTER_F = 45,
 } gyroToBoardCommMode_t;
 
 typedef struct boardCommState {
-   gyroToBoardCommMode_t commMode;
-   int commEnabled;
+   uint32_t commMode;
    uint32_t bufferSize;
 } boardCommState_t;
 

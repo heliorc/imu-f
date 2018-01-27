@@ -185,6 +185,11 @@ inline void gyro_exti_callback(void)
     //skip gyro read?
     if (!skipGyro)
     {
+        //only let the F4 have a small window to talk
+        if (boardCommState.commMode != GTBCM_SETUP){
+            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
+        }
+
         //read all data all the time, but only update ACC data every X times, handled elsewhere now
         gyro_device_read();
 
@@ -224,6 +229,42 @@ static void gyro_int_to_float(void)
 
 }
 
+void rewind_spi(void)
+{
+    #define SPI_I2S_DMAReq_Tx               ((uint16_t)0x0002)
+    #define SPI_I2S_DMAReq_Rx               ((uint16_t)0x0001)
+    #define DMA_CCR1_EN                     ((uint16_t)0x0001)
+
+    // Clear DMA1 global flags
+    //SET_BIT(DMA1->IFCR, BOARD_COMM_RX_DMA_FLAG);
+    //SET_BIT(DMA1->IFCR, BOARD_COMM_TX_DMA_FLAG);
+
+    // Disable the DMA channels
+    //BOARD_COMM_RX_DMA->CCR &= (uint16_t)(~DMA_CCR1_EN);
+    //BOARD_COMM_TX_DMA->CCR &= (uint16_t)(~DMA_CCR1_EN);
+
+    // Bring back SPI2 DMAs to start of Rx & Tx buffers -
+    // CPAR/CMAR stay the same after disable, no need to
+    // `restore` those.
+   // BOARD_COMM_RX_DMA->CNDTR = COM_BUFFER_SIZE;
+   // BOARD_COMM_TX_DMA->CNDTR = COM_BUFFER_SIZE * 2;
+
+    /* Reset SPI2 (clears TXFIFO). */
+    RCC->APB1RSTR |= BOARD_COMM_SPI_RST_MSK;
+    RCC->APB1RSTR &= ~BOARD_COMM_SPI_RST_MSK;
+
+    /* Reconfigure SPI2. */
+    spi_init(&boardCommSPIHandle, BOARD_COMM_SPI, SPI_BAUDRATEPRESCALER_2, SPI_MODE_SLAVE, BOARD_COMM_SPI_IRQn, BOARD_COMM_SPI_ISR_PRE_PRI, BOARD_COMM_SPI_ISR_SUB_PRI);
+    //spi_dma_init(&boardCommSPIHandle, &hdmaBoardCommSPIRx, &hdmaBoardCommSPITx, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA, BOARD_COMM_SPI_RX_DMA_IRQn, BOARD_COMM_SPI_TX_DMA_IRQn);
+    //HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, COM_BUFFER_SIZE);
+
+    /* Re-enable SPI2 and DMA channels. */
+    //BOARD_COMM_SPI->CR2 |= SPI_I2S_DMAReq_Rx;
+    //BOARD_COMM_RX_DMA->CCR |= DMA_CCR1_EN;
+    //BOARD_COMM_TX_DMA->CCR |= DMA_CCR1_EN;
+    //BOARD_COMM_SPI->CR2 |= SPI_I2S_DMAReq_Rx;
+    //BOARD_COMM_SPI->CR1 |= SPI_CR1_SPE;
+}
 void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
 {
     (void)(hspi); //we don't care about which handle this is as we only have one gyro
@@ -252,9 +293,23 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
         generate_quaterions(&rawRateData,&rawAccData,&filteredData);
     }
 
-    //memcpy(boardCommSpiTxBuffer, memptr, boardCommState.commMode);
-    //HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, boardCommState.commMode);
-    //HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, GPIO_PIN_SET);
+    static int everyOther = 1;
+    if (everyOther-- < 1)
+    {
+        everyOther = 1;
+        if (boardCommState.commMode != GTBCM_SETUP){
+            memcpy(boardCommSpiTxBuffer+1, memptr, boardCommState.commMode);
+            boardCommSpiTxBuffer[0] = 'h';
+            rewind_spi();
+
+            volatile uint32_t check1 = BOARD_COMM_RX_DMA->CNDTR;
+            volatile uint32_t check2 = BOARD_COMM_TX_DMA->CNDTR;
+
+
+            HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, boardCommState.commMode);
+            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
+        }
+    }
 }
 
 static void gyro_device_read(void)

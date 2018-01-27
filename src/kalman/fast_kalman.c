@@ -102,6 +102,17 @@ float fastKalmanUpdate(filterAxisTypedef_t axis, float input)
 
 void filter_data(axisData_t* gyroRateData, axisData_t* gyroAccData,float gyroTempData, filteredData_t* filteredData)
 {
+	static int firstRun = 1;
+
+	if(firstRun)
+	{
+		fastKalmanInit(300.0f, 88.0f, 300.0f, 0.0f, DISTANCE_ESTIMATION);
+	}
+
+	filteredData->rateData.x = fastKalmanUpdate(0, gyroRateData->x);
+	filteredData->rateData.y = fastKalmanUpdate(1, gyroRateData->y);
+	filteredData->rateData.z = fastKalmanUpdate(2, gyroRateData->z);
+
 	//what's insie the filteredData_t typedef
 	//float rateData[3];
     //float accData[3];
@@ -110,15 +121,12 @@ void filter_data(axisData_t* gyroRateData, axisData_t* gyroAccData,float gyroTem
 
 	//filter data here
 
-	//set filterData
-	filteredData->rateData.x = gyroRateData->x;
-	filteredData->rateData.y = gyroRateData->y;
-	filteredData->rateData.z = gyroRateData->z;
-
+	//no need to filter ACC is used in quaternions
 	filteredData->accData.x  = gyroAccData->x;
 	filteredData->accData.y  = gyroAccData->y;
 	filteredData->accData.z  = gyroAccData->z;
 
+	//should filter this
 	filteredData->tempC       = gyroTempData;
 
 }

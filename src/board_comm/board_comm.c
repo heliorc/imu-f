@@ -2,6 +2,7 @@
 #include "spi.h"
 #include "board_comm.h"
 #include "includes.h"
+#include "boothandler.h"
 
 #define simpleDelay_ASM(us) do {\
 	asm volatile (	"MOV R0,%[loops]\n\t"\
@@ -12,7 +13,7 @@
 		      );\
 } while(0)
 
-
+volatile int saActive;
 //SPI 3 is for the f4/f3
 SPI_HandleTypeDef boardCommSPIHandle;
 DMA_HandleTypeDef hdmaBoardCommSPIRx;
@@ -24,9 +25,11 @@ volatile boardCommState_t boardCommState;
 
 void board_comm_init(void) 
 {
+    saActive = 0;
     //default states for boardCommState
     boardCommState.commMode     = GTBCM_SETUP; 
-    boardCommState.commEnabled  = 0; 
+    boardCommState.commMode     = GTBCM_GYRO_ACC_FILTER_F; //testing
+    
 
     //set this pin to high since we're set at the default buffer size of GTBCM_SETUP
     HAL_GPIO_WritePin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, 1);
@@ -46,38 +49,75 @@ void board_comm_init(void)
     //the Data Rdy pin goes high when the F3 is ready to communicate via SPI
     //the F3 has to know which mode it's in, it does this using 
     memset(boardCommSpiTxBuffer, 0, COM_BUFFER_SIZE);
-    snprintf((char *)boardCommSpiTxBuffer, 10, "Helios!");
-    HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, GTBCM_SETUP+1);
-    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //ready to communicate
+    snprintf((char *)boardCommSpiTxBuffer, 10, "Helio!");
+    HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, COM_BUFFER_SIZE);
+    //HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //ready to communicate
 }
 
 void parse_imuf_command(imufCommand_t* newCommand, uint8_t* buffer){
     //copy received data into command structure
-    memcpy(newCommand, buffer, sizeof(imufCommand_t));
-    if (!(newCommand->command && newCommand->command == newCommand->crc))
+    if(buffer[0] == 'h')
     {
-        newCommand->command = BC_NONE;
+        memcpy(newCommand, buffer+1, sizeof(imufCommand_t));
+        if (!(newCommand->command && newCommand->command == newCommand->crc))
+        {
+            newCommand->command = BC_NONE;
+        }
     }
 }
 
 static void run_command(imufCommand_t* newCommand)
 {
+    int validCommand = 0;
     switch (newCommand->command)
     {
+        case 128:
+            if (
+                (boardCommSpiTxBuffer[1] == 13) &&
+                (boardCommSpiTxBuffer[2] == 13) &&
+                (boardCommSpiTxBuffer[3] == 13) &&
+                (boardCommSpiTxBuffer[4] == 13) &&
+                (boardCommSpiTxBuffer[5] == 13) &&
+                (boardCommSpiTxBuffer[6] == 13)
+            )
+            {
+                BootToAddress(THIS_ADDRESS);
+            }
+            //callback handler will init the spi and pin for transmission
+        break;
         case BC_IMUF_REPORT_INFO:
-            memcpy(boardCommSpiTxBuffer, &flightVerson, sizeof(flightVerson));
+            boardCommSpiTxBuffer[0] = 'h';
+            memcpy(boardCommSpiTxBuffer+1, &flightVerson, sizeof(flightVerson));
             //callback handler will init the spi and pin for transmission
         break;
         case BC_IMUF_SETUP:
-            boardCommState.commMode   = newCommand->param1;
-            boardCommState.bufferSize = newCommand->param2;
+            validCommand = 1;
 
             //todo: validate params
-            if(boardCommState.commMode != GTBCM_SETUP)
+            if(validCommand)
             {
-                HAL_GPIO_WritePin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, GPIO_PIN_RESET); //buffer size  is now set by ""
-                boardCommState.commEnabled = 1; //if settings are valid we do this, else return an error
-                //gyro will now handle communication
+                //let's pretend the f4 sent this for now
+                newCommand->param1 = GTBCM_GYRO_ONLY_FILTER_F; //f4 sends one extra byte so we can keep sync
+
+                boardCommSpiTxBuffer[0] = 'h';
+                boardCommSpiTxBuffer[1] = 'o';
+                boardCommSpiTxBuffer[2] = 'k';
+                HAL_StatusTypeDef check = HAL_TIMEOUT;
+                check = HAL_SPI_TransmitReceive(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, GTBCM_SETUP, 100);
+                if (check == HAL_OK)
+                {
+                    //message succsessfully sent to F4, switch to new comm mode now
+                    boardCommState.commMode   = newCommand->param1-1;
+                    boardCommState.bufferSize = newCommand->param1-1;
+                    HAL_GPIO_WritePin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, GPIO_PIN_RESET); //buffer size  is now set by ""
+                    //gyro will now handle communication
+                }
+            }
+            else
+            {
+                boardCommSpiTxBuffer[0] = 'h';
+                boardCommSpiTxBuffer[1] = 'n';
+                boardCommSpiTxBuffer[2] = 'o';
             }
         break;
         default:
@@ -89,73 +129,37 @@ void syncHandler(void)
 {
     if(boardCommSpiRxBuffer[0] != 'h')
     {
-        volatile uint32_t huh1 = BOARD_COMM_SPI->CR1;
-        volatile uint32_t huh2 = BOARD_COMM_SPI->CR2;
-        volatile uint32_t huh3 = BOARD_COMM_SPI->SR;
-        volatile uint32_t huh4 = BOARD_COMM_SPI->DR;
-
-        volatile uint16_t cat1 = boardCommSPIHandle.TxXferSize;
-        volatile uint16_t cat2 = boardCommSPIHandle.TxXferCount;
-
+        saActive = 1;
+        HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
         //boardCommSPIHandle.TxXferCount.hdmatx.
-        HAL_SPI_DeInit(&boardCommSPIHandle);
         simpleDelay_ASM(150);
-        HAL_SPI_Init(&boardCommSPIHandle);
-        HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, GTBCM_SETUP+1);
     }
+    saActive = 0;
 }
 
 void board_comm_callback_function(SPI_HandleTypeDef *hspi)
 {
     imufCommand_t newCommand;
 
+    if(saActive)
+        return;
+
     HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
 
     //syncHandler();
-    //memset(boardCommSpiRxBuffer, 0, sizeof(boardCommSpiRxBuffer));
     parse_imuf_command(&newCommand, boardCommSpiRxBuffer);
+    memset(boardCommSpiRxBuffer, 0, sizeof(boardCommSpiRxBuffer));
     //snprintf((char *)boardCommSpiTxBuffer, 10, "Helios!");
-    //run_command(&newCommand);
+    run_command(&newCommand);
 
     if(boardCommState.commMode == GTBCM_SETUP)
     {
-        simpleDelay_ASM(10);
+        simpleDelay_ASM(3);
         //setup next command and notify F4 we're ready to talk
-        //HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, GTBCM_SETUP-1);
+        //HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, GTBCM_SETUP);
         HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //ready to communicate
     }
 
-}
-
-void HAL_SPI_TxRxHalfCpltCallback(SPI_HandleTypeDef *hspi)
-{
-    /* if(hspi->Instance == SPI1)
-    {
-		spiCallbackFunctionArray[0](hspi);
-    }
-    else  */
-    if(hspi->Instance == BOARD_COMM_SPI)
-    {
-		volatile int poof = 1;
-        if(boardCommSpiRxBuffer[0] != 'h')
-        {
-            for(int x=0;x<41;x++)
-            {
-                if(boardCommSpiRxBuffer[x] == 'h')
-                {
-                    uint8_t temp[41];
-                    memcpy(temp+x, boardCommSpiTxBuffer, x-41);
-                    memcpy(temp, boardCommSpiTxBuffer+x, 41-x);
-                    memcpy(boardCommSpiTxBuffer, temp+x, 41);
-                }
-            }
-        }
-        
-    }
-    else if(hspi->Instance == GYRO_SPI)
-    {
-		volatile int pood = 1;
-    }
 }
 
 

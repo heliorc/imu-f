@@ -19,6 +19,7 @@ int main(void)
 {
     //init board
     board_init();
+    set_version();
     //init gyro and its spi
     gyro_init();
 
