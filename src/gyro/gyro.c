@@ -286,7 +286,7 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
 
     if (boardCommState.commMode == GTBCM_GYRO_ACC_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ONLY_FILTER_F){
         gyro_int_to_float();
-        filter_data(&rawRateData,&rawAccData,gyroTempData,&filteredData);
+        filter_data(&rawRateData,&rawAccData,gyroTempData,&filteredData); //profile: this takes 2.45us to run with O3 optimization
     }
 
     if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F){
@@ -298,16 +298,19 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
     {
         everyOther = 1;
         if (boardCommState.commMode != GTBCM_SETUP){
-            memcpy(boardCommSpiTxBuffer+1, memptr, boardCommState.commMode);
+
+            //this line is no good, we need to add the flags to the data structure
+            memcpy(boardCommSpiTxBuffer+1, memptr, boardCommState.commMode); //profile: this takes 3.84us to run with O3 optimization
             boardCommSpiTxBuffer[0] = 'h';
-            rewind_spi();
 
-            volatile uint32_t check1 = BOARD_COMM_RX_DMA->CNDTR;
-            volatile uint32_t check2 = BOARD_COMM_TX_DMA->CNDTR;
+            //profile:
+            //HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
+            //HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
 
-
-            HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, boardCommState.commMode);
+            rewind_spi(); //profile: this takes 1.35us to run with O3 optimization
+            HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, boardCommState.commMode); //profile: this takes 2.14us to run with O3 optimization
             HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
+
         }
     }
 }
