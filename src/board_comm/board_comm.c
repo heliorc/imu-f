@@ -1,4 +1,5 @@
 #include "includes.h"
+#include "gyro.h"
 #include "spi.h"
 #include "board_comm.h"
 #include "includes.h"
@@ -22,6 +23,8 @@ uint8_t boardCommSpiRxBuffer[COM_BUFFER_SIZE];
 uint8_t boardCommSpiTxBuffer[COM_BUFFER_SIZE];
 
 volatile boardCommState_t boardCommState;
+
+static void run_command(imufCommand_t* newCommand);
 
 void board_comm_init(void) 
 {
@@ -48,8 +51,8 @@ void board_comm_init(void)
     //comm works likes this, each commMode state has  a known size,
     //the Data Rdy pin goes high when the F3 is ready to communicate via SPI
     //the F3 has to know which mode it's in, it does this using 
+    memset(boardCommSpiRxBuffer, 0, COM_BUFFER_SIZE);
     memset(boardCommSpiTxBuffer, 0, COM_BUFFER_SIZE);
-    snprintf((char *)boardCommSpiTxBuffer, 10, "Helio!");
     HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, COM_BUFFER_SIZE);
     //HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //ready to communicate
 }
@@ -58,10 +61,23 @@ void parse_imuf_command(imufCommand_t* newCommand, uint8_t* buffer){
     //copy received data into command structure
     if(buffer[0] == 'h')
     {
-        memcpy(newCommand, buffer+1, sizeof(imufCommand_t));
+        if(buffer[0] == 'h' && buffer[1] == BC_IMUF_CALIBRATE && buffer[2] == BC_IMUF_CALIBRATE)
+        {
+            //runtime commands are different
+            newCommand->command = BC_IMUF_CALIBRATE;
+            newCommand->crc = BC_IMUF_CALIBRATE;
+        }
+        else
+        {
+            memcpy(newCommand, buffer+1, sizeof(imufCommand_t));
+        }
         if (!(newCommand->command && newCommand->command == newCommand->crc))
         {
             newCommand->command = BC_NONE;
+        }
+        else
+        {
+            run_command(newCommand);
         }
     }
 }
@@ -71,19 +87,12 @@ static void run_command(imufCommand_t* newCommand)
     int validCommand = 0;
     switch (newCommand->command)
     {
-        case 128:
-            if (
-                (boardCommSpiTxBuffer[1] == 13) &&
-                (boardCommSpiTxBuffer[2] == 13) &&
-                (boardCommSpiTxBuffer[3] == 13) &&
-                (boardCommSpiTxBuffer[4] == 13) &&
-                (boardCommSpiTxBuffer[5] == 13) &&
-                (boardCommSpiTxBuffer[6] == 13)
-            )
-            {
-                BootToAddress(THIS_ADDRESS);
-            }
-            //callback handler will init the spi and pin for transmission
+        case BC_IMUF_RESTART:
+            BootToAddress(THIS_ADDRESS);
+        break;
+        case BC_IMUF_CALIBRATE:
+            //might be good to make sure we're not flying when we run this command
+            calibratingGyro=1;
         break;
         case BC_IMUF_REPORT_INFO:
             boardCommSpiTxBuffer[0] = 'h';
@@ -92,7 +101,6 @@ static void run_command(imufCommand_t* newCommand)
         break;
         case BC_IMUF_SETUP:
             validCommand = 1;
-
             //todo: validate params
             if(validCommand)
             {
@@ -125,18 +133,6 @@ static void run_command(imufCommand_t* newCommand)
     }
 }
 
-void syncHandler(void)
-{
-    if(boardCommSpiRxBuffer[0] != 'h')
-    {
-        saActive = 1;
-        HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
-        //boardCommSPIHandle.TxXferCount.hdmatx.
-        simpleDelay_ASM(150);
-    }
-    saActive = 0;
-}
-
 void board_comm_callback_function(SPI_HandleTypeDef *hspi)
 {
     imufCommand_t newCommand;
@@ -146,11 +142,7 @@ void board_comm_callback_function(SPI_HandleTypeDef *hspi)
 
     HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
 
-    //syncHandler();
     parse_imuf_command(&newCommand, boardCommSpiRxBuffer);
-    memset(boardCommSpiRxBuffer, 0, sizeof(boardCommSpiRxBuffer));
-    //snprintf((char *)boardCommSpiTxBuffer, 10, "Helios!");
-    run_command(&newCommand);
 
     if(boardCommState.commMode == GTBCM_SETUP)
     {

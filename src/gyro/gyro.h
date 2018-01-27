@@ -54,6 +54,12 @@ typedef struct gyro_data {
 #define GYRO_DPS_SCALE_2000 0.060975609756098f
 #define ACC_DPS_SCALE_2000 0.00048828125f
 
+#define CALIBRATION_CYCLES 1900
+
+extern volatile int calibratingGyro;
+extern volatile axisData_t gyroSum;
+extern volatile axisData_t gyroCalibrationTrim;
+
 extern SPI_HandleTypeDef gyroSPIHandle;
 extern DMA_HandleTypeDef hdmaGyroSPIRx;
 extern DMA_HandleTypeDef hdmaGyroSPITx;

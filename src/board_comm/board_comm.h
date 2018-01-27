@@ -31,10 +31,10 @@ typedef enum
     BL_WRITE_FIRMWARES      = 29,
     BL_PREPARE_PROGRAM      = 30,
     BL_END_PROGRAM          = 31,
+    BC_IMUF_CALIBRATE       = 99,
     BC_IMUF_REPORT_INFO     = 121,
     BC_IMUF_SETUP           = 122,
-    BC_IMUF_CALIBRATE_START = 123,
-    BC_IMUF_CALIBRATE_END   = 124,
+    BC_IMUF_RESTART         = 127,
 } imufCommandsList_t;
 
 

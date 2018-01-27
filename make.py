@@ -162,7 +162,7 @@ def configure_target(TARGET):
         os.path.join("src", "bootloader"),
         os.path.join("src", "gpio"),
         os.path.join("src", "gyro"),
-        os.path.join("src", "kalman"),
+        os.path.join("src", "filter"),
         os.path.join("src", "quaternions"),
         os.path.join("src", "report"),
         os.path.join("src", "board_comm"),
@@ -178,7 +178,7 @@ def configure_target(TARGET):
         os.path.join("src", "bootloader"),
         os.path.join("src", "gpio"),
         os.path.join("src", "gyro"),
-        os.path.join("src", "kalman"),
+        os.path.join("src", "filter"),
         os.path.join("src", "quaternions"),
         os.path.join("src", "report"),
         os.path.join("src", "board_comm"),
@@ -228,7 +228,7 @@ def configure_target(TARGET):
     INCLUDES = " -I" + " -I".join(INCLUDE_DIRS)
 
     LTO_FLAGS = "-flto -fuse-linker-plugin"
-    DEBUG_FLAGS = "-ggdb3 -DDEBUG -O3"
+    DEBUG_FLAGS = "-ggdb3 -DDEBUG -Og"
 
     CFLAGS = " ".join([
         ARCH_FLAGS,

@@ -4,7 +4,7 @@
 #include "includes.h"
 
 
-fastKalman_t filter[3];
+fastKalman_t fastKalmanFilterStateRate[3];
 filterTypedef_t filterType;
 
 void initFilter(fastKalman_t *filter, float q, float r, float p, float intialValue) {
@@ -17,12 +17,12 @@ void initFilter(fastKalman_t *filter, float q, float r, float p, float intialVal
     filter->gyroDfkfDataPtr = 0;  
 }
 
-void fastKalmanInit(float q, float r, float p, float intialValue, filterTypedef_t type)
+void fast_kalman_init(float q, float r, float p, float intialValue, filterTypedef_t type)
 {
     filterType = type;
-	initFilter(&filter[0], q, r, p, intialValue);
-	initFilter(&filter[1], q, r, p, intialValue);
-	initFilter(&filter[2], q, r, p, intialValue);
+	initFilter(&fastKalmanFilterStateRate[0], q, r, p, intialValue);
+	initFilter(&fastKalmanFilterStateRate[1], q, r, p, intialValue);
+	initFilter(&fastKalmanFilterStateRate[2], q, r, p, intialValue);
 }
 
 
@@ -61,7 +61,7 @@ float distanceEstimate(float data[], uint32_t size)
 	return (range * 0.001f);
 }
 
-static void _fastKalmanUpdate(fastKalman_t *axisFilter, float input)
+static void _fast_kalman_pdate(fastKalman_t *axisFilter, float input)
 {
     //project the state ahead using acceleration
     axisFilter->x += (axisFilter->x - axisFilter->lastX);
@@ -80,53 +80,22 @@ static void _fastKalmanUpdate(fastKalman_t *axisFilter, float input)
 
 //for(int x=2;x>=0;x--)
 //{
-//	fastKalmanUpdate(&filter[x], input[x]);
+//	fast_kalman_pdate(&filter[x], input[x]);
 //}
 
-float fastKalmanUpdate(filterAxisTypedef_t axis, float input)
+float fast_kalman_pdate(filterAxisTypedef_t axis, float input)
 {
     if (filterType == STD_DEV_ESTIMATION) {
-        filter[axis].r = noiseEstimate(filter[axis].gyroDfkfData, 6);
+        fastKalmanFilterStateRate[axis].r = noiseEstimate(fastKalmanFilterStateRate[axis].gyroDfkfData, 6);
     } else if (filterType == DISTANCE_ESTIMATION) {
-        filter[axis].r = distanceEstimate(filter[axis].gyroDfkfData, 6);
+        fastKalmanFilterStateRate[axis].r = distanceEstimate(fastKalmanFilterStateRate[axis].gyroDfkfData, 6);
     } 
-    filter[axis].gyroDfkfData[filter[axis].gyroDfkfDataPtr] = input;
-    _fastKalmanUpdate(&filter[axis], input);
-    filter[axis].gyroDfkfDataPtr++;
-	if (filter[axis].gyroDfkfDataPtr > 5)
+    fastKalmanFilterStateRate[axis].gyroDfkfData[fastKalmanFilterStateRate[axis].gyroDfkfDataPtr] = input;
+    _fast_kalman_pdate(&fastKalmanFilterStateRate[axis], input);
+    fastKalmanFilterStateRate[axis].gyroDfkfDataPtr++;
+	if (fastKalmanFilterStateRate[axis].gyroDfkfDataPtr > 5)
     {
-		filter[axis].gyroDfkfDataPtr=0;
+		fastKalmanFilterStateRate[axis].gyroDfkfDataPtr=0;
     }
-    return filter[axis].x;
-}
-
-void filter_data(axisData_t* gyroRateData, axisData_t* gyroAccData,float gyroTempData, filteredData_t* filteredData)
-{
-	static int firstRun = 1;
-
-	if(firstRun)
-	{
-		fastKalmanInit(300.0f, 88.0f, 300.0f, 0.0f, DISTANCE_ESTIMATION);
-	}
-
-	filteredData->rateData.x = fastKalmanUpdate(0, gyroRateData->x);
-	filteredData->rateData.y = fastKalmanUpdate(1, gyroRateData->y);
-	filteredData->rateData.z = fastKalmanUpdate(2, gyroRateData->z);
-
-	//what's insie the filteredData_t typedef
-	//float rateData[3];
-    //float accData[3];
-    //float tempC;
-    //float quaternion[4];
-
-	//filter data here
-
-	//no need to filter ACC is used in quaternions
-	filteredData->accData.x  = gyroAccData->x;
-	filteredData->accData.y  = gyroAccData->y;
-	filteredData->accData.z  = gyroAccData->z;
-
-	//should filter this
-	filteredData->tempC       = gyroTempData;
-
+    return fastKalmanFilterStateRate[axis].x;
 }

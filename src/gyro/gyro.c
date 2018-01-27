@@ -11,6 +11,10 @@
 volatile uint32_t debug1=0;
 volatile uint32_t debug2=0;
 
+volatile int calibratingGyro;
+volatile axisData_t gyroSum;
+volatile axisData_t gyroCalibrationTrim;
+
 //SPI 2 is for the gyro
 SPI_HandleTypeDef gyroSPIHandle;
 DMA_HandleTypeDef hdmaGyroSPIRx;
@@ -142,6 +146,12 @@ void gyro_init(void)
     skipGyro = 0;
     gyroTempData = 0;
 
+    gyroSum.x = 0.0f;
+    gyroSum.y = 0.0f;
+    gyroSum.z = 0.0f;
+
+    calibratingGyro = 0;
+
     spiIrqCallbackFunctionArray[GYRO_SPI_NUM] = gyro_spi_irq_callback;
     spiCallbackFunctionArray[GYRO_SPI_NUM] = gyro_rx_complete_callback;
 
@@ -157,7 +167,7 @@ void gyro_init(void)
     //SPI_BAUDRATEPRESCALER_4  = 16
     //SPI_BAUDRATEPRESCALER_8  = 8
     //SPI_BAUDRATEPRESCALER_16 = 4
-    gyro_spi_setup(SPI_BAUDRATEPRESCALER_8);
+    gyro_spi_setup(SPI_BAUDRATEPRESCALER_4);
 
     //init gyro external interupt
     gyro_exti_init();
@@ -185,10 +195,6 @@ inline void gyro_exti_callback(void)
     //skip gyro read?
     if (!skipGyro)
     {
-        //only let the F4 have a small window to talk
-        if (boardCommState.commMode != GTBCM_SETUP){
-            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
-        }
 
         //read all data all the time, but only update ACC data every X times, handled elsewhere now
         gyro_device_read();
@@ -206,6 +212,7 @@ inline void gyro_exti_callback(void)
 static void gyro_int_to_float(void)
 {
 
+    static uint32_t gyroCalibrationCycles = 0;
     static int gyroLoopCounter = 0;
 
     if (gyroLoopCounter-- <= 0)
@@ -223,9 +230,31 @@ static void gyro_int_to_float(void)
         //gyroTempMultiplier is gyro temp in C
     }
 
-    rawRateData.x = ((int16_t)((gyroRxFrame.gyroX_H << 8) | gyroRxFrame.gyroX_L)) * gyroRateMultiplier;
-	rawRateData.y = ((int16_t)((gyroRxFrame.gyroY_H << 8) | gyroRxFrame.gyroY_L)) * gyroRateMultiplier;
-	rawRateData.z = ((int16_t)((gyroRxFrame.gyroZ_H << 8) | gyroRxFrame.gyroZ_L)) * gyroRateMultiplier;
+    //doing in real time, might be better to move this to the main loop for processing, but we need to make sure it's done right
+    if (calibratingGyro)
+    {
+        if(gyroCalibrationCycles < CALIBRATION_CYCLES) //limit how many cycles we allow for calibration to minimize float error
+        {
+            gyroCalibrationCycles++;
+            gyroSum.x += rawRateData.x;
+            gyroSum.y += rawRateData.y;
+            gyroSum.z += rawRateData.z;
+
+        }
+        else
+        {
+            gyroCalibrationTrim.x = -gyroSum.x / (float)gyroCalibrationCycles;
+            gyroCalibrationTrim.y = -gyroSum.y / (float)gyroCalibrationCycles;
+            gyroCalibrationTrim.z = -gyroSum.z / (float)gyroCalibrationCycles;
+            calibratingGyro = 0; //calibration done, set to zero and calibration data will apear in next cycle.
+            gyroCalibrationCycles = 0;
+        }
+    }
+
+    //f*f+f is one operation on FPU
+    rawRateData.x = (float)((int16_t)((gyroRxFrame.gyroX_H << 8) | gyroRxFrame.gyroX_L)) * gyroRateMultiplier + gyroCalibrationTrim.x;
+	rawRateData.y = (float)((int16_t)((gyroRxFrame.gyroY_H << 8) | gyroRxFrame.gyroY_L)) * gyroRateMultiplier + gyroCalibrationTrim.y;
+	rawRateData.z = (float)((int16_t)((gyroRxFrame.gyroZ_H << 8) | gyroRxFrame.gyroZ_L)) * gyroRateMultiplier + gyroCalibrationTrim.z;
 
 }
 
@@ -286,17 +315,22 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
 
     if (boardCommState.commMode == GTBCM_GYRO_ACC_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ONLY_FILTER_F){
         gyro_int_to_float();
-        filter_data(&rawRateData,&rawAccData,gyroTempData,&filteredData); //profile: this takes 2.45us to run with O3 optimization
+        filter_data(&rawRateData,&rawAccData,gyroTempData,&filteredData); //profile: this takes 2.45us to run with O3 optimization, before adding biquad at least
     }
 
     if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F){
+        //set flags and do quats in main loop
         generate_quaterions(&rawRateData,&rawAccData,&filteredData);
     }
 
     static int everyOther = 1;
     if (everyOther-- < 1)
     {
+        #ifdef DEBUG
+        everyOther = 4;
+        #else
         everyOther = 1;
+        #endif
         if (boardCommState.commMode != GTBCM_SETUP){
 
             //this line is no good, we need to add the flags to the data structure
@@ -308,8 +342,12 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
             //HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
 
             rewind_spi(); //profile: this takes 1.35us to run with O3 optimization
-            HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, boardCommState.commMode); //profile: this takes 2.14us to run with O3 optimization
-            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
+            if (HAL_SPI_GetState(&boardCommSPIHandle) == HAL_SPI_STATE_READY)
+            {
+                HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, boardCommState.commMode); //profile: this takes 2.14us to run with O3 optimization
+                HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
+                HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
+            }
 
         }
     }
