@@ -61,5 +61,6 @@ extern volatile boardCommState_t boardCommState;
 
 extern void board_comm_init(void);
 extern void board_comm_callback_function(SPI_HandleTypeDef *hspi);
-extern void parse_imuf_command(imufCommand_t* newCommand, uint8_t* buffer);
+extern int parse_imuf_command(imufCommand_t* newCommand, uint8_t* buffer);
 extern void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi);
+extern void rewind_board_comm_spi(void);

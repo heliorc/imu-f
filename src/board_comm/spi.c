@@ -150,12 +150,6 @@ void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, 
     }
 }
 
-void board_comm_spi_irq_callback(void)
-{
-    //irq handler
-    HAL_SPI_IRQHandler(&boardCommSPIHandle);
-}
-
 void gyro_spi_irq_callback(void)
 {
     //irq handler
