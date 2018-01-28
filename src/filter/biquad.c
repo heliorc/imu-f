@@ -1,6 +1,5 @@
 #include "includes.h"
 #include "biquad.h"
-#include <math.h>
 
 biquad_state_t lpfFilterStateRate[3];
 

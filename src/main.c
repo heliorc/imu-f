@@ -4,6 +4,7 @@
 #include "board_comm.h"
 #include "spi.h"
 #include "adc.h"
+#include "imu.h"
 
 #ifdef C3PUBL
 int main(void)
@@ -20,6 +21,8 @@ int main(void)
     //init board
     board_init();
     set_version();
+    //init imu
+    init_imu();
     //init gyro and its spi
     gyro_init();
 
@@ -32,6 +35,9 @@ int main(void)
     while(1)
     {
         //what do we do in main loop, or do we keep everthing event based?
+
+        //low prioirty stuff in main loop. 
+        update_quaternions(); //We have 8 gyro cycles to do this in and it should only take one
     }
 }
 #endif

@@ -1,4 +1,3 @@
-#include <math.h>
 #include "fast_kalman.h"
 #include "gyro.h"
 #include "includes.h"
@@ -22,9 +21,8 @@ void fast_kalman_init(float q, float r, float p, float intialValue, filterTypede
     filterType = type;
 	initFilter(&fastKalmanFilterStateRate[0], q, r, p, intialValue);
 	initFilter(&fastKalmanFilterStateRate[1], q, r, p, intialValue);
-	initFilter(&fastKalmanFilterStateRate[2], q, r, p, intialValue);
+	initFilter(&fastKalmanFilterStateRate[2], q * 0.5f, r, p, intialValue);
 }
-
 
 float noiseEstimate(float data[], uint32_t size)
 {
@@ -77,11 +75,6 @@ static void _fast_kalman_pdate(fastKalman_t *axisFilter, float input)
 	axisFilter->x += axisFilter->k * (input - axisFilter->x);
 	axisFilter->p = (1.0f - axisFilter->k) * axisFilter->p;
 }
-
-//for(int x=2;x>=0;x--)
-//{
-//	fast_kalman_pdate(&filter[x], input[x]);
-//}
 
 float fast_kalman_pdate(filterAxisTypedef_t axis, float input)
 {

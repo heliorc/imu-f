@@ -4,7 +4,7 @@
 #include "invensense_register_map.h"
 #include "hal_gpio_init.h"
 #include "fast_kalman.h"
-#include "quaternions.h"
+#include "imu.h"
 #include "board_comm.h"
 
 
@@ -296,6 +296,8 @@ void rewind_spi(void)
 }
 void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
 {
+    uint32_t accTracker = 7; //start at 7, so 8 is run first
+    uint32_t quatBufferNum = 0; //start working on this buffer
     (void)(hspi); //we don't care about which handle this is as we only have one gyro
 
     if(GYRO_CS_TYPE  == NSS_SOFT)
@@ -313,14 +315,54 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
         memptr = (uint8_t*)&gyroTxFrame.accAddress;
     }
 
-    if (boardCommState.commMode == GTBCM_GYRO_ACC_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ONLY_FILTER_F){
+    if (boardCommState.commMode == GTBCM_GYRO_ACC_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ONLY_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F){
         gyro_int_to_float();
         filter_data(&rawRateData,&rawAccData,gyroTempData,&filteredData); //profile: this takes 2.45us to run with O3 optimization, before adding biquad at least
     }
 
     if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F){
         //set flags and do quats in main loop
-        generate_quaterions(&rawRateData,&rawAccData,&filteredData);
+        //we have to fill the gyro data here though
+
+        //add rate data for later usage in quats. This is reset in imu.c
+        quatBuffer[quatBufferNum].x += filteredData.rateData.x;
+        quatBuffer[quatBufferNum].y += filteredData.rateData.y;
+        quatBuffer[quatBufferNum].z += filteredData.rateData.z;
+
+        accTracker++;
+        switch(accTracker)
+        {
+            case 8:
+                //update quaternions, these were calculated in imu.c
+                filteredData.quaternion[0] = attitudeFrameQuat.w;
+                filteredData.quaternion[1] = attitudeFrameQuat.x;
+                filteredData.quaternion[2] = attitudeFrameQuat.y;
+                filteredData.quaternion[3] = attitudeFrameQuat.z;
+                //put acc into quat buffer
+                quatBuffer[0].accx = filteredData.accData.x;
+                quatBuffer[0].accy = filteredData.accData.y;
+                quatBuffer[0].accz = filteredData.accData.z;
+                quatState = QUAT_PROCESS_BUFFER_0;
+                //switch buffers
+                quatBufferNum = 1;
+                break;
+            case 16:
+                //reset acc tracker
+                accTracker = 0;
+                //update quaternions, these were calculated in imu.c
+                filteredData.quaternion[0] = attitudeFrameQuat.w;
+                filteredData.quaternion[1] = attitudeFrameQuat.x;
+                filteredData.quaternion[2] = attitudeFrameQuat.y;
+                filteredData.quaternion[3] = attitudeFrameQuat.z;
+                //put acc into quat buffer
+                quatBuffer[1].accx = filteredData.accData.x;
+                quatBuffer[1].accy = filteredData.accData.y;
+                quatBuffer[1].accz = filteredData.accData.z;
+                quatState = QUAT_PROCESS_BUFFER_1;
+                //switch buffers
+                quatBufferNum = 0;
+                break;
+        }
     }
 
     static int everyOther = 1;

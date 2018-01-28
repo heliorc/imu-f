@@ -26,6 +26,8 @@
         "invensense_register_map.h": "c",
         "quaternions.h": "c",
         "adc.h": "c",
-        "stm32f3xx_hal_conf.h": "c"
+        "stm32f3xx_hal_conf.h": "c",
+        "default.h": "c",
+        "stm32f3xx.h": "c"
     }
 }

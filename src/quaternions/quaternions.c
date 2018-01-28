@@ -1,4 +1,3 @@
-#include <math.h>
 #include "quaternions.h"
 #include "includes.h"
 #include "gyro.h"

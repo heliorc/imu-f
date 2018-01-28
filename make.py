@@ -163,7 +163,7 @@ def configure_target(TARGET):
         os.path.join("src", "gpio"),
         os.path.join("src", "gyro"),
         os.path.join("src", "filter"),
-        os.path.join("src", "quaternions"),
+        os.path.join("src", "imu"),
         os.path.join("src", "report"),
         os.path.join("src", "board_comm"),
         os.path.join("src", "error_handler"),
@@ -179,7 +179,7 @@ def configure_target(TARGET):
         os.path.join("src", "gpio"),
         os.path.join("src", "gyro"),
         os.path.join("src", "filter"),
-        os.path.join("src", "quaternions"),
+        os.path.join("src", "imu"),
         os.path.join("src", "report"),
         os.path.join("src", "board_comm"),
         os.path.join("src", "error_handler"),
@@ -191,6 +191,9 @@ def configure_target(TARGET):
         this_dir + "/assembly/startup/startup_stm32f303xc.s"
     ]
 
+    SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS/DSP_Lib/Source/CommonTables/arm_common_tables.c")
+    SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS/DSP_Lib/Source/FastMathFunctions/arm_cos_f32.c")
+    SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS/DSP_Lib/Source/FastMathFunctions/arm_sin_f32.c")
     ################################################################################
     # Set per target compilation options
     FLAGS = [
