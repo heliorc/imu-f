@@ -5,12 +5,12 @@
 
 typedef enum gyroToBoardCommMode
 {
-    GTBCM_SETUP                  = 41,
-    GTBCM_GYRO_ONLY_PASSTHRU     = 7,
-    GTBCM_GYRO_ACC_PASSTHRU      = 16,
-    GTBCM_GYRO_ONLY_FILTER_F     = 17,
-    GTBCM_GYRO_ACC_FILTER_F      = 29,
-    GTBCM_GYRO_ACC_QUAT_FILTER_F = 45,
+    GTBCM_SETUP                  = 48, //max number
+    GTBCM_GYRO_ONLY_PASSTHRU     = 6,  //no crc, gyro, 3*2 bytes
+    GTBCM_GYRO_ACC_PASSTHRU      = 14, //no crc, acc, temp, gyro, 3*2, 1*2, 3*2 bytes
+    GTBCM_GYRO_ONLY_FILTER_F     = 16, //gyro, filtered, 3*4 bytes, 4 bytes crc
+    GTBCM_GYRO_ACC_FILTER_F      = 28, //gyro, filtered, acc, 3*4, 3*4, 4 byte crc
+    GTBCM_GYRO_ACC_QUAT_FILTER_F = 48, //gyro, filtered, temp, filtered, acc, quaternions, filtered, 3*4, 3*4, 4*4, 1*4, 4 byte crc
 } gyroToBoardCommMode_t;
 
 typedef struct boardCommState {
@@ -48,6 +48,7 @@ typedef struct imufCommand {
    uint32_t param6;
    uint32_t param7;
    uint32_t param8;
+   uint32_t param9;
    uint32_t crc;
 } __attribute__ ((__packed__)) imufCommand_t;
 
@@ -64,3 +65,5 @@ extern void board_comm_callback_function(SPI_HandleTypeDef *hspi);
 extern int parse_imuf_command(imufCommand_t* newCommand, uint8_t* buffer);
 extern void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi);
 extern void rewind_board_comm_spi(void);
+extern void board_comm_spi_irq_callback(void);
+extern void check_board_comm_setup_timeout(void);

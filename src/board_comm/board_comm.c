@@ -22,10 +22,12 @@ uint8_t boardCommSpiRxBuffer[COM_BUFFER_SIZE];
 uint8_t boardCommSpiTxBuffer[COM_BUFFER_SIZE];
 uint32_t boardCommSpiRxBufferPtr;
 uint32_t boardCommSpiTxBufferPtr;
+volatile uint32_t timeBoardCommSetupIsr;
 
 volatile boardCommState_t boardCommState;
 
 static void run_command(imufCommand_t* newCommand);
+static void start_board_comm_isr(void);
 
 void board_comm_init(void) 
 {
@@ -54,8 +56,7 @@ void board_comm_init(void)
     memset(boardCommSpiRxBuffer, 0, COM_BUFFER_SIZE);
     memset(boardCommSpiTxBuffer, 0, COM_BUFFER_SIZE);
     //put the SPI into IT mode, we check each byte as data comes in this way. The gyro transfers will use DMA mode
-    HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, COM_BUFFER_SIZE);
-    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //ready to communicate
+    start_board_comm_isr();
 }
 
 
@@ -83,6 +84,25 @@ int parse_imuf_command(imufCommand_t* newCommand, uint8_t* buffer){
         }
     }
     return 0;
+}
+
+static void start_board_comm_isr(void)
+{
+    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0); //ready to communicate
+    rewind_board_comm_spi();
+    HAL_Delay(1);
+    timeBoardCommSetupIsr = HAL_GetTick();
+    HAL_SPI_TransmitReceive_IT(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, COM_BUFFER_SIZE);
+    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //ready to communicate
+}
+
+void check_board_comm_setup_timeout(void)
+{
+    if(HAL_GetTick() - timeBoardCommSetupIsr > 10)
+    {
+        //timeout every 10 ms
+        start_board_comm_isr();
+    }
 }
 
 static void run_command(imufCommand_t* newCommand)
@@ -158,35 +178,99 @@ void board_comm_callback_function(SPI_HandleTypeDef *hspi)
 }
 
 //this runs in setup mode, it handler, all data gets parsed one byte at a time
-static void spi_it_setup_mode_handler(void)
+static int spi_it_setup_mode_handler(void)
 {
+    static uint32_t timeOfLastIsr = 0;
     imufCommand_t newCommand;
+    SPI_HandleTypeDef *hspi = &boardCommSPIHandle;
 
+    uint32_t itsource = hspi->Instance->CR2;
+    uint32_t itflag   = hspi->Instance->SR;
+
+    //when done:
+    //SPI_TxCloseIRQHandler(hspi);
+    //SPI_RxCloseIRQHandler(hspi);
     //we're getting data in IT mode, let's turn off the data ready pin now that a data transaction is happening
-    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
     /* SPI in Receiver mode */
-    if((__HAL_SPI_GET_IT_SOURCE(&boardCommSPIHandle, SPI_IT_RXNE) != RESET) && (__HAL_SPI_GET_FLAG(&boardCommSPIHandle, SPI_FLAG_RXNE) != RESET) && (__HAL_SPI_GET_FLAG(&boardCommSPIHandle, SPI_FLAG_OVR) == RESET))
+    if(((itflag & SPI_FLAG_OVR) == RESET) && ((itflag & SPI_FLAG_RXNE) != RESET) && ((itsource & SPI_IT_RXNE) != RESET))
     {
+        HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
         /* Receive Transaction data */
-        boardCommSpiRxBuffer[boardCommSpiRxBufferPtr++] = boardCommSPIHandle.Instance->DR;
-        //check received data, send a 0 if 1 and vice-versa
-        if(boardCommSpiRxBuffer[boardCommSpiRxBufferPtr-1] == 1)
+        /* Receive data in packing mode */
+        if(hspi->RxXferCount > 1)
         {
-            boardCommSpiTxBuffer[boardCommSpiTxBufferPtr] = 0;
+            *((uint16_t*)hspi->pRxBuffPtr) = hspi->Instance->DR;
+            hspi->pRxBuffPtr += sizeof(uint16_t);
+            boardCommSpiRxBufferPtr+=2;
+            hspi->RxXferCount -= 2;
+            if(hspi->RxXferCount == 1) 
+            {
+            /* set fiforxthresold according the reception data length: 8bit */
+            SET_BIT(hspi->Instance->CR2, SPI_RXFIFO_THRESHOLD);
+            }
         }
+        /* Receive data in 8 Bit mode */
         else
         {
-            boardCommSpiTxBuffer[boardCommSpiTxBufferPtr] = 1;
+            *hspi->pRxBuffPtr++ = *((__IO uint8_t *)&hspi->Instance->DR);
+            hspi->RxXferCount--;
+            boardCommSpiRxBufferPtr++;
         }
-        //__HAL_SPI_DISABLE_IT(hspi, SPI_IT_RXNE | SPI_IT_TXE | SPI_IT_ERR);
+
+        //enough data, check command
+        if( boardCommSpiRxBufferPtr > 6 && boardCommSpiTxBuffer[16] != 'h')
+        {
+            snprintf(&boardCommSpiTxBuffer[16], GTBCM_SETUP-16, "helio! %c%c%c%c%c%c", boardCommSpiRxBuffer[0], boardCommSpiRxBuffer[1], boardCommSpiRxBuffer[2], boardCommSpiRxBuffer[3], boardCommSpiRxBuffer[4], boardCommSpiRxBuffer[5]);
+        }
+
+          /* check end of the reception */
+        if(hspi->RxXferCount == 0 )
+        {
+            /* Disable RXNE interrupt */
+            __HAL_SPI_DISABLE_IT(hspi, SPI_IT_RXNE);
+
+            if(hspi->TxXferCount == 0)
+            {
+                __HAL_SPI_DISABLE_IT(hspi, SPI_IT_ERR);
+            }
+        }
+        return 1;
     }
 
       /* SPI in mode Transmitter ---------------------------------------------------*/
-    if((__HAL_SPI_GET_IT_SOURCE(&boardCommSPIHandle, SPI_IT_TXE) != RESET) && (__HAL_SPI_GET_FLAG(&boardCommSPIHandle, SPI_FLAG_TXE) != RESET))
+    if(((itflag & SPI_FLAG_TXE) != RESET) && ((itsource & SPI_IT_TXE) != RESET))
     {
-        boardCommSPIHandle.Instance->DR = boardCommSpiTxBuffer[boardCommSpiRxBufferPtr++];
+        HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
+        if(hspi->TxXferCount >= 2)
+        {
+            hspi->Instance->DR = *((uint16_t *)hspi->pTxBuffPtr);
+            hspi->pTxBuffPtr += sizeof(uint16_t);
+            hspi->TxXferCount -= 2;
+            boardCommSpiTxBufferPtr+=2;
+        }
+        /* Transmit data in 8 Bit mode */
+        else
+        {
+            *(__IO uint8_t *)&hspi->Instance->DR = (*hspi->pTxBuffPtr++);
+            hspi->TxXferCount--;
+            boardCommSpiTxBufferPtr++;
+        }
+          /* check the end of the transmission */
+        if(hspi->TxXferCount == 0)
+        {
+            /* Disable TXE interrupt */
+            __HAL_SPI_DISABLE_IT(hspi, SPI_IT_TXE);
+
+            if(hspi->RxXferCount == 0)
+            {
+                __HAL_SPI_DISABLE_IT(hspi, SPI_IT_ERR);
+                hspi->State = HAL_SPI_STATE_READY;
+            }
+        }
+        return 1;
     }
 
+    return 0;
     //transaction occured, parse rx buffer
     //if ( parse_imuf_command(&newCommand, boardCommSpiRxBufferPtr) )
     //{
@@ -204,7 +288,10 @@ void board_comm_spi_irq_callback(void)
     //irq handler
     if(boardCommState.commMode == GTBCM_SETUP)
     {
-        spi_it_setup_mode_handler();
+        if (!spi_it_setup_mode_handler())
+        {
+            HAL_SPI_IRQHandler(&boardCommSPIHandle);
+        }
     }
     else
     {
