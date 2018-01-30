@@ -32,6 +32,7 @@ typedef enum
     BL_PREPARE_PROGRAM      = 30,
     BL_END_PROGRAM          = 31,
     BC_IMUF_CALIBRATE       = 99,
+    BC_IMUF_LISTENING       = 108,
     BC_IMUF_REPORT_INFO     = 121,
     BC_IMUF_SETUP           = 122,
     BC_IMUF_RESTART         = 127,
@@ -55,14 +56,13 @@ typedef struct imufCommand {
 extern SPI_HandleTypeDef boardCommSPIHandle;
 extern DMA_HandleTypeDef hdmaBoardCommSPIRx;
 extern DMA_HandleTypeDef hdmaBoardCommSPITx;
-extern uint8_t boardCommSpiRxBuffer[COM_BUFFER_SIZE];
-extern uint8_t boardCommSpiTxBuffer[COM_BUFFER_SIZE];
+extern volatile imufCommand_t imufCommandRx;
 
 extern volatile boardCommState_t boardCommState;
 
 extern void board_comm_init(void);
 extern void board_comm_callback_function(SPI_HandleTypeDef *hspi);
-extern int parse_imuf_command(imufCommand_t* newCommand, uint8_t* buffer);
+extern int  parse_imuf_command(volatile imufCommand_t* newCommand);
 extern void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi);
 extern void rewind_board_comm_spi(void);
 extern void board_comm_spi_irq_callback(void);

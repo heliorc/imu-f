@@ -3,6 +3,7 @@
 
 VersionInfoTypedef_t info;
 
+//not using this
 void get_report_info(SPI_HandleTypeDef* messageHandle, uint8_t* rxData, uint8_t* txData)
 {
     // ensure that SPI resources are available, but don't block if they are not

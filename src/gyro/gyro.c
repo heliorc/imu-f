@@ -338,11 +338,8 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
         #else
         everyOther = 1;
         #endif
-        if (boardCommState.commMode != GTBCM_SETUP){
-
-            //this line is no good, we need to add the flags to the data structure
-            memcpy(boardCommSpiTxBuffer+1, memptr, boardCommState.commMode); //profile: this takes 3.84us to run with O3 optimization
-            boardCommSpiTxBuffer[0] = 'h';
+        if (boardCommState.commMode != GTBCM_SETUP)
+        {
 
             //profile:
             //HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
@@ -351,9 +348,11 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
             rewind_board_comm_spi(); //profile: this takes 1.35us to run with O3 optimization
             if (HAL_SPI_GetState(&boardCommSPIHandle) == HAL_SPI_STATE_READY)
             {
-                HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpiRxBuffer, boardCommState.commMode); //profile: this takes 2.14us to run with O3 optimization
-                HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
-                HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
+                imufCommandRx.command = BC_NONE; //no command
+                //transmit from the memptr to save CPU cycles, receive into the command rx struct, saves about 2us of time
+                HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, memptr, (uint8_t *)&imufCommandRx, boardCommState.commMode); //profile: this takes 2.14us to run with O3 optimization
+                HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); // a quick spike for EXTI
+                HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0); // a quick spike for EXTI
             }
 
         }
