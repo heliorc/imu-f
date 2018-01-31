@@ -1,4 +1,6 @@
 #pragma once
+#include "quaternions.h"
+#include "vectors.h"
 
 //	+X to the right
 //	+Y straight up
@@ -38,49 +40,14 @@
   #define CONSTRAIN(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 #endif
 
-
-typedef enum quaternionUpdateState
-{
-    QUAT_NO_DATA          = 0,
-    QUAT_PROCESS_BUFFER_0 = 1,
-    QUAT_PROCESS_BUFFER_1 = 2,
-    QUAT_DONE_BUFFER_0    = 3,
-    QUAT_DONE_BUFFER_1    = 4,
-} quaternionUpdateState_t;
-
-typedef struct quaternion_buffer {
-	volatile float x;
-	volatile float y;
-	volatile float z;
-	volatile float accx;
-	volatile float accy;
-	volatile float accz;
-} quaternion_buffer_t;
-
-typedef struct {
-	volatile float x;
-	volatile float y;
-	volatile float z;
-	volatile float w;
-} quaternion_record;
-
-typedef struct {
-	volatile float x;
-	volatile float y;
-	volatile float z;
-} vector_record;
-
 extern volatile float rollAttitude;
 extern volatile float pitchAttitude;
 extern volatile float yawAttitude;
 
-extern volatile quaternion_buffer_t quatBuffer[];
-extern volatile quaternionUpdateState_t quatState;
 extern volatile int quadInverted;
 extern volatile float currentSpinRate;
-extern volatile quaternion_record attitudeFrameQuat;
+extern volatile quaternion_record_t attitudeFrameQuat;
 extern volatile float requestedDegrees[3];
 
-extern void update_quaternions();
 extern void init_imu(void);
 extern void update_imu(float gx, float gy, float gz, float ax, float ay, float az);

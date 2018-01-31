@@ -19,7 +19,7 @@ SPI_HandleTypeDef boardCommSPIHandle;
 DMA_HandleTypeDef hdmaBoardCommSPIRx;
 DMA_HandleTypeDef hdmaBoardCommSPITx;
 volatile imufCommand_t imufCommandTx;
-volatile imufCommand_t imufCommandRx;
+imufCommand_t imufCommandRx;
 volatile uint32_t timeBoardCommSetupIsr;
 
 volatile boardCommState_t boardCommState;
