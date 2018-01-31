@@ -12,7 +12,9 @@ vector_record_t accWorldVector;
 vector_record_t errorWorldVector;
 vector_record_t verticalVector;
 volatile quaternion_record_t attitudeFrameQuat;
-
+quaternion_record_t conjQuat;
+quaternion_record_t multQuat;
+quaternion_record_t tempQuat;
 volatile float currentSpinRate = 0.0f;
 volatile float rotationalMatrix[3][3];
 volatile float rollAttitude;
@@ -151,9 +153,7 @@ void update_imu(vector_record_t *gyroVector, vector_record_t *accBodyVector)
 
 	//this block takes 6.23 us to run
 	// RotateVectorByQuaternionQV(&accWorldVector, &attitudeFrameQuat, &accBodyVector);     //rotate acc body frame to world frame using attitudeFrameQuat quatenrion
-	quaternion_record_t conjQuat;
-	quaternion_record_t multQuat;
-	quaternion_record_t tempQuat;
+
 	QuaternionConjugate(&conjQuat, &attitudeFrameQuat);
 	MultiplyQuatAndVector(&multQuat, &conjQuat, accBodyVector);
 	MultiplyQuaternionByQuaternion(&tempQuat, &multQuat,  &attitudeFrameQuat);
