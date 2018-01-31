@@ -115,6 +115,12 @@ def configure_target(TARGET):
         OPTIMIZE_FLAGS = "-O3"
         HSE_SPEED = str(16000000)
 
+    elif TARGET == "F3BING":
+        PROJECT = "C3PUBL"
+        TARGET_SCRIPT = "stm32_flash_f30x_32k.ld"
+        OPTIMIZE_FLAGS = "-Os"
+        HSE_SPEED = str(16000000)
+
     elif TARGET == "F3BL":
         PROJECT = "C3PUBL"
         TARGET_SCRIPT = "stm32_flash_f30x_12k.ld"

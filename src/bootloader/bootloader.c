@@ -80,10 +80,17 @@ void bootloader_start(void)
 
 void bootloader_spi_callback(SPI_HandleTypeDef *hspi)
 {
-    imufCommand_t newCommand;
-    //parse_imuf_command(&newCommand, boardCommSpixxBuffer);
-    run_command(&newCommand);
-    //memset(boardCommSpixxBuffer, 0, GTBCM_SETUP);
-    //setup for next DMA transfer
-    //HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, boardCommSpiTxBuffer, boardCommSpixxBuffer, GTBCM_SETUP);
+
+    //rx complete, do pin thing here
+    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
+    timeBoardCommSetupIsr = HAL_GetTick();
+
+    if (parse_imuf_command(&imufCommandRx))
+    {
+        run_command(&imufCommandRx);  //this command will handle the message start handling
+    }
+
+    //restart listening if in setup mode
+    timeBoardCommSetupIsr = 0;
+
 }

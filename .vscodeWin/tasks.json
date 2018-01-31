@@ -6,6 +6,30 @@
     "args": ["/C"],
     "tasks": [
         {
+            "taskName": "F3BING",
+            "suppressTaskName": true,
+            "isBuildCommand": true,
+            "args": [ "powershell -Command \"Start-Process 'cmd' -Verb RunAs -ArgumentList '/c C:\\dev\\scripts\\openocd.bat f3'\" & cd ${workspaceFolderBasename} & python.exe make.py -TF3BING -D" ]
+        },
+        {
+            "taskName": "F3BING Opt",
+            "suppressTaskName": true,
+            "isBuildCommand": true,
+            "args": [ "powershell -Command \"Start-Process 'cmd' -Verb RunAs -ArgumentList '/c C:\\dev\\scripts\\openocd.bat f3'\" & cd ${workspaceFolderBasename} & python.exe make.py -TF3BING" ]
+        },
+        {
+            "taskName": "F3SING",
+            "suppressTaskName": true,
+            "isBuildCommand": true,
+            "args": [ "powershell -Command \"Start-Process 'cmd' -Verb RunAs -ArgumentList '/c C:\\dev\\scripts\\openocd.bat f3'\" & cd ${workspaceFolderBasename} & python.exe make.py -TF3SING -D" ]
+        },
+        {
+            "taskName": "F3SING Opt",
+            "suppressTaskName": true,
+            "isBuildCommand": true,
+            "args": [ "powershell -Command \"Start-Process 'cmd' -Verb RunAs -ArgumentList '/c C:\\dev\\scripts\\openocd.bat f3'\" & cd ${workspaceFolderBasename} & python.exe make.py -TF3SING" ]
+        },
+        {
             "taskName": "F3 C3PU BL",
             "suppressTaskName": true,
             "isBuildCommand": true,
