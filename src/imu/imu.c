@@ -79,7 +79,7 @@ void init_imu(void)
 	verticalVector.x = 0.0f;
 	verticalVector.y = 0.0f;
 	verticalVector.z = 1.0f;
-	
+
 	QuaternionZeroRotation(&conjQuat);
 	QuaternionZeroRotation(&multQuat);
 	QuaternionZeroRotation(&tempQuat);
@@ -131,7 +131,7 @@ void update_imu(vector_record_t *gyroVector, vector_record_t *accBodyVector)
     //trust ACC a LOT for first 7 seconds
     if(interationCounter < 7000) //7000 is 7 seconds
     {
-        accTrust = 5.0f;
+        accTrust = 100.0f;
         interationCounter++;
     }
     else
