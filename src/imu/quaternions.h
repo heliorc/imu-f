@@ -15,12 +15,12 @@ typedef enum quaternionUpdateState
 typedef struct quaternion_buffer {
     vector_record_t vector;
     vector_record_t accVector;
-} quaternion_buffer_t;
+}  __attribute__((__packed__)) quaternion_buffer_t;
 
 typedef struct quaternion_record {
     vector_record_t vector;
 	volatile float w;
-} quaternion_record_t;
+}  __attribute__((__packed__)) quaternion_record_t;
 
 extern volatile quaternionUpdateState_t quatState;
 extern quaternion_buffer_t *quatBufferA;
