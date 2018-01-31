@@ -44,16 +44,6 @@ static void GenerateQuaternionFromGyroVector(volatile quaternion_record_t *quatO
 //Positive Z is a yaw to the left which is opposite of our gyro
 //we feed the quad negative yaw and pitch values to make it match our gyro
 
-static float DegreesToRadians(float degrees)
-{
-	return(degrees * PI180f);
-}
-
-static float RadiansToDegrees(float radians)
-{
-	return(radians * d180PIf);
-}
-
 static float Atan2fast( float y, float x )
 {
     if ( x == 0.0f )
@@ -79,23 +69,6 @@ static float Atan2fast( float y, float x )
         if ( y < 0.0f ) return atan - 3.14159265f;
     }
     return atan;
-}
-
-static float inline_clamp_f(float amt, float low, float high)
-{
-    if (amt < low)
-        return low;
-    else if (amt > high)
-        return high;
-    else
-        return amt;
-}
-
-static float inline_change_range_f(float oldValue, float oldMax, float oldMin, float newMax, float newMin)
-{
-	float oldRange = (oldMax - oldMin);
-	float newRange = (newMax - newMin);
-	return (((oldValue - oldMin) * newRange) / oldRange) + newMin;
 }
 
 static void UpdateRotationMatrix(void)
@@ -249,7 +222,7 @@ void update_imu(float accX, float accY, float accZ, float gyroRoll, float gyroPi
     else
     {
         //vary trust from 2 to 0 based on spin rate (should also look at noise)
-        accTrust = inline_change_range_f( inline_clamp_f(currentSpinRate, 0.0f, 50.0f), 50.0f, 0.0f, -2.0f, 0.0f) * -2.0f;
+        accTrust = CHANGERANGE( CONSTRAIN(currentSpinRate, 0.0f, 50.0f), 50.0f, 0.0f, -2.0f, 0.0f) * -2.0f;
     }
 
 	//we use radians

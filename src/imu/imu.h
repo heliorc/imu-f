@@ -40,6 +40,17 @@
   #define CONSTRAIN(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 #endif
 
+#ifndef CHANGERANGE
+  #define CHANGERANGE(oldValue,oldMax,oldMin,newMax,newMin) ((((oldValue - oldMin) * (newMax - newMin)) / (oldMax - oldMin)) + newMin)
+#endif
+
+#ifndef DegreesToRadians
+#define DegreesToRadians(degrees)(degrees * PI180f);
+#endif
+#ifndef RadiansToDegrees
+#define RadiansToDegrees(radians)(radians * d180PIf);
+#endif
+
 extern volatile float rollAttitude;
 extern volatile float pitchAttitude;
 extern volatile float yawAttitude;
