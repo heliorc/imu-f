@@ -1,7 +1,7 @@
 #pragma once
 #include "includes.h"
 
-#define SYSTICK_ISR_PRE_PRI 0
+#define SYSTICK_ISR_PRE_PRI 3
 #define SYSTICK_ISR_SUB_PRI 0
 
 #define BOARD_COMM_SPI_ISR_PRE_PRI 1

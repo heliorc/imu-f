@@ -1,11 +1,11 @@
 #pragma once
 #include "includes.h"
 
-#define COM_BUFFER_SIZE 48
+#define COM_BUFFER_SIZE 52
 
 typedef enum gyroToBoardCommMode
 {
-    GTBCM_SETUP                  = 48, //max number
+    GTBCM_SETUP                  = 52, //max number
     GTBCM_GYRO_ONLY_PASSTHRU     = 6,  //no crc, gyro, 3*2 bytes
     GTBCM_GYRO_ACC_PASSTHRU      = 14, //no crc, acc, temp, gyro, 3*2, 1*2, 3*2 bytes
     GTBCM_GYRO_ONLY_FILTER_F     = 16, //gyro, filtered, 3*4 bytes, 4 bytes crc
@@ -40,6 +40,7 @@ typedef enum
 
 
 typedef struct imufCommand {
+   uint32_t param0;
    uint32_t command;
    uint32_t param1;
    uint32_t param2;
@@ -50,8 +51,10 @@ typedef struct imufCommand {
    uint32_t param7;
    uint32_t param8;
    uint32_t param9;
+   uint32_t param10;
    uint32_t crc;
-} __attribute__ ((__packed__)) imufCommand_t;
+   uint32_t param11;
+} __attribute__ ((aligned (16), packed)) imufCommand_t;
 
 extern SPI_HandleTypeDef boardCommSPIHandle;
 extern DMA_HandleTypeDef hdmaBoardCommSPIRx;

@@ -167,7 +167,7 @@ void gyro_init(void)
     //SPI_BAUDRATEPRESCALER_4  = 16
     //SPI_BAUDRATEPRESCALER_8  = 8
     //SPI_BAUDRATEPRESCALER_16 = 4
-    gyro_spi_setup(SPI_BAUDRATEPRESCALER_4);
+    gyro_spi_setup(SPI_BAUDRATEPRESCALER_2);
 
     //init gyro external interupt
     gyro_exti_init();
