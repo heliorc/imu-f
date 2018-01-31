@@ -171,6 +171,9 @@ void update_imu(vector_record_t *gyroVector, vector_record_t *accBodyVector)
     gyroQuat.vector.x  = gyroVector->x * HALF_GYRO_DT;
     gyroQuat.vector.y  = gyroVector->y * HALF_GYRO_DT;
     gyroQuat.vector.z  = gyroVector->z * HALF_GYRO_DT;
+	gyroVector->x = 0;
+	gyroVector->y = 0;
+	gyroVector->z = 0;
     gyroQuat.w  = 1.0f - 0.5f * ( SQUARE(gyroQuat.vector.x) + SQUARE(gyroQuat.vector.y) + SQUARE(gyroQuat.vector.z) );
 
 	MultiplyQuaternionByQuaternion(&attitudeFrameQuat, &gyroQuat, &attitudeFrameQuat);   //update attitudeFrameQuat quaternion
