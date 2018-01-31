@@ -23,7 +23,15 @@ void init_quaternions(void){
 }
 
 void process(quaternion_buffer_t *quatBuffer) {
-    update_imu(quatBuffer->vector.x, quatBuffer->vector.y, quatBuffer->vector.z, quatBuffer->accVector.x, quatBuffer->accVector.y, quatBuffer->accVector.z);
+    if (isnan(quatBuffer->vector.x) || 
+        isnan(quatBuffer->vector.y) || 
+        isnan(quatBuffer->vector.z) || 
+        isnan(quatBuffer->accVector.x) || 
+        isnan(quatBuffer->accVector.y) || 
+        isnan(quatBuffer->accVector.z)) {
+		return;
+	}
+    update_imu(&(quatBuffer->vector), &(quatBuffer->accVector));
     quatBuffer->vector.x = 0.0f;
     quatBuffer->vector.y = 0.0f;
     quatBuffer->vector.z = 0.0f;

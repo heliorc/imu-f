@@ -6,38 +6,18 @@
 #define HALF_GYRO_DT 0.000015625f //1/2 of dT for gyro sample rate which is 32 KHz
 
 volatile int quadInverted = 0;
-volatile quaternion_record_t commandQuat;
-volatile quaternion_record_t accQuat;
 volatile quaternion_record_t gyroQuat;
-vector_record_t gyroVector;
-vector_record_t accBodyVector;
 vector_record_t accWorldVector;
 vector_record_t errorWorldVector;
-vector_record_t errorBodyVector;
 vector_record_t verticalVector;
-volatile quaternion_record_t accBodyQuat;
-volatile quaternion_record_t accWorldQuat;
-volatile quaternion_record_t rotationQuat;
-volatile quaternion_record_t errorQuat;
 volatile quaternion_record_t attitudeFrameQuat;
-volatile quaternion_record_t inertialFrameQuat;
 
 volatile float currentSpinRate = 0.0f;
 volatile float rotationalMatrix[3][3];
-volatile float requestedDegrees[3];
 volatile float rollAttitude;
 volatile float pitchAttitude;
 volatile float yawAttitude;
 
-static void UpdateRotationMatrix(void);
-
-static void GenerateQuaternionFromGyroVector(volatile quaternion_record_t *quatOut, vector_record_t *vectorIn, float halfdT)
-{  
-    quatOut->vector.x  = vectorIn->x * halfdT;
-    quatOut->vector.y  = vectorIn->y * halfdT;
-    quatOut->vector.z  = vectorIn->z * halfdT;
-    quatOut->w  = 1.0f - 0.5f * ( SQUARE(quatOut->vector.x) + SQUARE(quatOut->vector.y) + SQUARE(quatOut->vector.z) );
-}
 //quats are defined like this: X is roll, Y is pitch, Z is yaw.
 //Positive X is a roll to the right which matches our gyro
 //Positive Y is a pitch down which is opposite of our gyro
@@ -71,8 +51,34 @@ static float Atan2fast( float y, float x )
     return atan;
 }
 
-static void UpdateRotationMatrix(void)
+void init_imu(void)
 {
+	uint32_t x, y;
+
+    rollAttitude  = 0.0f;
+    pitchAttitude = 0.0f;
+    yawAttitude   = 0.0f;
+	init_quaternions();
+
+	for (x = 0; x < 3; x++)
+	{
+		for (y = 0; y < 3; y++)
+		{
+			rotationalMatrix[x][y] = 0.0f;
+		}
+	}
+
+	VectorZeroVector(&accWorldVector);
+	VectorZeroVector(&errorWorldVector);
+
+	//set vertical vector to normallized vertical values
+	verticalVector.x = 0.0f;
+	verticalVector.y = 0.0f;
+	verticalVector.z = 1.0f;
+
+	QuaternionZeroRotation(&gyroQuat);
+	QuaternionZeroRotation(&attitudeFrameQuat);
+
     float qxqx = (attitudeFrameQuat.vector.x * attitudeFrameQuat.vector.x);
     float qyqy = (attitudeFrameQuat.vector.y * attitudeFrameQuat.vector.y);
     float qzqz = (attitudeFrameQuat.vector.z * attitudeFrameQuat.vector.z);
@@ -97,72 +103,6 @@ static void UpdateRotationMatrix(void)
     rotationalMatrix[2][2] = (1.0f - 2.0f * qxqx - 2.0f * qyqy);
 }
 
-void init_imu(void)
-{
-	uint32_t x, y;
-
-    rollAttitude  = 0.0f;
-    pitchAttitude = 0.0f;
-    yawAttitude   = 0.0f;
-	init_quaternions();
-
-	for (x = 0; x < 3; x++)
-	{
-		for (y = 0; y < 3; y++)
-		{
-			rotationalMatrix[x][y] = 0.0f;
-		}
-	}
-
-	VectorZeroVector(&gyroVector);
-	VectorZeroVector(&accBodyVector);
-	VectorZeroVector(&accWorldVector);
-	VectorZeroVector(&errorWorldVector);
-	VectorZeroVector(&errorBodyVector);
-
-	//set vertical vector to normallized vertical values
-	verticalVector.x = 0.0f;
-	verticalVector.y = 0.0f;
-	verticalVector.z = 1.0f;
-
-	QuaternionZeroRotation(&gyroQuat);
-	QuaternionZeroRotation(&attitudeFrameQuat);
-	QuaternionZeroRotation(&inertialFrameQuat);
-	QuaternionZeroRotation(&rotationQuat);
-	QuaternionZeroRotation(&commandQuat);
-
-	UpdateRotationMatrix();
-	requestedDegrees[0] = 0.0f;
-	requestedDegrees[1] = 0.0f;
-	requestedDegrees[2] = 0.0f;
-}
-
-void UpdateAttitudeFrameQuat(float gyroRollDiffRads, float gyroPitchDiffRads, float gyroYawDiffRads)
-{
-	quaternion_record_t tempQuat;
-
-	tempQuat.w = attitudeFrameQuat.w;
-	tempQuat.vector.x = attitudeFrameQuat.vector.x;
-	tempQuat.vector.y = attitudeFrameQuat.vector.y;
-	tempQuat.vector.z = attitudeFrameQuat.vector.z;
-
-	gyroRollDiffRads  = (DegreesToRadians(gyroRollDiffRads) * HALF_GYRO_DT);
-	gyroPitchDiffRads = (DegreesToRadians(gyroPitchDiffRads) * HALF_GYRO_DT);
-	gyroYawDiffRads   = (DegreesToRadians(gyroYawDiffRads) * HALF_GYRO_DT);
-
-	if (isnan(gyroRollDiffRads) || isnan(gyroPitchDiffRads) || isnan(gyroYawDiffRads))
-	{
-		return;
-	}
-
-	attitudeFrameQuat.w += (-tempQuat.vector.x * gyroRollDiffRads  - tempQuat.vector.y * gyroPitchDiffRads - tempQuat.vector.z * gyroYawDiffRads);
-	attitudeFrameQuat.vector.x += (tempQuat.w  * gyroRollDiffRads  + tempQuat.vector.y * gyroYawDiffRads   - tempQuat.vector.z * gyroPitchDiffRads);
-	attitudeFrameQuat.vector.y += (tempQuat.w  * gyroPitchDiffRads - tempQuat.vector.x * gyroYawDiffRads   + tempQuat.vector.z * gyroRollDiffRads);
-	attitudeFrameQuat.vector.z += (tempQuat.w  * gyroYawDiffRads   + tempQuat.vector.x * gyroPitchDiffRads - tempQuat.vector.y * gyroRollDiffRads);
-
-	QuaternionNormalize(&attitudeFrameQuat);
-}
-
 static void MultiplyQuatAndVector(volatile quaternion_record_t *quatOut, volatile quaternion_record_t *quatIn, volatile vector_record_t *vectorIn)
 {
     quatOut->w = -quatIn->vector.x * vectorIn->x - quatIn->vector.y * vectorIn->y - quatIn->vector.z * vectorIn->z;
@@ -170,53 +110,21 @@ static void MultiplyQuatAndVector(volatile quaternion_record_t *quatOut, volatil
     quatOut->vector.y =  quatIn->w * vectorIn->y + quatIn->vector.x * vectorIn->z - quatIn->vector.z * vectorIn->x;
     quatOut->vector.z =  quatIn->vector.y * vectorIn->x - quatIn->vector.x * vectorIn->y + quatIn->w * vectorIn->z;
 }
-
-static void RotateVectorByQuaternionQV(volatile vector_record_t *vectorOut, volatile quaternion_record_t *quatIn, volatile vector_record_t *vectorIn)
+void update_imu(vector_record_t *gyroVector, vector_record_t *accBodyVector)
 {
-	quaternion_record_t conjQuat;
-	QuaternionConjugate(&conjQuat, quatIn);
-	quaternion_record_t multQuat;
-	MultiplyQuatAndVector(&multQuat, &conjQuat, vectorIn);
-	quaternion_record_t tempQuat;
-	MultiplyQuaternionByQuaternion(&tempQuat, &multQuat, quatIn);
-	vectorOut = &(tempQuat.vector);
-}
-
-static void RotateVectorByQuaternionVQ(volatile vector_record_t *vectorOut, volatile vector_record_t *vectorIn, volatile quaternion_record_t *quatIn)
-{
-	quaternion_record_t multQuat;
-	MultiplyQuatAndVector(&multQuat, quatIn, vectorIn);
-	quaternion_record_t conjQuat;
-	QuaternionConjugate(&conjQuat, quatIn);
-	quaternion_record_t tempQuat;	
-	MultiplyQuaternionByQuaternion(&tempQuat, &multQuat, &conjQuat);
-	vectorOut = &(tempQuat.vector);
-}
-
-void update_imu(float accX, float accY, float accZ, float gyroRoll, float gyroPitch, float gyroYaw)
-{
-
 	float accTrust = 0.01;
 	float norm;
-	float accToGyroError[3] = {0.0f, 0.0f, 0.0f};
     static int interationCounter = 0;
-	static float accTrustKiStorage[3] = {0.0f, 0.0f, 0.0f};
     static uint32_t forcedUntilBelow = 0;
 	static uint32_t forcedUntilAbove = 0;
 
-	if (isnan(accX) || isnan(accY) || isnan(accZ) || isnan(gyroRoll) || isnan(gyroPitch) || isnan(gyroYaw))
-	{
-		return;
-	}
-
     //calculate current spin rate in DPS
-	arm_sqrt_f32( SQUARE(gyroRoll) + SQUARE(gyroPitch) + SQUARE(gyroYaw), &norm);
+	arm_sqrt_f32( SQUARE(gyroVector->x) + SQUARE(gyroVector->y) + SQUARE(gyroVector->z), &norm);
 	currentSpinRate = norm;
-
     //trust ACC a LOT for first 7 seconds
     if(interationCounter < 7000) //7000 is 7 seconds
     {
-        accTrust = 100.0f;
+        accTrust = 5.0f;
         interationCounter++;
     }
     else
@@ -226,37 +134,48 @@ void update_imu(float accX, float accY, float accZ, float gyroRoll, float gyroPi
     }
 
 	//we use radians
-	gyroPitch = DegreesToRadians( gyroPitch );
-	gyroRoll  = DegreesToRadians( gyroRoll );
-	gyroYaw   = DegreesToRadians( gyroYaw );
+	gyroVector->x = DegreesToRadians( gyroVector->x );
+	gyroVector->y = DegreesToRadians( gyroVector->y );
+	gyroVector->z = DegreesToRadians( gyroVector->z );
 
 	//normallize the ACC readings
-	arm_sqrt_f32( (accX * accX + accY * accY + accZ * accZ), &norm);
+	arm_sqrt_f32( (accBodyVector->x * accBodyVector->x + accBodyVector->y * accBodyVector->y + accBodyVector->z * accBodyVector->z), &norm);
 	norm = 1.0f/norm;
-	accX *= norm;
-	accY *= norm;
-	accZ *= norm;
+	accBodyVector->x *= norm;
+	accBodyVector->y *= norm;
+	accBodyVector->z *= norm;
 
 	//this gives us attitude
 	//vector_record_t commandVector = verticalVector;
 
 	//this block takes 6.23 us to run
-	gyroVector.x = gyroRoll;
-	gyroVector.y = gyroPitch;
-	gyroVector.z = gyroYaw;
-	accBodyVector.x = accX;
-	accBodyVector.y = accY;
-	accBodyVector.z = accZ;                                //set ACC vector from ACC readings
-	RotateVectorByQuaternionQV(&accWorldVector, &attitudeFrameQuat, &accBodyVector);     //rotate acc body frame to world frame using attitudeFrameQuat quatenrion
-	VectorCrossProduct(&errorWorldVector, &accWorldVector, &verticalVector);             //find correction error from ACC readings
-	RotateVectorByQuaternionVQ(&errorBodyVector, &errorWorldVector, &attitudeFrameQuat); //rotate error world frame to world body using attitudeFrameQuat quatenrion
-	VectorAddVector(&gyroVector, &errorBodyVector, accTrust);                           //apply ACC correction to Gyro Vector with trust modifier
-	GenerateQuaternionFromGyroVector(&gyroQuat, &gyroVector, HALF_GYRO_DT);          //generate gyro quaternion from modified gyro vector
+	// RotateVectorByQuaternionQV(&accWorldVector, &attitudeFrameQuat, &accBodyVector);     //rotate acc body frame to world frame using attitudeFrameQuat quatenrion
+	quaternion_record_t conjQuat;
+	quaternion_record_t multQuat;
+	quaternion_record_t tempQuat;
+	QuaternionConjugate(&conjQuat, &attitudeFrameQuat);
+	MultiplyQuatAndVector(&multQuat, &conjQuat, accBodyVector);
+	MultiplyQuaternionByQuaternion(&tempQuat, &multQuat,  &attitudeFrameQuat);
+	VectorCrossProduct(&errorWorldVector, &(tempQuat.vector), &verticalVector);             //find correction error from ACC readings
+	
+	MultiplyQuatAndVector(&multQuat, &attitudeFrameQuat, &errorWorldVector);
+	QuaternionConjugate(&conjQuat, &attitudeFrameQuat);
+	MultiplyQuaternionByQuaternion(&tempQuat, &multQuat, &conjQuat);
+	VectorAddVector(gyroVector, &(tempQuat.vector), accTrust);                           //apply ACC correction to Gyro Vector with trust modifier
+
+    gyroQuat.vector.x  = gyroVector->x * HALF_GYRO_DT;
+    gyroQuat.vector.y  = gyroVector->y * HALF_GYRO_DT;
+    gyroQuat.vector.z  = gyroVector->z * HALF_GYRO_DT;
+    gyroQuat.w  = 1.0f - 0.5f * ( SQUARE(gyroQuat.vector.x) + SQUARE(gyroQuat.vector.y) + SQUARE(gyroQuat.vector.z) );
+
 	MultiplyQuaternionByQuaternion(&attitudeFrameQuat, &gyroQuat, &attitudeFrameQuat);   //update attitudeFrameQuat quaternion
 
 	if (isnan(attitudeFrameQuat.w) || isnan(attitudeFrameQuat.vector.x) || isnan(attitudeFrameQuat.vector.y) || isnan(attitudeFrameQuat.vector.z))
 	{
 		attitudeFrameQuat.w = 1.0;
+		attitudeFrameQuat.vector.x = 0.0;
+		attitudeFrameQuat.vector.y = 0.0;
+		attitudeFrameQuat.vector.z = 0.0;
 	}
 
     rollAttitude  =  RadiansToDegrees( Atan2fast(attitudeFrameQuat.vector.y * attitudeFrameQuat.vector.z + attitudeFrameQuat.w * attitudeFrameQuat.vector.x, 0.5f - (attitudeFrameQuat.vector.x * attitudeFrameQuat.vector.x + attitudeFrameQuat.vector.y * attitudeFrameQuat.vector.y)) );
