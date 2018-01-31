@@ -168,7 +168,7 @@ void gyro_init(void)
     //SPI_BAUDRATEPRESCALER_4  = 16
     //SPI_BAUDRATEPRESCALER_8  = 8
     //SPI_BAUDRATEPRESCALER_16 = 4
-    gyro_spi_setup(SPI_BAUDRATEPRESCALER_2);
+    gyro_spi_setup(SPI_BAUDRATEPRESCALER_8);
 
     //init gyro external interupt
     gyro_exti_init();
@@ -262,7 +262,7 @@ static void gyro_int_to_float(void)
 
 void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
 {
-    uint32_t accTracker = 7; //start at 7, so 8 is run first
+    uint32_t accTracker = 8; //start at 8, so 9 is run first
     uint32_t quatBufferNum = 0; //start working on this buffer
     (void)(hspi); //we don't care about which handle this is as we only have one gyro
 
@@ -298,7 +298,7 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
         accTracker++;
         switch(accTracker)
         {
-            case 8:
+            case 9:
                 //update quaternions, these were calculated in imu.c
                 filteredData.quaternion[0] = attitudeFrameQuat.w;
                 filteredData.quaternion[1] = attitudeFrameQuat.x;
@@ -312,9 +312,9 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
                 //switch buffers
                 quatBufferNum = 1;
                 break;
-            case 16:
+            case 17:
                 //reset acc tracker
-                accTracker = 0;
+                accTracker = 1;
                 //update quaternions, these were calculated in imu.c
                 filteredData.quaternion[0] = attitudeFrameQuat.w;
                 filteredData.quaternion[1] = attitudeFrameQuat.x;

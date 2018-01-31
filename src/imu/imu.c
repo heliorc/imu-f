@@ -387,6 +387,11 @@ void update_imu(float accX, float accY, float accZ, float gyroRoll, float gyroPi
     static uint32_t forcedUntilBelow = 0;
 	static uint32_t forcedUntilAbove = 0;
 
+	if (isnan(accX) || isnan(accY) || isnan(accZ) || isnan(gyroRoll) || isnan(gyroPitch) || isnan(gyroYaw))
+	{
+		return;
+	}
+
     //calculate current spin rate in DPS
 	arm_sqrt_f32( SQUARE(gyroRoll) + SQUARE(gyroPitch) + SQUARE(gyroYaw), &norm);
 	currentSpinRate = norm;
@@ -428,6 +433,10 @@ void update_imu(float accX, float accY, float accZ, float gyroRoll, float gyroPi
 	GenerateQuaternionFromGyroVector(&gyroQuat, gyroVector, HALF_GYRO_DT);             //generate gyro quaternion from modified gyro vector
 	attitudeFrameQuat = MultiplyQuaternionByQuaternion(gyroQuat, attitudeFrameQuat);   //update attitudeFrameQuat quaternion
 
+	if (isnan(attitudeFrameQuat.w) || isnan(attitudeFrameQuat.x) || isnan(attitudeFrameQuat.y) || isnan(attitudeFrameQuat.z))
+	{
+		attitudeFrameQuat.w = 1.0;
+	}
 
     rollAttitude  =  InlineRadiansToDegrees( Atan2fast(attitudeFrameQuat.y * attitudeFrameQuat.z + attitudeFrameQuat.w * attitudeFrameQuat.x, 0.5f - (attitudeFrameQuat.x * attitudeFrameQuat.x + attitudeFrameQuat.y * attitudeFrameQuat.y)) );
     pitchAttitude =  InlineRadiansToDegrees( arm_sin_f32(2.0f * (attitudeFrameQuat.x * attitudeFrameQuat.z - attitudeFrameQuat.w * attitudeFrameQuat.y)) );
