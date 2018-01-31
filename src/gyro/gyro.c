@@ -264,7 +264,7 @@ static void gyro_int_to_float(void)
 void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
 {
     uint32_t accTracker = 8; //start at 7, so 8 is run first
-    quaternion_buffer_t *quatBuffer; //start working on this buffer
+    quaternion_buffer_t *quatBuffer = &(quatBufferA); //start working on this buffer
     (void)(hspi); //we don't care about which handle this is as we only have one gyro
 
     if(GYRO_CS_TYPE  == NSS_SOFT)
