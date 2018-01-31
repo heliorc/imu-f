@@ -334,16 +334,24 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
     }
     
 
-    static int everyOther = 1;
-    if (everyOther-- < 1)
+    static int everyOther = 3;
+    if (boardCommState.commMode != GTBCM_SETUP)
     {
-        #ifdef DEBUG
-        everyOther = 8;
-        #else
-        everyOther = 1;
-        #endif
-        if (boardCommState.commMode != GTBCM_SETUP)
+        if (everyOther-- < 1)
         {
+            #ifdef DEBUG
+            everyOther = 3;
+            #else
+            if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F)
+            {
+                everyOther = 3;
+            }
+            else
+            {
+                everyOther = 1;
+            }
+            #endif
+
             timeBoardCommSetupIsr = HAL_GetTick();
             //profile:
             //HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
@@ -358,11 +366,10 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
                 }
                 imufCommandRx.command = BC_NONE; //no command
                 //transmit from the memptr to save CPU cycles, receive into the command rx struct, saves about 2us of time
-                HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, memptr, (uint8_t *)&imufCommandRx, boardCommState.commMode+2); //profile: this takes 2.14us to run with O3 optimization
+                HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, memptr, (uint8_t *)&imufCommandRx, boardCommState.commMode); //profile: this takes 2.14us to run with O3 optimization
                 HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); // a quick spike for EXTI
                 HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0); // a quick spike for EXTI
             }
-
         }
     }
 }

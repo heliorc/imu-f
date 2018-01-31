@@ -3,7 +3,8 @@
 #include "vectors.h"
 #include "quaternions.h"
 
-#define HALF_GYRO_DT 0.000015625f //1/2 of dT for gyro sample rate which is 32 KHz
+//#define HALF_GYRO_DT 0.000125f //1/2 of dT for gyro sample rate which is 32 KHz
+#define HALF_GYRO_DT 0.00025f //1/2 of dT for gyro sample rate which is 32 KHz
 
 volatile int quadInverted = 0;
 volatile quaternion_record_t gyroQuat;

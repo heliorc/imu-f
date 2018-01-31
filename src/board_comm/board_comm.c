@@ -144,6 +144,8 @@ static void run_command(volatile imufCommand_t* newCommand)
                     //message succsessfully sent to F4, switch to new comm mode now since f4 expects it now
                     boardCommState.commMode = (param1);
                     //gyro.c will now handle communication
+                    timeBoardCommSetupIsr = HAL_GetTick();
+                    rewind_board_comm_spi(); 
                 }
             }
         break;
@@ -223,11 +225,11 @@ void rewind_board_comm_spi(void)
     RCC->APB1RSTR &= ~BOARD_COMM_SPI_RST_MSK;
 
     /* Reconfigure SPI2. */
-    //spi_init(&boardCommSPIHandle, BOARD_COMM_SPI, SPI_BAUDRATEPRESCALER_2, SPI_MODE_SLAVE, BOARD_COMM_SPI_IRQn, BOARD_COMM_SPI_ISR_PRE_PRI, BOARD_COMM_SPI_ISR_SUB_PRI);
-    //spi_dma_init(&boardCommSPIHandle, &hdmaBoardCommSPIRx, &hdmaBoardCommSPITx, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA, BOARD_COMM_SPI_RX_DMA_IRQn, BOARD_COMM_SPI_TX_DMA_IRQn);
+    spi_init(&boardCommSPIHandle, BOARD_COMM_SPI, SPI_BAUDRATEPRESCALER_2, SPI_MODE_SLAVE, BOARD_COMM_SPI_IRQn, BOARD_COMM_SPI_ISR_PRE_PRI, BOARD_COMM_SPI_ISR_SUB_PRI);
+    spi_dma_init(&boardCommSPIHandle, &hdmaBoardCommSPIRx, &hdmaBoardCommSPITx, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA, BOARD_COMM_SPI_RX_DMA_IRQn, BOARD_COMM_SPI_TX_DMA_IRQn);
 
-    HAL_SPI_DeInit(&boardCommSPIHandle);
-    HAL_SPI_Init(&boardCommSPIHandle);
+    //HAL_SPI_DeInit(&boardCommSPIHandle);
+    //HAL_SPI_Init(&boardCommSPIHandle);
 
     /* Re-enable SPI2 and DMA channels. */
     //BOARD_COMM_SPI->CR2 |= SPI_I2S_DMAReq_Rx;
