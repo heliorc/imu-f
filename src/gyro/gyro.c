@@ -287,7 +287,7 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
         filter_data(&rawRateData,&rawAccData,gyroTempData,&filteredData); //profile: this takes 2.45us to run with O3 optimization, before adding biquad at least
     }
 
-    /*
+    
     if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F){
         //set flags and do quats in main loop
         //we have to fill the gyro data here though
@@ -332,7 +332,7 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
                 break;
         }
     }
-    */
+    
 
     static int everyOther = 1;
     if (everyOther-- < 1)
