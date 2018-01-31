@@ -74,11 +74,15 @@ void init_imu(void)
 	VectorZeroVector(&accWorldVector);
 	VectorZeroVector(&errorWorldVector);
 
+
 	//set vertical vector to normallized vertical values
 	verticalVector.x = 0.0f;
 	verticalVector.y = 0.0f;
 	verticalVector.z = 1.0f;
-
+	
+	QuaternionZeroRotation(&conjQuat);
+	QuaternionZeroRotation(&multQuat);
+	QuaternionZeroRotation(&tempQuat);
 	QuaternionZeroRotation(&gyroQuat);
 	QuaternionZeroRotation(&attitudeFrameQuat);
 
