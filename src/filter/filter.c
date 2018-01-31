@@ -12,6 +12,9 @@ void filter_data(axisData_t *gyroRateData, axisData_t *gyroAccData,float gyroTem
 	{
         firstRun = 0;
 		fast_kalman_init(3000.0f, 88.0f, 3000.0f, 0.0f, DISTANCE_ESTIMATION);
+		memset(&lpfFilterStateRate->x, 0, sizeof(biquad_axis_state_t));
+		memset(&lpfFilterStateRate->y, 0, sizeof(biquad_axis_state_t));
+		memset(&lpfFilterStateRate->z, 0, sizeof(biquad_axis_state_t));
         #ifndef DEBUG
         biquad_init(150.0f, &(lpfFilterStateRate->x), 0.00003125f, FILTER_TYPE_LOWPASS, &(lpfFilterStateRate->x), BIQUAD_BANDWIDTH);
         biquad_init(150.0f, &(lpfFilterStateRate->y), 0.00003125f, FILTER_TYPE_LOWPASS, &(lpfFilterStateRate->y), BIQUAD_BANDWIDTH);

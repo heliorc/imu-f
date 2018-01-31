@@ -59,7 +59,7 @@ typedef struct imufCommand {
 extern SPI_HandleTypeDef boardCommSPIHandle;
 extern DMA_HandleTypeDef hdmaBoardCommSPIRx;
 extern DMA_HandleTypeDef hdmaBoardCommSPITx;
-extern imufCommand_t imufCommandRx;
+extern volatile imufCommand_t imufCommandRx;
 
 extern volatile boardCommState_t boardCommState;
 extern volatile uint32_t timeBoardCommSetupIsr;

@@ -7,7 +7,7 @@
 #include "report.h"
 
 
-static void run_command(imufCommand_t* command)
+static void run_command(volatile imufCommand_t *command)
 {
     switch (command->command)
     {
