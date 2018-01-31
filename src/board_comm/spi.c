@@ -106,12 +106,12 @@ void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, 
 
     if(spiHandle->Instance == BOARD_COMM_SPI)
     {
-        HAL_NVIC_SetPriority(rxDmaIrqn, 0, 1);
+        HAL_NVIC_SetPriority(rxDmaIrqn, BOARD_COMM_SPI_DMA_RX_PRE_PRI, BOARD_COMM_SPI_DMA_RX_SUB_PRI);
         HAL_NVIC_EnableIRQ(rxDmaIrqn);
     }
     else
     {
-        HAL_NVIC_SetPriority(rxDmaIrqn, 0, 3);
+        HAL_NVIC_SetPriority(rxDmaIrqn, GYRO_SPI_DMA_RX_PRE_PRI, GYRO_SPI_DMA_RX_SUB_PRI);
         HAL_NVIC_EnableIRQ(rxDmaIrqn);
     }
 
@@ -140,12 +140,12 @@ void spi_dma_init(SPI_HandleTypeDef* spiHandle, DMA_HandleTypeDef* hdma_spi_rx, 
 
     if(spiHandle->Instance == BOARD_COMM_SPI)
     {
-        HAL_NVIC_SetPriority(txDmaIrqn, 0, 2);
+        HAL_NVIC_SetPriority(txDmaIrqn, BOARD_COMM_SPI_DMA_TX_PRE_PRI, BOARD_COMM_SPI_DMA_TX_SUB_PRI);
         HAL_NVIC_EnableIRQ(txDmaIrqn);
     }
     else
     {
-        HAL_NVIC_SetPriority(txDmaIrqn, 0, 4);
+        HAL_NVIC_SetPriority(txDmaIrqn, GYRO_SPI_DMA_TX_PRE_PRI, GYRO_SPI_DMA_TX_SUB_PRI);
         HAL_NVIC_EnableIRQ(txDmaIrqn);
     }
 }

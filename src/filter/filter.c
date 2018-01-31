@@ -25,10 +25,11 @@ void filter_data(axisData_t* gyroRateData, axisData_t* gyroAccData,float gyroTem
 	filteredData->rateData.x = biquad_update( fast_kalman_pdate(0, gyroRateData->x), &lpfFilterStateRate[0]);
 	filteredData->rateData.y = biquad_update( fast_kalman_pdate(1, gyroRateData->y), &lpfFilterStateRate[1]);
 	filteredData->rateData.z = biquad_update( fast_kalman_pdate(2, gyroRateData->z), &lpfFilterStateRate[2]);
-    #endif
+    #else
     filteredData->rateData.x = fast_kalman_pdate(0, gyroRateData->x);
 	filteredData->rateData.y = fast_kalman_pdate(1, gyroRateData->y);
 	filteredData->rateData.z = fast_kalman_pdate(2, gyroRateData->z);
+    #endif
 
 
 	//what's insie the filteredData_t typedef

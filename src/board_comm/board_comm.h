@@ -62,6 +62,7 @@ extern DMA_HandleTypeDef hdmaBoardCommSPITx;
 extern volatile imufCommand_t imufCommandRx;
 
 extern volatile boardCommState_t boardCommState;
+extern volatile uint32_t timeBoardCommSetupIsr;
 
 extern void board_comm_init(void);
 extern void board_comm_callback_function(SPI_HandleTypeDef *hspi);

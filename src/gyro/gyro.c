@@ -6,6 +6,7 @@
 #include "fast_kalman.h"
 #include "imu.h"
 #include "board_comm.h"
+#include "boothandler.h"
 
 
 volatile uint32_t debug1=0;
@@ -334,13 +335,13 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
     if (everyOther-- < 1)
     {
         #ifdef DEBUG
-        everyOther = 4;
+        everyOther = 8;
         #else
         everyOther = 1;
         #endif
         if (boardCommState.commMode != GTBCM_SETUP)
         {
-
+            timeBoardCommSetupIsr = HAL_GetTick();
             //profile:
             //HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
             //HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
@@ -348,9 +349,13 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
             rewind_board_comm_spi(); //profile: this takes 1.35us to run with O3 optimization
             if (HAL_SPI_GetState(&boardCommSPIHandle) == HAL_SPI_STATE_READY)
             {
+                if ( imufCommandRx.command == 0x7f7f7f7F)
+                {
+                    BootToAddress(THIS_ADDRESS);
+                }
                 imufCommandRx.command = BC_NONE; //no command
                 //transmit from the memptr to save CPU cycles, receive into the command rx struct, saves about 2us of time
-                HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, memptr, (uint8_t *)&imufCommandRx, boardCommState.commMode); //profile: this takes 2.14us to run with O3 optimization
+                HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, memptr, (uint8_t *)&imufCommandRx, boardCommState.commMode+2); //profile: this takes 2.14us to run with O3 optimization
                 HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); // a quick spike for EXTI
                 HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0); // a quick spike for EXTI
             }

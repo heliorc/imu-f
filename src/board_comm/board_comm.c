@@ -86,10 +86,8 @@ static void start_board_comm_isr(void)
 
 void check_board_comm_setup_timeout(void)
 {
-    //if(boardCommState.commMode != GTBCM_SETUP)
-        //return;
 
-    if(HAL_GetTick() - timeBoardCommSetupIsr > 100)
+    if(HAL_GetTick() - timeBoardCommSetupIsr > 2000)
     {
         //timeout every 10 ms
         start_board_comm_isr();
@@ -102,19 +100,6 @@ static void run_command(volatile imufCommand_t* newCommand)
     HAL_StatusTypeDef check = HAL_TIMEOUT;
     switch (newCommand->command)
     {
-        case BC_IMUF_RESTART:
-            //repeat command to tell FC we have it, then restart
-            memset((uint8_t *)&imufCommandTx, 0, sizeof(imufCommandTx));
-            imufCommandTx.command = BC_IMUF_RESTART;
-            imufCommandTx.crc     = BC_IMUF_RESTART;
-            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
-            check = HAL_SPI_TransmitReceive(&boardCommSPIHandle, (uint8_t *)&imufCommandTx, (uint8_t *)&imufCommandRx, GTBCM_SETUP+2, 40);
-            HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
-            if (check == HAL_OK) //f4 got reply
-            {
-                BootToAddress(THIS_ADDRESS);
-            }
-        break;
         case BC_IMUF_CALIBRATE:
             //might be good to make sure we're not flying when we run this command
             //this reply can only happen when not in setup mode
@@ -145,7 +130,7 @@ static void run_command(volatile imufCommand_t* newCommand)
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime
             {
                 //let's pretend the f4 sent this for now
-                newCommand->param1 = (GTBCM_GYRO_ONLY_FILTER_F << 24);
+                newCommand->param1 = (GTBCM_GYRO_ACC_QUAT_FILTER_F << 24);
                 //f4 needs to send all valid setup commands
 
                 memset((uint8_t *)&imufCommandTx, 0, sizeof(imufCommandTx));
@@ -157,7 +142,7 @@ static void run_command(volatile imufCommand_t* newCommand)
                 if (check == HAL_OK)
                 {
                     //message succsessfully sent to F4, switch to new comm mode now since f4 expects it now
-                    boardCommState.commMode = (GTBCM_GYRO_ONLY_FILTER_F); //first 8 bits are comm mode, need to verify it's a valid command  though
+                    boardCommState.commMode = (GTBCM_GYRO_ACC_QUAT_FILTER_F); //first 8 bits are comm mode, need to verify it's a valid command  though
                     //gyro.c will now handle communication
                 }
             }
@@ -174,16 +159,18 @@ void board_comm_callback_function(SPI_HandleTypeDef *hspi)
     HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
     timeBoardCommSetupIsr = HAL_GetTick();
 
+    if ( imufCommandRx.command == 0x7f7f7f7F)
+    {
+        BootToAddress(THIS_ADDRESS);
+    }
     if (parse_imuf_command(&imufCommandRx))
     {
-        if(imufCommandTx.command == BC_IMUF_LISTENING ) //we are expecting a command,
-        {
-            run_command(&imufCommandRx);  //this command will handle the message start handling
-        }
+        run_command(&imufCommandRx);  //this command will handle the message start handling
     }
 
     //restart listening if in setup mode
-    timeBoardCommSetupIsr = 0;
+    if(boardCommState.commMode == GTBCM_SETUP)
+        timeBoardCommSetupIsr = 0;
 
 }
 
