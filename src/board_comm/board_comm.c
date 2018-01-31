@@ -130,9 +130,9 @@ static void run_command(volatile imufCommand_t* newCommand)
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime
             {
                 //let's pretend the f4 sent this for now
-                newCommand->param1 = (GTBCM_GYRO_ACC_FILTER_F << 24);
-                //f4 needs to send all valid setup commands
 
+                //f4 needs to send all valid setup commands
+                uint32_t param1 = newCommand->param1;
                 memset((uint8_t *)&imufCommandTx, 0, sizeof(imufCommandTx));
                 imufCommandTx.command = BC_IMUF_SETUP;
                 imufCommandTx.crc     = BC_IMUF_SETUP;
@@ -142,7 +142,7 @@ static void run_command(volatile imufCommand_t* newCommand)
                 if (check == HAL_OK)
                 {
                     //message succsessfully sent to F4, switch to new comm mode now since f4 expects it now
-                    boardCommState.commMode = (GTBCM_GYRO_ACC_FILTER_F); //first 8 bits are comm mode, need to verify it's a valid command  though
+                    boardCommState.commMode = (param1);
                     //gyro.c will now handle communication
                 }
             }
