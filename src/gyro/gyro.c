@@ -312,7 +312,7 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
                 quatBuffer->accVector.z = filteredData.accData.z;
                 quatState = QUAT_PROCESS_BUFFER_0;
                 //switch buffers
-                quatBuffer = quatBufferB;
+                quatBuffer = &quatBufferB;
                 break;
             case 17:
                 //reset acc tracker
@@ -328,7 +328,7 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
                 quatBuffer->accVector.z = filteredData.accData.z;
                 quatState = QUAT_PROCESS_BUFFER_1;
                 //switch buffers
-                quatBuffer = quatBufferA;
+                quatBuffer = &quatBufferA;
                 break;
         }
     }

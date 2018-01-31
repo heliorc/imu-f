@@ -4,15 +4,22 @@
 #include "imu.h"
 
 volatile quaternionUpdateState_t quatState;
-quaternion_buffer_t *quatBufferA;
-quaternion_buffer_t *quatBufferB;
+quaternion_buffer_t quatBufferA;
+quaternion_buffer_t quatBufferB;
+
+void buffer_init(quaternion_buffer_t *buffer) {
+   buffer->vector.x = 0.0f;
+   buffer->vector.y = 0.0f;
+   buffer->vector.z = 0.0f;
+   buffer->accVector.x = 0.0f;
+   buffer->accVector.y = 0.0f;
+   buffer->accVector.z = 0.0f;
+}
 
 void init_quaternions(void){
-    quatState = QUAT_NO_DATA;
-    memset(&quatBufferA->vector, 0, sizeof(vector_record_t));
-    memset(&quatBufferA->accVector, 0, sizeof(vector_record_t));
-    memset(&quatBufferB->vector, 0, sizeof(vector_record_t));
-    memset(&quatBufferB->accVector, 0, sizeof(vector_record_t));
+   quatState = QUAT_NO_DATA;
+   buffer_init(&quatBufferA);
+   buffer_init(&quatBufferB);
 }
 
 void process(quaternion_buffer_t *quatBuffer) {
@@ -27,11 +34,11 @@ void update_quaternions(void)
     switch (quatState)
     {
         case QUAT_PROCESS_BUFFER_0:
-            process(quatBufferA);
+            process(&quatBufferA);
             quatState = QUAT_DONE_BUFFER_0;
             break;
         case QUAT_PROCESS_BUFFER_1:        
-            process(quatBufferB);
+            process(&quatBufferB);
             quatState = QUAT_DONE_BUFFER_1;      
             break;
         case QUAT_NO_DATA:

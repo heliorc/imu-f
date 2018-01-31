@@ -23,8 +23,8 @@ typedef struct quaternion_record {
 }  __attribute__((__packed__)) quaternion_record_t;
 
 extern volatile quaternionUpdateState_t quatState;
-extern quaternion_buffer_t *quatBufferA;
-extern quaternion_buffer_t *quatBufferB;
+extern quaternion_buffer_t quatBufferA;
+extern quaternion_buffer_t quatBufferB;
 
 extern void MultiplyQuaternionByQuaternion(volatile quaternion_record_t *qOut, volatile quaternion_record_t *q1, volatile quaternion_record_t *q2);
 extern void QuaternionNormalize (volatile quaternion_record_t *out);
