@@ -158,12 +158,16 @@ void update_imu(vector_record_t *gyroVector, vector_record_t *accBodyVector)
 
 	//this block takes 6.23 us to run
 	// RotateVectorByQuaternionQV(&accWorldVector, &attitudeFrameQuat, &accBodyVector);     //rotate acc body frame to world frame using attitudeFrameQuat quatenrion
-
+	QuaternionZeroRotation(&conjQuat);
+	QuaternionZeroRotation(&multQuat);
+	QuaternionZeroRotation(&tempQuat);
 	QuaternionConjugate(&conjQuat, &attitudeFrameQuat);
 	MultiplyQuatAndVector(&multQuat, &conjQuat, accBodyVector);
 	MultiplyQuaternionByQuaternion(&tempQuat, &multQuat,  &attitudeFrameQuat);
 	VectorCrossProduct(&errorWorldVector, &(tempQuat.vector), &verticalVector);             //find correction error from ACC readings
-	
+	QuaternionZeroRotation(&conjQuat);
+	QuaternionZeroRotation(&multQuat);
+	QuaternionZeroRotation(&tempQuat);
 	MultiplyQuatAndVector(&multQuat, &attitudeFrameQuat, &errorWorldVector);
 	QuaternionConjugate(&conjQuat, &attitudeFrameQuat);
 	MultiplyQuaternionByQuaternion(&tempQuat, &multQuat, &conjQuat);
@@ -228,5 +232,4 @@ void update_imu(vector_record_t *gyroVector, vector_record_t *accBodyVector)
 			pitchAttitude = -90.0f;
 		}
 	}
-
 }
