@@ -112,7 +112,7 @@ def configure_target(TARGET):
     elif TARGET == "F3SING":
         PROJECT = "C3PU"
         TARGET_SCRIPT = "stm32_flash_f30x_32k.ld"
-        OPTIMIZE_FLAGS = "-O2"
+        OPTIMIZE_FLAGS = "-O3"
         HSE_SPEED = str(16000000)
 
     elif TARGET == "F3BL":
