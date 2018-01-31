@@ -146,9 +146,9 @@ void UpdateAttitudeFrameQuat(float gyroRollDiffRads, float gyroPitchDiffRads, fl
 	tempQuat.vector.y = attitudeFrameQuat.vector.y;
 	tempQuat.vector.z = attitudeFrameQuat.vector.z;
 
-	gyroRollDiffRads  = DegreesToRadians( gyroRollDiffRads )  * HALF_GYRO_DT;
-	gyroPitchDiffRads = DegreesToRadians( gyroPitchDiffRads ) * HALF_GYRO_DT;
-	gyroYawDiffRads   = DegreesToRadians( gyroYawDiffRads )   * HALF_GYRO_DT;
+	gyroRollDiffRads  = (DegreesToRadians(gyroRollDiffRads) * HALF_GYRO_DT);
+	gyroPitchDiffRads = (DegreesToRadians(gyroPitchDiffRads) * HALF_GYRO_DT);
+	gyroYawDiffRads   = (DegreesToRadians(gyroYawDiffRads) * HALF_GYRO_DT);
 
 	if (isnan(gyroRollDiffRads) || isnan(gyroPitchDiffRads) || isnan(gyroYawDiffRads))
 	{

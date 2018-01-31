@@ -45,10 +45,10 @@
 #endif
 
 #ifndef DegreesToRadians
-#define DegreesToRadians(degrees)(degrees * PI180f);
+#define DegreesToRadians(degrees)(degrees * PI180f)
 #endif
 #ifndef RadiansToDegrees
-#define RadiansToDegrees(radians)(radians * d180PIf);
+#define RadiansToDegrees(radians)(radians * d180PIf)
 #endif
 
 extern volatile float rollAttitude;
