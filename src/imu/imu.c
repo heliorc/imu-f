@@ -120,7 +120,7 @@ static void MultiplyQuatAndVector(volatile quaternion_record_t *quatOut, volatil
 }
 void update_imu(vector_record_t *gyroVector, vector_record_t *accBodyVector)
 {
-	float accTrust = 0.01;
+	volatile float accTrust = 0.01;
 	float norm;
     static int interationCounter = 0;
     static uint32_t forcedUntilBelow = 0;
@@ -130,21 +130,23 @@ void update_imu(vector_record_t *gyroVector, vector_record_t *accBodyVector)
 	arm_sqrt_f32( SQUARE(gyroVector->x) + SQUARE(gyroVector->y) + SQUARE(gyroVector->z), &norm);
 	currentSpinRate = norm;
     //trust ACC a LOT for first 7 seconds
-    if(interationCounter < 7000) //7000 is 7 seconds
+	interationCounter++;
+    if(interationCounter++ < 7000) //7000 is 7 seconds
     {
         accTrust = 100.0f;
-        interationCounter++;
     }
     else
     {
         //vary trust from 2 to 0 based on spin rate (should also look at noise)
-        accTrust = CHANGERANGE( CONSTRAIN(currentSpinRate, 0.0f, 50.0f), 50.0f, 0.0f, -2.0f, 0.0f) * -2.0f;
+        //accTrust = CHANGERANGE( CONSTRAIN(currentSpinRate, 0.0f, 360.0f), 50.0f, 0.0f, -2.0f, 0.0f) * -2.0f;
+        accTrust = CHANGERANGE( CONSTRAIN(currentSpinRate, 0.0f, 500.0f), 500.0f, 0.0f, 0.0f, 5.0f);
     }
 
+	//accTrust = 100.0f;
 	//we use radians
-	gyroVector->x = DegreesToRadians( gyroVector->x );
-	gyroVector->y = DegreesToRadians( gyroVector->y );
-	gyroVector->z = DegreesToRadians( gyroVector->z );
+	//gyroVector->x = 0; //DegreesToRadians( gyroVector->x );
+	//gyroVector->y = 0; //DegreesToRadians( gyroVector->y );
+	//gyroVector->z = 0; //DegreesToRadians( gyroVector->z );
 
 	//normallize the ACC readings
 	arm_sqrt_f32( (accBodyVector->x * accBodyVector->x + accBodyVector->y * accBodyVector->y + accBodyVector->z * accBodyVector->z), &norm);
@@ -173,9 +175,10 @@ void update_imu(vector_record_t *gyroVector, vector_record_t *accBodyVector)
 	MultiplyQuaternionByQuaternion(&tempQuat, &multQuat, &conjQuat);
 	VectorAddVector(gyroVector, &(tempQuat.vector), accTrust);                           //apply ACC correction to Gyro Vector with trust modifier
 
-    gyroQuat.vector.x  = gyroVector->x * HALF_GYRO_DT;
-    gyroQuat.vector.y  = gyroVector->y * HALF_GYRO_DT;
-    gyroQuat.vector.z  = gyroVector->z * HALF_GYRO_DT;
+	//this is wrong, but it works?
+    gyroQuat.vector.x  = DegreesToRadians(gyroVector->x * HALF_GYRO_DT);
+    gyroQuat.vector.y  = DegreesToRadians(gyroVector->y * HALF_GYRO_DT);
+    gyroQuat.vector.z  = DegreesToRadians(gyroVector->z * HALF_GYRO_DT);
 	gyroVector->x = 0;
 	gyroVector->y = 0;
 	gyroVector->z = 0;

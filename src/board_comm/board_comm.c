@@ -165,6 +165,10 @@ void board_comm_callback_function(SPI_HandleTypeDef *hspi)
     {
         BootToAddress(THIS_ADDRESS);
     }
+    if ( imufCommandRx.command == 0x63636363)
+    {
+        calibratingGyro = 1;
+    }
     if (parse_imuf_command(&imufCommandRx))
     {
         run_command(&imufCommandRx);  //this command will handle the message start handling

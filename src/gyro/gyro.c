@@ -364,6 +364,10 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
                 {
                     BootToAddress(THIS_ADDRESS);
                 }
+                if ( imufCommandRx.command == 0x63636363)
+                {
+                    calibratingGyro = 1;
+                }
                 imufCommandRx.command = BC_NONE; //no command
                 //transmit from the memptr to save CPU cycles, receive into the command rx struct, saves about 2us of time
                 HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, memptr, (uint8_t *)&imufCommandRx, boardCommState.commMode); //profile: this takes 2.14us to run with O3 optimization
