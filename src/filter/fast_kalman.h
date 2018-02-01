@@ -29,11 +29,11 @@ typedef enum filterTypedef
 
 typedef struct filter_config {
     float pitch_q;
-    float pitch_p;
+    float pitch_r;
     float roll_q;
-    float roll_p;
+    float roll_r;
     float yaw_q;
-    float yaw_p;
+    float yaw_r;
 } filter_config_t;
 
 extern filter_config_t filterConfig;

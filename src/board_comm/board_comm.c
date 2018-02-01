@@ -136,11 +136,11 @@ static void run_command(volatile imufCommand_t* newCommand)
                 uint32_t filterMode      = newCommand->param1;
                 uint32_t gyroOrientation = newCommand->param2;
                 filterConfig.pitch_q  = ((float)(newCommand->param3 & 0xFFFF));
-                filterConfig.pitch_p  = ((float)(newCommand->param3 >> 16));
+                filterConfig.pitch_r  = ((float)(newCommand->param3 >> 16));
                 filterConfig.roll_q   = ((float)(newCommand->param4 & 0xFFFF));
-                filterConfig.roll_p   = ((float)(newCommand->param4 >> 16));
+                filterConfig.roll_r   = ((float)(newCommand->param4 >> 16));
                 filterConfig.yaw_q    = ((float)(newCommand->param5 & 0xFFFF));
-                filterConfig.yaw_p    = ((float)(newCommand->param5 >> 16));
+                filterConfig.yaw_r    = ((float)(newCommand->param5 >> 16));
                 memset((uint8_t *)&imufCommandTx, 0, sizeof(imufCommandTx));
                 imufCommandTx.command = BC_IMUF_SETUP;
                 imufCommandTx.crc     = BC_IMUF_SETUP;
