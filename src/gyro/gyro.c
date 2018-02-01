@@ -59,9 +59,6 @@ static void gyro_configure(void)
     {
         error_handler(GYRO_DETECT_FAILURE);
     }
-    // reset gyro
-	gyro_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_H_RESET);
-	HAL_Delay(80);
 
     // set gyro clock to Z axis gyro
     gyro_verify_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_CLK_Z);
@@ -119,12 +116,11 @@ static int gyro_device_detect(void)
     // reset gyro
     gyro_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_H_RESET);
     HAL_Delay(80);
-    gyro_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_H_RESET);
 
     // poll for the who am i register while device resets
     for (attempt = 0; attempt < 250; attempt++)
     {
-        HAL_Delay(80);
+        HAL_Delay(2);
 
         gyro_read_data(INVENS_RM_WHO_AM_I, &data, 1);
         switch (data)
