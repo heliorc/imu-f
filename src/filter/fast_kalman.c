@@ -5,6 +5,7 @@
 
 fastKalman_t fastKalmanFilterStateRate[3];
 filterTypedef_t filterType;
+ filter_config_t filterConfig;
 
 void initFilter(fastKalman_t *filter, float q, float r, float p, float intialValue) {
     filter->q     = q * 0.001f; //add multiplier to make tuning easier
@@ -16,12 +17,12 @@ void initFilter(fastKalman_t *filter, float q, float r, float p, float intialVal
     filter->gyroDfkfDataPtr = 0;  
 }
 
-void fast_kalman_init(float q, float r, float p, float intialValue, filterTypedef_t type)
+void fast_kalman_init(filterTypedef_t type)
 {
     filterType = type;
-	initFilter(&fastKalmanFilterStateRate[0], q, r, p, intialValue);
-	initFilter(&fastKalmanFilterStateRate[1], q, r, p, intialValue);
-	initFilter(&fastKalmanFilterStateRate[2], q * 0.5f, r, p, intialValue);
+	initFilter(&fastKalmanFilterStateRate[0], filterConfig.pitch_q, 88.0f, filterConfig.pitch_p, 0.0f);
+	initFilter(&fastKalmanFilterStateRate[1], filterConfig.roll_q, 88.0f, filterConfig.roll_p, 0.0f);
+	initFilter(&fastKalmanFilterStateRate[2], (filterConfig.yaw_q * 0.5f), 88.0f, (filterConfig.yaw_p * 0.5f), 0.0f);
 }
 
 float noiseEstimate(float data[], uint32_t size)

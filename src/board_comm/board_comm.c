@@ -4,6 +4,7 @@
 #include "board_comm.h"
 #include "includes.h"
 #include "boothandler.h"
+#include "fast_kalman.h"
 
 #define simpleDelay_ASM(us) do {\
 	asm volatile (	"MOV R0,%[loops]\n\t"\
@@ -132,7 +133,14 @@ static void run_command(volatile imufCommand_t* newCommand)
                 //let's pretend the f4 sent this for now
 
                 //f4 needs to send all valid setup commands
-                uint32_t param1 = newCommand->param1;
+                uint32_t filterMode      = newCommand->param1;
+                uint32_t gyroOrientation = newCommand->param2;
+                filterConfig.pitch_q  = ((float)(newCommand->param3 & 0xFFFF));
+                filterConfig.pitch_p  = ((float)(newCommand->param3 >> 16));
+                filterConfig.roll_q   = ((float)(newCommand->param4 & 0xFFFF));
+                filterConfig.roll_p   = ((float)(newCommand->param4 >> 16));
+                filterConfig.yaw_q    = ((float)(newCommand->param5 & 0xFFFF));
+                filterConfig.yaw_p    = ((float)(newCommand->param5 >> 16));
                 memset((uint8_t *)&imufCommandTx, 0, sizeof(imufCommandTx));
                 imufCommandTx.command = BC_IMUF_SETUP;
                 imufCommandTx.crc     = BC_IMUF_SETUP;
@@ -142,7 +150,7 @@ static void run_command(volatile imufCommand_t* newCommand)
                 if (check == HAL_OK)
                 {
                     //message succsessfully sent to F4, switch to new comm mode now since f4 expects it now
-                    boardCommState.commMode = (param1);
+                    boardCommState.commMode = (filterMode);
                     //gyro.c will now handle communication
                     timeBoardCommSetupIsr = HAL_GetTick();
                     rewind_board_comm_spi(); 

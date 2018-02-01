@@ -11,7 +11,7 @@ void filter_data(axisData_t *gyroRateData, axisData_t *gyroAccData,float gyroTem
 	if(firstRun)
 	{
         firstRun = 0;
-		fast_kalman_init(3000.0f, 88.0f, 3000.0f, 0.0f, DISTANCE_ESTIMATION);
+		fast_kalman_init(DISTANCE_ESTIMATION);
 		memset(&(lpfFilterStateRate.x), 0, sizeof(biquad_axis_state_t));
 		memset(&(lpfFilterStateRate.y), 0, sizeof(biquad_axis_state_t));
 		memset(&(lpfFilterStateRate.z), 0, sizeof(biquad_axis_state_t));

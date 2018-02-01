@@ -27,8 +27,19 @@ typedef enum filterTypedef
     DISTANCE_ESTIMATION = 2
 } filterTypedef_t;
 
+typedef struct filter_config {
+    float pitch_q;
+    float pitch_p;
+    float roll_q;
+    float roll_p;
+    float yaw_q;
+    float yaw_p;
+} filter_config_t;
+
+extern filter_config_t filterConfig;
+
 extern fastKalman_t fastKalmanFilterStateRate[];
 
-extern void fast_kalman_init(float q, float r, float p, float intialValue, filterTypedef_t type);
+extern void fast_kalman_init(filterTypedef_t type);
 extern float fast_kalman_pdate(filterAxisTypedef_t axis, float input);
 extern void filter_data(axisData_t* gyroRateData,axisData_t* gyroAccData,float gyroTempData, filteredData_t* filteredData);
