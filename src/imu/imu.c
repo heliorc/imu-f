@@ -5,7 +5,7 @@
 
 //#define HALF_GYRO_DT 0.000125f //1/2 of dT for gyro sample rate which is 32 KHz
 //#define HALF_GYRO_DT 0.00025f //1/2 of dT for gyro sample rate which is 32 KHz
-#define HALF_GYRO_DT 0.00003125f //1/2 of dT for gyro sample rate which is 32 KHz
+#define HALF_GYRO_DT 0.000015625f //1/2 of dT for gyro sample rate which is 32 KHz
 
 volatile int quadInverted = 0;
 volatile quaternion_record_t gyroQuat;
@@ -120,7 +120,7 @@ static void MultiplyQuatAndVector(volatile quaternion_record_t *quatOut, volatil
 }
 void update_imu(vector_record_t *gyroVector, vector_record_t *accBodyVector)
 {
-	volatile float accTrust = 0.01;
+	volatile float accTrust = 1000.0f;
 	float norm;
     static int interationCounter = 0;
     static uint32_t forcedUntilBelow = 0;
@@ -133,13 +133,13 @@ void update_imu(vector_record_t *gyroVector, vector_record_t *accBodyVector)
 	interationCounter++;
     if(interationCounter++ < 7000) //7000 is 7 seconds
     {
-        accTrust = 100.0f;
+        accTrust = 1000.0f;
     }
     else
     {
         //vary trust from 2 to 0 based on spin rate (should also look at noise)
         //accTrust = CHANGERANGE( CONSTRAIN(currentSpinRate, 0.0f, 360.0f), 50.0f, 0.0f, -2.0f, 0.0f) * -2.0f;
-        accTrust = CHANGERANGE( CONSTRAIN(currentSpinRate, 0.0f, 500.0f), 500.0f, 0.0f, 0.0f, 5.0f);
+        accTrust = CHANGERANGE( CONSTRAIN(currentSpinRate, 0.0f, 500.0f), 500.0f, 0.0f, 0.0f, 50.0f);
     }
 
 	//accTrust = 100.0f;
