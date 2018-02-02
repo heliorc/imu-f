@@ -64,10 +64,11 @@ void bootloader_start(void)
 {
     //setup bootloader pin then wait 50 ms
     single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_UP);
-    //todo: add delay functions
+    delay_ms(2);
 
     //If boothandler tells us to, or if pin is hi, we enter BL mode
-    if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || read_digital_input(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) )
+    //if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || read_digital_input(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) )
+    if ( 1 ) //testing, force bl mode
     {
 
         board_comm_init();
