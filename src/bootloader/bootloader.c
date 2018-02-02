@@ -1,71 +1,37 @@
 #include "includes.h"
 #include "bootloader.h"
 #include "board_comm.h"
+#include "config.h"
 
-//here just so it can compuile
-typedef enum 
+static void run_command(volatile imufCommand_t *command, volatile imufCommand_t *reply)
 {
-    BC_NONE                 = 0,
-    BL_ERASE_ALL            = 22,
-    BL_ERASE_ADDRESS_RANGE  = 23,
-    BL_REPORT_INFO          = 24,
-    BL_BOOT_TO_APP          = 25,
-    BL_BOOT_TO_LOCATION     = 26,
-    BL_RESTART              = 27,
-    BL_WRITE_FIRMWARE       = 28,
-    BL_WRITE_FIRMWARES      = 29,
-    BL_PREPARE_PROGRAM      = 30,
-    BL_END_PROGRAM          = 31,
-    BC_IMUF_CALIBRATE       = 99,
-    BC_IMUF_LISTENING       = 108,
-    BC_IMUF_REPORT_INFO     = 121,
-    BC_IMUF_SETUP           = 122,
-    BC_IMUF_RESTART         = 127,
-} imufCommandsList_t;
-
-typedef struct imufCommand {
-   uint32_t param0;
-   uint32_t command;
-   uint32_t param1;
-   uint32_t param2;
-   uint32_t param3;
-   uint32_t param4;
-   uint32_t param5;
-   uint32_t param6;
-   uint32_t param7;
-   uint32_t param8;
-   uint32_t param9;
-   uint32_t param10;
-   uint32_t crc;
-   uint32_t param11;
-} __attribute__ ((aligned (16), packed)) imufCommand_t;
-
-
-static void run_command(volatile imufCommand_t *command)
-{
+    clear_imuf_command(reply);
     switch (command->command)
     {
         case BL_ERASE_ALL:
             erase_flash(APP_ADDRESS, FLASH_END);
+            reply->command = reply->crc = BL_ERASE_ALL;
         break;
         case BL_ERASE_ADDRESS_RANGE:
             erase_range(command->param1, command->param2);
+            reply->command = reply->crc = BL_ERASE_ADDRESS_RANGE;
         break;
         case BL_REPORT_INFO:
-        //memset(boardCommSpixxBuffer, 0, COM_BUFFER_SIZE);       
-        //get_report_info(&boardCommSPIHandle, boardCommSpixxBuffer, boardCommSpixxBuffer);
+            volatile_uint32_copy( (uint32_t *)&(reply->param1), (uint32_t *)&flightVerson, sizeof(flightVerson));
+            reply->command = reply->crc = BL_REPORT_INFO;
         break;
         case BL_BOOT_TO_APP:
-            boot_to_address(APP_ADDRESS);
+            boot_to_address(APP_ADDRESS);     //can't reply of course
         break;
         case BL_BOOT_TO_LOCATION:
-            boot_to_address(command->param1);
+            boot_to_address(command->param1); //can't reply of course
         break;
         case BL_RESTART:
-            boot_to_address(THIS_ADDRESS);
+            boot_to_address(THIS_ADDRESS);    //can't reply of course
         break;
         case BL_WRITE_FIRMWARE:
             flash_program_word(command->param1, command->param2);
+            reply->command = reply->crc = BL_WRITE_FIRMWARE;
         break;
         case BL_WRITE_FIRMWARES:
             //write 8 words in one spi transaction
@@ -77,14 +43,19 @@ static void run_command(volatile imufCommand_t *command)
             flash_program_word(command->param1, command->param7);
             flash_program_word(command->param1, command->param8);
             flash_program_word(command->param1, command->param9);
+            reply->command = reply->crc = BL_WRITE_FIRMWARES;
         break;
         case BL_PREPARE_PROGRAM:
             prepare_flash_for_program();
+            reply->command = reply->crc = BL_PREPARE_PROGRAM;
         break;
         case BL_END_PROGRAM:
             end_flash_for_program();
+            reply->command = reply->crc = BL_END_PROGRAM;
         break;
         default:
+            //invalid command, just listen now
+            bcTx.command = bcTx.crc = BL_LISTENING;
         break;
     }
 }
@@ -98,17 +69,36 @@ void bootloader_start(void)
     //If boothandler tells us to, or if pin is hi, we enter BL mode
     if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || read_digital_input(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) )
     {
+
         board_comm_init();
-        //register callback for transfer complete
-        //spiCallbackFunctionArray[BOARD_COMM_SPI_NUM] = bootloader_spi_callback;
-        //init board comm SPI
-        //board_comm_init();
+        clear_imuf_command(&bcRx);
+        clear_imuf_command(&bcTx);
+        bcTx.command = bcTx.crc = BL_LISTENING;
+        start_listening();
+
         while(1)
         {
             //wait until transaction is complete
             while (DMA_GetFlagStatus(BOARD_COMM_RX_DMA_FLAG_TC) == RESET)
             {
-                
+                //doing this in a while loop for testing
+            }
+
+            board_comm_spi_complete(); //this needs to be called when the transaction is complete
+
+            if ( (bcTx.command == BL_LISTENING) && parse_imuf_command(&bcRx) )//we  were waiting for a command //we have a valid command
+            {
+                //command checks out
+                run_command(&bcRx,&bcTx);
+                start_listening();
+            }
+            else
+            {
+                //bad command, listen for another
+                clear_imuf_command(&bcRx);
+                clear_imuf_command(&bcTx);
+                bcTx.command = bcTx.crc = BL_LISTENING;
+                start_listening();
             }
             //if (spiRxBuffer[3] == 'r' )
             //{

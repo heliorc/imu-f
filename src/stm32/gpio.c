@@ -1,5 +1,17 @@
 #include "includes.h"
 
+void gpio_write_pin(GPIO_TypeDef * GPIOx, uint16_t GPIO_Pin, uint32_t pinState)
+{
+    if (pinState != 0)
+    {
+        GPIOx->BSRR = (uint32_t)GPIO_Pin;
+    }
+    else
+    {
+        GPIOx->BRR = (uint32_t)GPIO_Pin;
+    }
+}
+
 uint32_t read_digital_input(GPIO_TypeDef * GPIOx, uint16_t GPIO_Pin)
 {
     return (GPIOx->IDR & GPIO_Pin);

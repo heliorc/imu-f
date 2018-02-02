@@ -34,12 +34,12 @@ void spi_init(SPI_InitTypeDef *spiInitStructure, DMA_InitTypeDef *dmaInitStructu
 }
 
 //start the dma transaction
-void spi_fire_dma(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_TypeDef *rxDma, DMA_InitTypeDef *dmaInitStructure, uint32_t size, uint8_t *txBuff, uint8_t *rxBuff)
+void spi_fire_dma(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_TypeDef *rxDma, DMA_InitTypeDef *dmaInitStructure, uint32_t *size, volatile uint8_t *txBuff, volatile uint8_t *rxBuff)
 {
     //These two blocks of code are kind of expensive, we can make them much smaller and we need to for runtime.
     //setting the init structure piece by peice just to fill some regs is pricey when we can just set the regs ourselves
     //DMA channel Rx of SPI Configuration
-    dmaInitStructure->DMA_BufferSize = size;
+    dmaInitStructure->DMA_BufferSize = *size;
     dmaInitStructure->DMA_PeripheralBaseAddr = (uint32_t)(spi->DR);
     dmaInitStructure->DMA_MemoryBaseAddr = (uint32_t)rxBuff;
     dmaInitStructure->DMA_DIR = DMA_DIR_PeripheralSRC;
@@ -48,7 +48,7 @@ void spi_fire_dma(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_Type
 
     //setting the init structure piece by peice just to fill some regs is pricey when we can just set the regs ourselves
     //DMA channel Tx of SPI Configuration
-    dmaInitStructure->DMA_BufferSize = size;
+    dmaInitStructure->DMA_BufferSize = *size;
     dmaInitStructure->DMA_PeripheralBaseAddr = (uint32_t)(spi->DR);
     dmaInitStructure->DMA_MemoryBaseAddr = (uint32_t)txBuff;
     dmaInitStructure->DMA_DIR = DMA_DIR_PeripheralDST;
@@ -65,14 +65,15 @@ void spi_fire_dma(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_Type
     /* Enable the DMA channels */
     DMA_Cmd(rxDma, ENABLE); //simp
     DMA_Cmd(txDma, ENABLE); //simp
+
 }
 
 //after spi transaction is done
-void cleanup_spi(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_TypeDef *rxDma, uint32_t *txDmaFlag, uint32_t *rxDmaFlag)
+void cleanup_spi(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_TypeDef *rxDma, uint32_t txDmaFlag, uint32_t rxDmaFlag)
 {
     /* Clear DMA1 global flags */
-    DMA_ClearFlag(*txDmaFlag); //simp
-    DMA_ClearFlag(*rxDmaFlag); //simp
+    DMA_ClearFlag(txDmaFlag); //simp
+    DMA_ClearFlag(rxDmaFlag); //simp
    
     /* Disable the DMA channels */
     DMA_Cmd(txDma, DISABLE); //simp
