@@ -76,10 +76,10 @@ void QuaternionZeroRotation(volatile quaternion_record_t *quaternion)
 
 void MultiplyQuaternionByQuaternion(volatile quaternion_record_t *qOut, volatile quaternion_record_t *q1, volatile quaternion_record_t *q2)
 {
-    qOut->w = q1->w * q2->w - q1->vector.x * q2->vector.x - q1->vector.y * q2->vector.y - q1->vector.z * q2->vector.z;
-	qOut->vector.x = q1->w * q2->vector.x + q1->vector.z * q2->vector.y - q1->vector.y * q2->vector.z + q1->vector.x * q2->w;  
-    qOut->vector.y = q1->w * q2->vector.y + q1->vector.x * q2->vector.z + q1->vector.y * q2->w - q1->vector.z * q2->vector.x;
-    qOut->vector.z = q1->vector.y * q2->vector.x - q1->vector.x * q2->vector.y + q1->w * q2->vector.z + q1->vector.z * q2->w;
+    qOut->w = (q1->w * q2->w) - (q1->vector.x * q2->vector.x) - (q1->vector.y * q2->vector.y) - (q1->vector.z * q2->vector.z);
+	qOut->vector.x = (q1->w * q2->vector.x) + (q1->vector.x * q2->w) + (q1->vector.y * q2->vector.z) - (q1->vector.z * q2->vector.y);  
+    qOut->vector.y = (q1->w * q2->vector.y) - (q1->vector.x * q2->vector.z) + (q1->vector.y * q2->w) + (q1->vector.z * q2->vector.x);
+    qOut->vector.z = (q1->w * q2->vector.z) + (q1->vector.x * q2->vector.y) - (q1->vector.y * q2->vector.x) + (q1->vector.z * q2->w);
 }
 
 
