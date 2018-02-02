@@ -75,6 +75,8 @@ void clock_config(void)
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE);
 
+    RCC_I2SCLKConfig(RCC_I2S2CLKSource_SYSCLK);
+
     //enable DMA clock
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
 
@@ -84,7 +86,8 @@ void clock_config(void)
         RCC_AHBPeriph_GPIOB |
         RCC_AHBPeriph_GPIOC |
         RCC_AHBPeriph_GPIOD |
-        RCC_AHBPeriph_GPIOE
+        RCC_AHBPeriph_GPIOE |
+        RCC_AHBPeriph_GPIOF
         , ENABLE
     );
 

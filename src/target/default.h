@@ -24,7 +24,7 @@ enum
     //clock config for std per
     #define TARGET_HSE                      ((uint32_t)(RCC_CR_HSEBYP | RCC_CR_HSEON))
     #define TARGET_FLASH_LATENCY            0x4U
-    #define TARGET_PLL_MUL                  RCC_CFGR_PLLMULL6
+    #define TARGET_PLL_MUL                  RCC_CFGR_PLLMULL8
     #define TARGET_AHB_DIV                  (uint32_t)RCC_CFGR_HPRE_DIV1
     #define TARGET_APBH1_DIV                (uint32_t)RCC_CFGR_PPRE1_DIV2
     #define TARGET_APBH2_DIV                (uint32_t)RCC_CFGR_PPRE2_DIV1
@@ -62,6 +62,7 @@ enum
     #define GYRO_EXTI_HANDLER               EXTI3_IRQHandler
     #define GYRO_EXTI_LINE                  EXTI_Line3
 
+
     #define BOARD_COMM_SPI                  SPI2
     #define BOARD_COMM_SPI_NUM              1   //SPI3 = 2, SPI2 = 1, SPI1 = 0,
     #define BOARD_COMM_SPI_IRQn             SPI2_IRQn
@@ -72,28 +73,34 @@ enum
     #define BOARD_COMM_TX_DMA_FLAG_GL       DMA1_FLAG_GL5
     #define BOARD_COMM_RX_DMA_FLAG_TC       DMA1_FLAG_TC4
     #define BOARD_COMM_TX_DMA_FLAG_TC       DMA1_FLAG_TC5
+
     #define BOARD_COMM_CS_TYPE              NSS_NONE
     #define BOARD_COMM_CS_PIN_SRC           GPIO_PinSource1
     #define BOARD_COMM_CS_PIN               GPIO_Pin_1
     #define BOARD_COMM_CS_PORT              GPIOA
     #define BOARD_COMM_CS_ALTERNATE         0
     #define BOARD_COMM_CS_MODE              GPIO_Mode_OUT
+
     #define BOARD_COMM_MISO_PIN_SRC         GPIO_PinSource10
     #define BOARD_COMM_MISO_PIN             GPIO_Pin_10
     #define BOARD_COMM_MISO_PORT            GPIOA
     #define BOARD_COMM_MISO_ALTERNATE       GPIO_AF_5
+
     #define BOARD_COMM_MOSI_PIN_SRC         GPIO_PinSource11
     #define BOARD_COMM_MOSI_PIN             GPIO_Pin_11
     #define BOARD_COMM_MOSI_PORT            GPIOA
     #define BOARD_COMM_MOSI_ALTERNATE       GPIO_AF_5
+
     #define BOARD_COMM_SCK_PIN_SRC          GPIO_PinSource1
     #define BOARD_COMM_SCK_PIN              GPIO_Pin_1
     #define BOARD_COMM_SCK_PORT             GPIOF
     #define BOARD_COMM_SCK_ALTERNATE        GPIO_AF_5
+
     #define BOARD_COMM_SPI_RX_DMA_HANDLER   DMA1_Channel4_IRQHandler
     #define BOARD_COMM_SPI_TX_DMA_HANDLER   DMA1_Channel5_IRQHandler
     #define BOARD_COMM_SPI_RX_DMA_IRQn      DMA1_Channel4_IRQn
     #define BOARD_COMM_SPI_TX_DMA_IRQn      DMA1_Channel5_IRQn
+
 
     #define BOARD_COMM_DATA_RDY_PORT        GPIOA
     #define BOARD_COMM_DATA_RDY_PIN_SRC     GPIO_PinSource0

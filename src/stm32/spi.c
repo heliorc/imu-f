@@ -40,7 +40,7 @@ void spi_fire_dma(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_Type
     //setting the init structure piece by peice just to fill some regs is pricey when we can just set the regs ourselves
     //DMA channel Rx of SPI Configuration
     dmaInitStructure->DMA_BufferSize = *size;
-    dmaInitStructure->DMA_PeripheralBaseAddr = (uint32_t)(spi->DR);
+    dmaInitStructure->DMA_PeripheralBaseAddr = (uint32_t)(&spi->DR);
     dmaInitStructure->DMA_MemoryBaseAddr = (uint32_t)rxBuff;
     dmaInitStructure->DMA_DIR = DMA_DIR_PeripheralSRC;
     dmaInitStructure->DMA_Priority = DMA_Priority_High;
@@ -49,7 +49,7 @@ void spi_fire_dma(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_Type
     //setting the init structure piece by peice just to fill some regs is pricey when we can just set the regs ourselves
     //DMA channel Tx of SPI Configuration
     dmaInitStructure->DMA_BufferSize = *size;
-    dmaInitStructure->DMA_PeripheralBaseAddr = (uint32_t)(spi->DR);
+    dmaInitStructure->DMA_PeripheralBaseAddr = (uint32_t)(&spi->DR);
     dmaInitStructure->DMA_MemoryBaseAddr = (uint32_t)txBuff;
     dmaInitStructure->DMA_DIR = DMA_DIR_PeripheralDST;
     dmaInitStructure->DMA_Priority = DMA_Priority_Low;

@@ -51,7 +51,7 @@ typedef struct imufCommand {
    uint32_t param10;
    uint32_t crc;
    uint32_t syncWord; //overflow, used for sync
-} __attribute__ ((aligned (16), packed)) imufCommand_t;
+} __attribute__ ((packed)) imufCommand_t;
 
 extern volatile imufCommand_t bcRx;
 extern volatile imufCommand_t bcTx;

@@ -80,8 +80,12 @@ void bootloader_start(void)
         while(1)
         {
             //wait until transaction is complete, spiDoneFlag is set via exti 
-            while ( !spiDoneFlag || DMA_GetFlagStatus(BOARD_COMM_RX_DMA_FLAG_TC) == RESET)
+            while ( !spiDoneFlag )
             {
+                if(  DMA_GetFlagStatus(BOARD_COMM_RX_DMA_FLAG_TC) == SET )
+                {
+                    spiDoneFlag = 1;
+                }
                 //doing this in a while loop for testing
             }
 

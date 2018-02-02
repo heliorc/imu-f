@@ -43,6 +43,11 @@ void board_comm_init(void)
     single_gpio_init(BOARD_COMM_MOSI_PORT, BOARD_COMM_MOSI_PIN_SRC, BOARD_COMM_MOSI_PIN, BOARD_COMM_MOSI_ALTERNATE, GPIO_Mode_AF, GPIO_OType_PP, GPIO_PuPd_NOPULL);
     single_gpio_init(BOARD_COMM_SCK_PORT,  BOARD_COMM_SCK_PIN_SRC,  BOARD_COMM_SCK_PIN,  BOARD_COMM_SCK_ALTERNATE,  GPIO_Mode_AF, GPIO_OType_PP, GPIO_PuPd_NOPULL);
 
+//single_gpio_init(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PORT_SRC, BOARD_COMM_EXTI_PIN, 0, GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
+//gpio_write_pin(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PIN, 0);
+//gpio_write_pin(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PIN, 1);
+//gpio_write_pin(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PIN, 0);
+//gpio_write_pin(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PIN, 1);
     //setup NSS GPIO if need be then init SPI and DMA for the SPI based on NSS type
     if(BOARD_COMM_CS_TYPE == NSS_HARD)
     {
@@ -61,6 +66,7 @@ void board_comm_init(void)
         spi_init(&boardCommSpiInitStruct, &boardCommDmaInitStruct, BOARD_COMM_SPI, SPI_Mode_Slave, SPI_NSS_Soft);
     }
 
+    
     single_gpio_init(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN_SRC, BOARD_COMM_DATA_RDY_PIN, 0, GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
 
 }
@@ -81,7 +87,7 @@ void start_listening(void)
 {
     spiDoneFlag = 0;
 
-    spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, &boardCommSize, bcTxPtr, bcRxPtr);
+    spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, &boardCommSize, (uint8_t *)&bcTx, (uint8_t *)&bcRx);
     gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
 }
 
@@ -89,4 +95,5 @@ void board_comm_spi_complete(void)
 {
     gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
     cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA_FLAG_GL, BOARD_COMM_RX_DMA_FLAG_GL);
+    volatile int cat =1;
 }
