@@ -1,5 +1,10 @@
 #include "includes.h"
 
+uint32_t read_digital_input(GPIO_TypeDef * GPIOx, uint16_t GPIO_Pin)
+{
+    return (GPIOx->IDR & GPIO_Pin);
+}
+
 void single_gpio_init(GPIO_TypeDef * port, uint16_t pin_src, uint16_t pin, uint8_t af, GPIOMode_TypeDef mode, GPIOOType_TypeDef output, GPIOPuPd_TypeDef pull)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -19,7 +24,6 @@ void single_gpio_init(GPIO_TypeDef * port, uint16_t pin_src, uint16_t pin, uint8
 
     //init the gpio
     GPIO_Init(port, &GPIO_InitStructure);
-
 }
 
 void board_gpio_init(void)

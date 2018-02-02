@@ -55,13 +55,13 @@ static void run_command(volatile imufCommand_t *command)
         //get_report_info(&boardCommSPIHandle, boardCommSpixxBuffer, boardCommSpixxBuffer);
         break;
         case BL_BOOT_TO_APP:
-            BootToAddress(APP_ADDRESS);
+            boot_to_address(APP_ADDRESS);
         break;
         case BL_BOOT_TO_LOCATION:
-            BootToAddress(command->param1);
+            boot_to_address(command->param1);
         break;
         case BL_RESTART:
-            BootToAddress(THIS_ADDRESS);
+            boot_to_address(THIS_ADDRESS);
         break;
         case BL_WRITE_FIRMWARE:
             flash_program_word(command->param1, command->param2);
@@ -95,7 +95,7 @@ void bootloader_start(void)
     //todo: add delay functions
 
     //If boothandler tells us to, or if pin is hi, we enter BL mode
-    if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || GPIO_ReadInputDataBit(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) )
+    if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || read_digital_input(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) )
     {
         //register callback for transfer complete
         //spiCallbackFunctionArray[BOARD_COMM_SPI_NUM] = bootloader_spi_callback;
@@ -107,6 +107,6 @@ void bootloader_start(void)
     else 
     {
         //boot to app
-        BootToAddress(APP_ADDRESS);
+        boot_to_address(APP_ADDRESS);
     }
 }

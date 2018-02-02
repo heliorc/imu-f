@@ -30,6 +30,7 @@ static void sys_tick_config(void)
 
 void clock_config(void)
 {
+    //TODO: Will need to add all the clocks
     //Enable SPI clocks
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE);
