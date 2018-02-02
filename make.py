@@ -120,7 +120,7 @@ def configure_target(TARGET):
     elif TARGET == "F3BING":
         PROJECT = "C3PUBL"
         TARGET_DEVICE = "STM32F302x8"
-        TARGET_SCRIPT = "stm32_flash_f30x_32k.ld"
+        TARGET_SCRIPT = "stm32_flash_f30x_0x08000000_6k.ld"
         OPTIMIZE_FLAGS = "-Os"
         HSE_SPEED = str(16000000)
 
@@ -170,7 +170,6 @@ def configure_target(TARGET):
         "src",
         os.path.join("src", "stm32"),
         os.path.join("src", "target"),
-        os.path.join("src", "bootloader"),
         os.path.join("src", "new_board_comm"),
         LIBRARY_PATH + "/CMSIS_std/Device/ST/STM32F30x/Include",
         LIBRARY_PATH + "/STM32F30x_StdPeriph_Driver/inc",
@@ -181,11 +180,15 @@ def configure_target(TARGET):
         "src",
         os.path.join("src", "stm32"),
         os.path.join("src", "target"),
-        os.path.join("src", "bootloader"),
         os.path.join("src", "new_board_comm"),
         LIBRARY_PATH + "/CMSIS_std/Device/ST/STM32F30x/Source",
         LIBRARY_PATH + "/STM32F30x_StdPeriph_Driver/src"
     ]
+
+    if PROJECT == "C3PUBL":
+        INCLUDE_DIRS.append(os.path.join("src", "bootloader"))
+        SOURCE_DIRS.append(os.path.join("src", "bootloader"))
+
     #extra source files to include not in the above dirs
     SOURCE_FILES = [
         this_dir + "/assembly/startup/startup_stm32f303xc.s"
