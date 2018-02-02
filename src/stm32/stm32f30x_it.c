@@ -26,7 +26,8 @@
   */ 
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f30x_it.h"
+#include "includes.h"
+#include "board_comm.h"
 
 /** @addtogroup STM32F30x_StdPeriph_Examples
   * @{
@@ -154,6 +155,16 @@ void SysTick_Handler(void)
 /*  available peripheral interrupt handler's name please refer to the startup */
 /*  file (startup_stm32f30x.s).                                            */
 /******************************************************************************/
+
+void BOARD_COMM_EXTI_HANDLER(void)
+{
+    /* Make sure that interrupt flag is set */
+    if (EXTI_GetITStatus(BOARD_COMM_EXTI_LINE) != RESET)
+    {
+        spiDoneFlag=1;
+        EXTI_ClearITPendingBit(BOARD_COMM_EXTI_LINE);
+    }
+}
 
 /**
   * @brief  This function handles PPP interrupt request.

@@ -78,8 +78,8 @@ void bootloader_start(void)
 
         while(1)
         {
-            //wait until transaction is complete
-            while (DMA_GetFlagStatus(BOARD_COMM_RX_DMA_FLAG_TC) == RESET)
+            //wait until transaction is complete, spiDoneFlag is set via exti 
+            while ( !spiDoneFlag || DMA_GetFlagStatus(BOARD_COMM_RX_DMA_FLAG_TC) == RESET)
             {
                 //doing this in a while loop for testing
             }
@@ -100,12 +100,6 @@ void bootloader_start(void)
                 bcTx.command = bcTx.crc = BL_LISTENING;
                 start_listening();
             }
-            //if (spiRxBuffer[3] == 'r' )
-            //{
-            //    spiTxBuffer[3] = 'r';
-            //    spiRxBuffer[3] = 0;
-            //    spi_done_callback();
-            //}
         }
     }
     else 

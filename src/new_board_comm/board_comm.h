@@ -55,6 +55,7 @@ typedef struct imufCommand {
 
 extern volatile imufCommand_t bcRx;
 extern volatile imufCommand_t bcTx;
+extern volatile uint32_t spiDoneFlag;
 
 extern void clear_imuf_command(volatile imufCommand_t* command);
 extern void volatile_uint32_copy(volatile uint32_t* dst, volatile uint32_t* src, uint32_t size);

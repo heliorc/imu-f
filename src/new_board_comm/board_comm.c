@@ -8,6 +8,7 @@ volatile imufCommand_t bcRx;
 volatile imufCommand_t bcTx;
 volatile uint8_t* bcRxPtr;
 volatile uint8_t* bcTxPtr;
+volatile uint32_t spiDoneFlag;
 uint32_t boardCommSize;
 
 void clear_imuf_command(volatile imufCommand_t* command)
@@ -52,11 +53,13 @@ void board_comm_init(void)
     {
         single_gpio_init(BOARD_COMM_CS_PORT, BOARD_COMM_CS_PIN_SRC, BOARD_COMM_CS_PIN, BOARD_COMM_CS_ALTERNATE, GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
         spi_init(&boardCommSpiInitStruct, &boardCommDmaInitStruct, BOARD_COMM_SPI, SPI_Mode_Slave, SPI_NSS_Soft);
+        gpio_exti_init(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PORT_SRC, BOARD_COMM_EXTI_PIN, BOARD_COMM_EXTI_PIN_SRC, BOARD_COMM_EXTI_LINE, EXTI_Trigger_Rising, BOARD_COMM_EXTI_IRQn, BOARD_COMM_EXTI_ISR_PRE_PRI, BOARD_COMM_EXTI_ISR_SUB_PRI);
     }
     else
     {
         spi_init(&boardCommSpiInitStruct, &boardCommDmaInitStruct, BOARD_COMM_SPI, SPI_Mode_Slave, SPI_NSS_Soft);
     }
+
 }
 
 int parse_imuf_command(volatile imufCommand_t* command)
@@ -73,6 +76,8 @@ int parse_imuf_command(volatile imufCommand_t* command)
 
 void start_listening(void)
 {
+    spiDoneFlag = 0;
+
     spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, &boardCommSize, bcTxPtr, bcRxPtr);
 
     if(BOARD_COMM_CS_MODE == NSS_SOFT)

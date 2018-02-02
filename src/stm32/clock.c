@@ -48,6 +48,8 @@ void clock_config(void)
         , ENABLE
     );
 
+    //enable SYSCFG clock
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 }
 
 

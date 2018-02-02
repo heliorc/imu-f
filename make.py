@@ -114,7 +114,7 @@ def configure_target(TARGET):
         PROJECT = "C3PU"
         TARGET_DEVICE = "STM32F302x8"
         TARGET_SCRIPT = "stm32_flash_f30x_32k.ld"
-        OPTIMIZE_FLAGS = "-Og"
+        OPTIMIZE_FLAGS = "-Os"
         HSE_SPEED = str(16000000)
 
     elif TARGET == "F3BING":
@@ -156,7 +156,7 @@ def configure_target(TARGET):
     #Not allowing DFU mode for the F3s
     DFU_ADDRESS = str(0x08000000)
     BL_ADDRESS = str(0x08000000)
-    APP_ADDRESS = str(0x08003000)
+    APP_ADDRESS = str(0x08002000) #8k bl
     MSP_ADDRESS = str(0x080E0000)
     THIS_ADDRESS = str(0x08000000)
     FLASH_END = str(0x08008000)

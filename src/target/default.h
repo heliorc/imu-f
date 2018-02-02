@@ -55,9 +55,12 @@ enum
     #define GYRO_SPI_TX_DMA_IRQn            DMA1_Channel3_IRQn
 
     #define GYRO_EXTI_PORT                  GPIOA
-    #define GYRO_EXTI_PIN                   GPIO_PinSource3
+    #define GYRO_EXTI_PORT_SRC              EXTI_PortSourceGPIOA
+    #define GYRO_EXTI_PIN_SRC               EXTI_PinSource3
+    #define GYRO_EXTI_PIN                   GPIO_Pin_3
     #define GYRO_EXTI_IRQn                  EXTI3_IRQn
     #define GYRO_EXTI_HANDLER               EXTI3_IRQHandler
+    #define GYRO_EXTI_LINE                  EXTI_Line3
 
     #define BOARD_COMM_SPI                  SPI2
     #define BOARD_COMM_SPI_NUM              1   //SPI3 = 2, SPI2 = 1, SPI1 = 0,
@@ -98,5 +101,13 @@ enum
     #define BOOTLOADER_CHECK_PORT           GPIOA
     #define BOOTLOADER_CHECK_PIN_SRC        GPIO_PinSource1
     #define BOOTLOADER_CHECK_PIN            GPIO_Pin_1
+
+    #define BOARD_COMM_EXTI_PORT            GPIOA
+    #define BOARD_COMM_EXTI_PORT_SRC        EXTI_PortSourceGPIOA
+    #define BOARD_COMM_EXTI_PIN_SRC         EXTI_PinSource1
+    #define BOARD_COMM_EXTI_PIN             GPIO_Pin_1
+    #define BOARD_COMM_EXTI_IRQn            EXTI1_IRQn
+    #define BOARD_COMM_EXTI_HANDLER         EXTI1_IRQHandler
+    #define BOARD_COMM_EXTI_LINE            EXTI_Line1
 
 #endif
