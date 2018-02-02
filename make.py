@@ -105,18 +105,21 @@ def configure_target(TARGET):
 
     if TARGET == "F3":
         PROJECT = "C3PU"
+        TARGET_DEVICE = "STM32F302x8"
         TARGET_SCRIPT = "stm32_flash_f30x_22k.ld"
         OPTIMIZE_FLAGS = "-O2"
         HSE_SPEED = str(16000000)
 
     elif TARGET == "F3SING":
         PROJECT = "C3PU"
+        TARGET_DEVICE = "STM32F302x8"
         TARGET_SCRIPT = "stm32_flash_f30x_32k.ld"
         OPTIMIZE_FLAGS = "-O3"
         HSE_SPEED = str(16000000)
 
     elif TARGET == "F3BING":
         PROJECT = "C3PUBL"
+        TARGET_DEVICE = "STM32F302x8"
         TARGET_SCRIPT = "stm32_flash_f30x_32k.ld"
         OPTIMIZE_FLAGS = "-Os"
         HSE_SPEED = str(16000000)
@@ -147,7 +150,6 @@ def configure_target(TARGET):
         os.system("PID=\"$(ps -elf | grep  openocd | grep -v 'grep' | sed -e 's/    / /g' | sed -e 's/   / /g' | sed -e 's/  / /g' | cut -d ' ' -f 3)\";kill $PID")
         os.system("openocd -s /usr/local/share/openocd/scripts -f /usr/local/share/openocd/scripts/interface/stlink-v2.cfg -f /usr/local/share/openocd/scripts/target/stm32f3x.cfg &> redirection &")
 
-    TARGET_DEVICE = "STM32F301x8"
     TARGET_PROCESSOR_TYPE = "F3"
 
     DFU_ADDRESS = str(0x1FF00000)
@@ -158,48 +160,34 @@ def configure_target(TARGET):
     FLASH_END = str(0x08008000)
 
     #extra D flags
-    EXTRA_DEF_FLAGS = " -DUSE_HAL_DRIVER -DTHIS_ADDRESS="+THIS_ADDRESS
+    EXTRA_DEF_FLAGS = " -DUSE_STDPERIPH_DRIVER -DTHIS_ADDRESS="+THIS_ADDRESS
 
 
     #All include dirs
     INCLUDE_DIRS = [
         "src",
         os.path.join("src", "stm32"),
-        os.path.join("src", "bootloader"),
-        os.path.join("src", "gpio"),
-        os.path.join("src", "gyro"),
-        os.path.join("src", "filter"),
-        os.path.join("src", "imu"),
-        os.path.join("src", "report"),
-        os.path.join("src", "board_comm"),
-        os.path.join("src", "error_handler"),
-        LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Include",
-        LIBRARY_PATH + "/STM32F3xx_HAL_Driver/Inc",
-        LIBRARY_PATH + "/CMSIS/Include"
+        os.path.join("src", "target"),
+        LIBRARY_PATH + "/CMSIS_std/Device/ST/STM32F30x/Include",
+        LIBRARY_PATH + "/STM32F30x_StdPeriph_Driver/inc",
+        LIBRARY_PATH + "/CMSIS_std/Include"
     ]
     #source dirs for all flie inclusion
     SOURCE_DIRS = [
         "src",
         os.path.join("src", "stm32"),
-        os.path.join("src", "bootloader"),
-        os.path.join("src", "gpio"),
-        os.path.join("src", "gyro"),
-        os.path.join("src", "filter"),
-        os.path.join("src", "imu"),
-        os.path.join("src", "report"),
-        os.path.join("src", "board_comm"),
-        os.path.join("src", "error_handler"),
-        LIBRARY_PATH + "/CMSIS/Device/ST/STM32F3xx/Source",
-        LIBRARY_PATH + "/STM32F3xx_HAL_Driver/Src"
+        os.path.join("src", "target"),
+        LIBRARY_PATH + "/CMSIS_std/Device/ST/STM32F30x/Source",
+        LIBRARY_PATH + "/STM32F30x_StdPeriph_Driver/src"
     ]
     #extra source files to include not in the above dirs
     SOURCE_FILES = [
         this_dir + "/assembly/startup/startup_stm32f303xc.s"
     ]
 
-    SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS/DSP_Lib/Source/CommonTables/arm_common_tables.c")
-    SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS/DSP_Lib/Source/FastMathFunctions/arm_cos_f32.c")
-    SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS/DSP_Lib/Source/FastMathFunctions/arm_sin_f32.c")
+    #SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/CommonTables/arm_common_tables.c")
+    #SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/FastMathFunctions/arm_cos_f32.c")
+    #SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/FastMathFunctions/arm_sin_f32.c")
     ################################################################################
     # Set per target compilation options
     FLAGS = [

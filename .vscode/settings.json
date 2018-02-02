@@ -31,6 +31,9 @@
         "stm32f3xx.h": "c",
         "boothandler.h": "c",
         "config.h": "c",
-        "imu.h": "c"
+        "imu.h": "c",
+        "stm32f30x.h": "c",
+        "stm32f30x_it.h": "c",
+        "isr_priority.h": "c"
     }
 }

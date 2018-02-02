@@ -13,5 +13,4 @@ void set_version(void)
     flightVerson.uid1       = (uint32_t)((*((uint32_t *)(UID_BASE))));
     flightVerson.uid2       = (uint32_t)((*((uint32_t *)(UID_BASE + 4U))));
     flightVerson.uid3       = (uint32_t)((*((uint32_t *)(UID_BASE + 8U))));
-
 }
