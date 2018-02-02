@@ -32,7 +32,8 @@ enum
     #define GYRO_RX_DMA                     DMA1_Channel2
     #define GYRO_TX_DMA                     DMA1_Channel3
     #define GYRO_CS_TYPE                    NSS_SOFT
-    #define GYRO_CS_PIN                     GPIO_PinSource4
+    #define GYRO_CS_PIN_SRC                 GPIO_PinSource4
+    #define GYRO_CS_PIN                     GPIO_Pin_4
     #define GYRO_CS_PORT                    GPIOA
     #define GYRO_CS_ALTERNATE               0
     #define GYRO_CS_MODE                    GPIO_MODE_OUTPUT_PP
@@ -64,17 +65,21 @@ enum
     #define BOARD_COMM_RX_DMA_FLAG          DMA1_FLAG_GL4
     #define BOARD_COMM_TX_DMA_FLAG          DMA1_FLAG_GL5
     #define BOARD_COMM_CS_TYPE              NSS_NONE
-    #define BOARD_COMM_CS_PIN               GPIO_PinSource9
+    #define BOARD_COMM_CS_PIN_SRC           GPIO_PinSource9
+    #define BOARD_COMM_CS_PIN               GPIO_Pin_9
     #define BOARD_COMM_CS_PORT              GPIOA
     #define BOARD_COMM_CS_ALTERNATE         0
     #define BOARD_COMM_CS_MODE              NSS_SOFT
-    #define BOARD_COMM_MISO_PIN             GPIO_PinSource10
+    #define BOARD_COMM_MISO_PIN_SRC         GPIO_PinSource10
+    #define BOARD_COMM_MISO_PIN             GPIO_Pin_10
     #define BOARD_COMM_MISO_PORT            GPIOA
     #define BOARD_COMM_MISO_ALTERNATE       GPIO_AF_5
-    #define BOARD_COMM_MOSI_PIN             GPIO_PinSource11
+    #define BOARD_COMM_MOSI_PIN_SRC         GPIO_PinSource11
+    #define BOARD_COMM_MOSI_PIN             GPIO_Pin_11
     #define BOARD_COMM_MOSI_PORT            GPIOA
     #define BOARD_COMM_MOSI_ALTERNATE       GPIO_AF_5
-    #define BOARD_COMM_SCK_PIN              GPIO_PinSource1
+    #define BOARD_COMM_SCK_PIN_SRC          GPIO_PinSource1
+    #define BOARD_COMM_SCK_PIN              GPIO_Pin_1
     #define BOARD_COMM_SCK_PORT             GPIOF
     #define BOARD_COMM_SCK_ALTERNATE        GPIO_AF_5
     #define BOARD_COMM_SPI_RX_DMA_HANDLER   DMA1_Channel4_IRQHandler
@@ -86,6 +91,7 @@ enum
     #define BOARD_COMM_DATA_RDY_PIN         GPIO_PinSource0
 
     #define BOOTLOADER_CHECK_PORT           GPIOA
-    #define BOOTLOADER_CHECK_PIN            GPIO_PinSource1
+    #define BOOTLOADER_CHECK_PIN_SRC        GPIO_PinSource1
+    #define BOOTLOADER_CHECK_PIN            GPIO_Pin_1
 
 #endif

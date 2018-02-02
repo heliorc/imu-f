@@ -1,5 +1,8 @@
 #include "includes.h"
+#include "bootloader.h"
 
+
+//todo all this needs to go to spi.c/h
 SPI_InitTypeDef  SPI_InitStructure;
 DMA_InitTypeDef  DMA_InitStructure;
 
@@ -94,6 +97,7 @@ int main(void)
     spi_rewind_dma();
     spi_init();
 
+    bootloader_start();
     while(1)
     {
         if (spiRxBuffer[3] == 'r' )
