@@ -219,8 +219,8 @@ void rewind_board_comm_spi(void)
     #define DMA_CCR1_EN                     ((uint16_t)0x0001)
 
     // Clear DMA1 global flags
-    //SET_BIT(DMA1->IFCR, BOARD_COMM_RX_DMA_FLAG);
-    //SET_BIT(DMA1->IFCR, BOARD_COMM_TX_DMA_FLAG);
+    //SET_BIT(DMA1->IFCR, BOARD_COMM_RX_DMA_FLAG_GL);
+    //SET_BIT(DMA1->IFCR, BOARD_COMM_TX_DMA_FLAG_GL);
 
     // Disable the DMA channels
     //BOARD_COMM_RX_DMA->CCR &= (uint16_t)(~DMA_CCR1_EN);

@@ -34,6 +34,7 @@
         "imu.h": "c",
         "stm32f30x.h": "c",
         "stm32f30x_it.h": "c",
-        "isr_priority.h": "c"
+        "isr_priority.h": "c",
+        "reset.h": "c"
     }
 }

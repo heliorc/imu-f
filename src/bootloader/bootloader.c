@@ -1,5 +1,6 @@
 #include "includes.h"
 #include "bootloader.h"
+#include "board_comm.h"
 
 //here just so it can compuile
 typedef enum 
@@ -97,12 +98,25 @@ void bootloader_start(void)
     //If boothandler tells us to, or if pin is hi, we enter BL mode
     if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || read_digital_input(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) )
     {
+        board_comm_init();
         //register callback for transfer complete
         //spiCallbackFunctionArray[BOARD_COMM_SPI_NUM] = bootloader_spi_callback;
         //init board comm SPI
         //board_comm_init();
-        //that's it, everything else is event based
-        while(1);
+        while(1)
+        {
+            //wait until transaction is complete
+            while (DMA_GetFlagStatus(BOARD_COMM_RX_DMA_FLAG_TC) == RESET)
+            {
+                
+            }
+            //if (spiRxBuffer[3] == 'r' )
+            //{
+            //    spiTxBuffer[3] = 'r';
+            //    spiRxBuffer[3] = 0;
+            //    spi_done_callback();
+            //}
+        }
     }
     else 
     {

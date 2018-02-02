@@ -1,5 +1,4 @@
 #include "includes.h"
-#include "flash.h"
 
 uint32_t numberOfPages, eraseCounter;
 __IO FLASH_Status flashStatus;

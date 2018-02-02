@@ -65,8 +65,10 @@ enum
     #define BOARD_COMM_SPI_RST_MSK          RCC_APB1RSTR_SPI2RST
     #define BOARD_COMM_RX_DMA               DMA1_Channel4
     #define BOARD_COMM_TX_DMA               DMA1_Channel5
-    #define BOARD_COMM_RX_DMA_FLAG          DMA1_FLAG_GL4
-    #define BOARD_COMM_TX_DMA_FLAG          DMA1_FLAG_GL5
+    #define BOARD_COMM_RX_DMA_FLAG_GL       DMA1_FLAG_GL4
+    #define BOARD_COMM_TX_DMA_FLAG_GL       DMA1_FLAG_GL5
+    #define BOARD_COMM_RX_DMA_FLAG_TC       DMA1_FLAG_TC4
+    #define BOARD_COMM_TX_DMA_FLAG_TC       DMA1_FLAG_TC5
     #define BOARD_COMM_CS_TYPE              NSS_NONE
     #define BOARD_COMM_CS_PIN_SRC           GPIO_PinSource9
     #define BOARD_COMM_CS_PIN               GPIO_Pin_9
