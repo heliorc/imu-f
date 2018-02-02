@@ -45,44 +45,43 @@ static void run_command(volatile imufCommand_t *command)
     switch (command->command)
     {
         case BL_ERASE_ALL:
-        //erase_flash(APP_ADDRESS, FLASH_END);
+            erase_flash(APP_ADDRESS, FLASH_END);
         break;
-        // case BL_ERASE_PAGE:
-        // erase_page();
-        // break;
         case BL_ERASE_ADDRESS_RANGE:
-        //erase_range(command->param1, command->param2);
+            erase_range(command->param1, command->param2);
         break;
         case BL_REPORT_INFO:
         //memset(boardCommSpixxBuffer, 0, COM_BUFFER_SIZE);       
         //get_report_info(&boardCommSPIHandle, boardCommSpixxBuffer, boardCommSpixxBuffer);
         break;
         case BL_BOOT_TO_APP:
-        BootToAddress(APP_ADDRESS);
+            BootToAddress(APP_ADDRESS);
         break;
         case BL_BOOT_TO_LOCATION:
-        BootToAddress(command->param1);
+            BootToAddress(command->param1);
         break;
         case BL_RESTART:
-        BootToAddress(THIS_ADDRESS);
+            BootToAddress(THIS_ADDRESS);
         break;
         case BL_WRITE_FIRMWARE:
-        //flash_program_word(command->param1, command->param2);
+            flash_program_word(command->param1, command->param2);
         break;
         case BL_WRITE_FIRMWARES:
-        //flash_program_word(command->param1, command->param2);
-        //flash_program_word(command->param1, command->param3);
-        //flash_program_word(command->param1, command->param4);
-        //flash_program_word(command->param1, command->param5);
-        //flash_program_word(command->param1, command->param6);
-        //flash_program_word(command->param1, command->param7);
-        //flash_program_word(command->param1, command->param8);
+            //write 8 words in one spi transaction
+            flash_program_word(command->param1, command->param2);
+            flash_program_word(command->param1, command->param3);
+            flash_program_word(command->param1, command->param4);
+            flash_program_word(command->param1, command->param5);
+            flash_program_word(command->param1, command->param6);
+            flash_program_word(command->param1, command->param7);
+            flash_program_word(command->param1, command->param8);
+            flash_program_word(command->param1, command->param9);
         break;
         case BL_PREPARE_PROGRAM:
-        //prepare_flash_for_program();
+            prepare_flash_for_program();
         break;
         case BL_END_PROGRAM:
-        //end_flash_for_program();
+            end_flash_for_program();
         break;
         default:
         break;

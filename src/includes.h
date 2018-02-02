@@ -4,8 +4,12 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
-#include "stm32f30x.h"
+
+//target specific
 #include "default.h"
+
+//stm32 defines, anything that uses std per
+#include "flash.h"
 #include "isr_priority.h"
 #include "config.h"
 #include "clock.h"

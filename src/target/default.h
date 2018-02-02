@@ -15,8 +15,11 @@ enum
     #include "motolab.h"
 #else
 
+    #include "stm32f30x.h"
+
     #define FLASHSIZE_BASE                  ((uint32_t)0x1FFFF7CCU)         /*!< FLASH Size register base address */
     #define UID_BASE                        ((uint32_t)0x1FFFF7ACU)         /*!< Unique device ID register base address */
+    #define FLASH_PAGE_SIZE                 0x800
 
     //clock config for std per
     #define TARGET_HSE                      ((uint32_t)(RCC_CR_HSEBYP | RCC_CR_HSEON))
