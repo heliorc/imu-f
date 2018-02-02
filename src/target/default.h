@@ -24,7 +24,7 @@ enum
     //clock config for std per
     #define TARGET_HSE                      ((uint32_t)(RCC_CR_HSEBYP | RCC_CR_HSEON))
     #define TARGET_FLASH_LATENCY            0x4U
-    #define TARGET_PLL_MUL                  RCC_CFGR_PLLMULL8
+    #define TARGET_PLL_MUL                  RCC_CFGR_PLLMULL6
     #define TARGET_AHB_DIV                  (uint32_t)RCC_CFGR_HPRE_DIV1
     #define TARGET_APBH1_DIV                (uint32_t)RCC_CFGR_PPRE1_DIV2
     #define TARGET_APBH2_DIV                (uint32_t)RCC_CFGR_PPRE2_DIV1
@@ -73,11 +73,11 @@ enum
     #define BOARD_COMM_RX_DMA_FLAG_TC       DMA1_FLAG_TC4
     #define BOARD_COMM_TX_DMA_FLAG_TC       DMA1_FLAG_TC5
     #define BOARD_COMM_CS_TYPE              NSS_NONE
-    #define BOARD_COMM_CS_PIN_SRC           GPIO_PinSource9
-    #define BOARD_COMM_CS_PIN               GPIO_Pin_9
+    #define BOARD_COMM_CS_PIN_SRC           GPIO_PinSource1
+    #define BOARD_COMM_CS_PIN               GPIO_Pin_1
     #define BOARD_COMM_CS_PORT              GPIOA
     #define BOARD_COMM_CS_ALTERNATE         0
-    #define BOARD_COMM_CS_MODE              NSS_SOFT
+    #define BOARD_COMM_CS_MODE              GPIO_Mode_OUT
     #define BOARD_COMM_MISO_PIN_SRC         GPIO_PinSource10
     #define BOARD_COMM_MISO_PIN             GPIO_Pin_10
     #define BOARD_COMM_MISO_PORT            GPIOA
@@ -96,7 +96,8 @@ enum
     #define BOARD_COMM_SPI_TX_DMA_IRQn      DMA1_Channel5_IRQn
 
     #define BOARD_COMM_DATA_RDY_PORT        GPIOA
-    #define BOARD_COMM_DATA_RDY_PIN         GPIO_PinSource0
+    #define BOARD_COMM_DATA_RDY_PIN_SRC     GPIO_PinSource0
+    #define BOARD_COMM_DATA_RDY_PIN         GPIO_Pin_0
 
     #define BOOTLOADER_CHECK_PORT           GPIOA
     #define BOOTLOADER_CHECK_PIN_SRC        GPIO_PinSource1
