@@ -176,6 +176,8 @@ def configure_target(TARGET):
         os.path.join("src", "target"),
         os.path.join("src", "board_comm"),
         os.path.join("src", "new_gyro"),
+        os.path.join("src", "imu"),
+        os.path.join("src", "bootloader"),
         LIBRARY_PATH + "/CMSIS_std/Device/ST/STM32F30x/Include",
         LIBRARY_PATH + "/STM32F30x_StdPeriph_Driver/inc",
         LIBRARY_PATH + "/CMSIS_std/Include"
@@ -193,11 +195,9 @@ def configure_target(TARGET):
 
     if PROJECT == "C3PUBL":
         print("C3PUBL - C3PUBL")
-        INCLUDE_DIRS.append(os.path.join("src", "bootloader"))
         SOURCE_DIRS.append(os.path.join("src", "bootloader"))
     elif PROJECT == "C3PU":
         print("C3PU - C3PU")
-        INCLUDE_DIRS.append(os.path.join("src", "imu"))
         SOURCE_DIRS.append(os.path.join("src", "imu"))
         INCLUDE_DIRS.append(os.path.join("src", "filter"))
         SOURCE_DIRS.append(os.path.join("src", "filter"))

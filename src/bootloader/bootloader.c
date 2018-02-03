@@ -36,13 +36,13 @@ static void run_command(volatile imufCommand_t *command, volatile imufCommand_t 
         case BL_WRITE_FIRMWARES:
             //write 8 words in one spi transaction
             flash_program_word(command->param1, command->param2);
-            flash_program_word(command->param1, command->param3);
-            flash_program_word(command->param1, command->param4);
-            flash_program_word(command->param1, command->param5);
-            flash_program_word(command->param1, command->param6);
-            flash_program_word(command->param1, command->param7);
-            flash_program_word(command->param1, command->param8);
-            flash_program_word(command->param1, command->param9);
+            flash_program_word(command->param1+4, command->param3);
+            flash_program_word(command->param1+8, command->param4);
+            flash_program_word(command->param1+12, command->param5);
+            flash_program_word(command->param1+16, command->param6);
+            flash_program_word(command->param1+20, command->param7);
+            flash_program_word(command->param1+24, command->param8);
+            flash_program_word(command->param1+24, command->param9);
             reply->command = reply->crc = BL_WRITE_FIRMWARES;
         break;
         case BL_PREPARE_PROGRAM:
@@ -63,12 +63,14 @@ static void run_command(volatile imufCommand_t *command, volatile imufCommand_t 
 void bootloader_start(void)
 {
     //setup bootloader pin then wait 50 ms
-    single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_UP);
-    delay_ms(2);
+    //simpleDelay_ASM(400000, SystemCoreClock/1000000);
+    single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_DOWN);
+    single_gpio_init(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN_SRC, BOARD_COMM_DATA_RDY_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_DOWN);
+    delay_ms(40);
 
     //If boothandler tells us to, or if pin is hi, we enter BL mode
-    //if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || read_digital_input(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) )
-    if ( 1 ) //testing, force bl mode
+    if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || read_digital_input(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN) )
+    //if ( 1 ) //testing, force bl mode
     {
 
         //set callback function

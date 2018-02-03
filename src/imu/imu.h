@@ -2,6 +2,8 @@
 #include "quaternions.h"
 #include "vectors.h"
 
+#define FIRMWARE_VERSION 101
+
 //	+X to the right
 //	+Y straight up
 //	+Z axis toward viewer
