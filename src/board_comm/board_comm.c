@@ -1,5 +1,6 @@
 #include "includes.h"
 #include "board_comm.h"
+#include "gyro.h"
 
 //board_comm spi stuff lives here, actually, it all should probably go under boardCommState_t
 SPI_InitTypeDef boardCommSpiInitStruct;
@@ -120,7 +121,7 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
                 reply->command = reply->crc = BC_IMUF_CALIBRATE;
             }
-            //calibratingGyro=1; //comented out for now until it's added
+            calibratingGyro=1;
         break;
         case BC_IMUF_REPORT_INFO:
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime

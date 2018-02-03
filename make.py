@@ -171,6 +171,7 @@ def configure_target(TARGET):
         os.path.join("src", "stm32"),
         os.path.join("src", "target"),
         os.path.join("src", "board_comm"),
+        os.path.join("src", "new_gyro"),
         LIBRARY_PATH + "/CMSIS_std/Device/ST/STM32F30x/Include",
         LIBRARY_PATH + "/STM32F30x_StdPeriph_Driver/inc",
         LIBRARY_PATH + "/CMSIS_std/Include"
@@ -181,6 +182,7 @@ def configure_target(TARGET):
         os.path.join("src", "stm32"),
         os.path.join("src", "target"),
         os.path.join("src", "board_comm"),
+        os.path.join("src", "new_gyro"),
         LIBRARY_PATH + "/CMSIS_std/Device/ST/STM32F30x/Source",
         LIBRARY_PATH + "/STM32F30x_StdPeriph_Driver/src"
     ]
@@ -193,6 +195,8 @@ def configure_target(TARGET):
         print("C3PU - C3PU")
         INCLUDE_DIRS.append(os.path.join("src", "imu"))
         SOURCE_DIRS.append(os.path.join("src", "imu"))
+        INCLUDE_DIRS.append(os.path.join("src", "filter"))
+        SOURCE_DIRS.append(os.path.join("src", "filter"))
     else:
         print("ERROR - Unknown Project")
         exit(1)
