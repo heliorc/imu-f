@@ -52,25 +52,29 @@ void spi_fire_dma(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_Type
     dmaInitStructure->DMA_PeripheralBaseAddr = (uint32_t)(&spi->DR);
     dmaInitStructure->DMA_MemoryBaseAddr = (uint32_t)txBuff;
     dmaInitStructure->DMA_DIR = DMA_DIR_PeripheralDST;
-    dmaInitStructure->DMA_Priority = DMA_Priority_Low;
+    dmaInitStructure->DMA_Priority = DMA_Priority_High;
     DMA_Init(txDma, dmaInitStructure); //comp
 
     /* Enable the SPI Rx and Tx DMA requests */
     SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Rx, ENABLE); //simp
     SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Tx, ENABLE); //simp
 
-    /* Enable the SPI peripheral */
-    SPI_Cmd(spi, ENABLE); //simp
-
     /* Enable the DMA channels */
     DMA_Cmd(rxDma, ENABLE); //simp
     DMA_Cmd(txDma, ENABLE); //simp
 
+    /* Enable the SPI peripheral */
+    SPI_Cmd(spi, ENABLE); //simp
 }
 
 //after spi transaction is done
 void cleanup_spi(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_TypeDef *rxDma, uint32_t txDmaFlag, uint32_t rxDmaFlag)
 {
+
+    // Reset SPI2 (clears TXFIFO).
+    RCC->APB1RSTR |= BOARD_COMM_SPI_RST_MSK;
+    RCC->APB1RSTR &= ~BOARD_COMM_SPI_RST_MSK;
+
     /* Clear DMA1 global flags */
     DMA_ClearFlag(txDmaFlag); //simp
     DMA_ClearFlag(rxDmaFlag); //simp

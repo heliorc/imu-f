@@ -95,6 +95,7 @@ void bootloader_start(void)
             {
                 //command checks out
                 run_command(&bcRx,&bcTx);
+                bcRx.command = bcRx.crc = 0;
                 start_listening();
             }
             else

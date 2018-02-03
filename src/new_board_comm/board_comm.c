@@ -14,25 +14,28 @@ uint32_t boardCommSize;
 void clear_imuf_command(volatile imufCommand_t* command)
 {
     //clear a volatile structure using 32 bit pointer typecast
-    for (int x=sizeof(imufCommand_t)-sizeof(uint32_t); x>=0; x-=sizeof(uint32_t))
-    {
-        (* ( ((volatile uint32_t *)command) + x) ) = 0;
-    }
+    //for (int x=sizeof(imufCommand_t)-sizeof(uint32_t); x>=0; x-=sizeof(uint32_t))
+    //{
+    //    (* ( ((volatile uint32_t *)command) + x) ) = 0;
+    //}
+    memset((uint8_t*)command, 0, sizeof(imufCommand_t));
 }
 
 void volatile_uint32_copy(volatile uint32_t* dst, volatile uint32_t* src, uint32_t size)
 {
     //clear a volatile structure using 32 bit pointer typecast
-    for (int x=size-sizeof(uint32_t); x>=0; x-=sizeof(uint32_t))
-    {
-        (*(dst + x)) = (*(src + x));
-    }
+    //for (int x=size-sizeof(uint32_t); x>=0; x-=sizeof(uint32_t))
+    //{
+    //    ((dst + x)) = (*(src + x));
+    //}
+    memcpy((uint8_t*)dst, (uint8_t*)src, size);
 }
 
 void board_comm_init(void)
 {
     //set comm size based on size of structure
     boardCommSize = sizeof(imufCommand_t) - sizeof(uint32_t); //last word is for overflow, the syncWord
+    //boardCommSize = sizeof(imufCommand_t); //last word is for overflow, the syncWord
 
     //set uint8_t pointer to avoid casting each time
     bcRxPtr = (volatile uint8_t *)&bcRx;
@@ -95,5 +98,4 @@ void board_comm_spi_complete(void)
 {
     gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
     cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA_FLAG_GL, BOARD_COMM_RX_DMA_FLAG_GL);
-    volatile int cat =1;
 }
