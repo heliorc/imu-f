@@ -26,7 +26,7 @@ int main(void)
     //quaternions stuff happens in the main loop here
     while(1)
     {
-
+        update_quaternions();
     }
 
 }

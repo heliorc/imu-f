@@ -162,8 +162,12 @@ def configure_target(TARGET):
     FLASH_END = str(0x08008000)
 
     #extra D flags
-    EXTRA_DEF_FLAGS = " -DUSE_STDPERIPH_DRIVER -DTHIS_ADDRESS="+THIS_ADDRESS
+    EXTRA_DEF_FLAGS = " -D__FPU_USED=1 -D__FPU_PRESENT=1 -DUSE_STDPERIPH_DRIVER -DTHIS_ADDRESS="+THIS_ADDRESS
 
+    #extra source files to include not in the below dirs
+    SOURCE_FILES = [
+        this_dir + "/assembly/startup/startup_stm32f303xc.s"
+    ]
 
     #All include dirs
     INCLUDE_DIRS = [
@@ -197,18 +201,15 @@ def configure_target(TARGET):
         SOURCE_DIRS.append(os.path.join("src", "imu"))
         INCLUDE_DIRS.append(os.path.join("src", "filter"))
         SOURCE_DIRS.append(os.path.join("src", "filter"))
+        SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/CommonTables/arm_common_tables.c")
+        SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/FastMathFunctions/arm_cos_f32.c")
+        SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/FastMathFunctions/arm_sin_f32.c")
     else:
         print("ERROR - Unknown Project")
         exit(1)
 
-    #extra source files to include not in the above dirs
-    SOURCE_FILES = [
-        this_dir + "/assembly/startup/startup_stm32f303xc.s"
-    ]
 
-    #SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/CommonTables/arm_common_tables.c")
-    #SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/FastMathFunctions/arm_cos_f32.c")
-    #SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/FastMathFunctions/arm_sin_f32.c")
+
     ################################################################################
     # Set per target compilation options
     FLAGS = [
