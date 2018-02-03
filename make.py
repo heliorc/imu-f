@@ -114,7 +114,7 @@ def configure_target(TARGET):
         PROJECT = "C3PU"
         TARGET_DEVICE = "STM32F302x8"
         TARGET_SCRIPT = "stm32_flash_f30x_32k.ld"
-        OPTIMIZE_FLAGS = "-Os"
+        OPTIMIZE_FLAGS = "-O3"
         HSE_SPEED = str(16000000)
 
     elif TARGET == "F3BING":
@@ -186,8 +186,16 @@ def configure_target(TARGET):
     ]
 
     if PROJECT == "C3PUBL":
+        print("C3PUBL - C3PUBL")
         INCLUDE_DIRS.append(os.path.join("src", "bootloader"))
         SOURCE_DIRS.append(os.path.join("src", "bootloader"))
+    elif PROJECT == "C3PU":
+        print("C3PU - C3PU")
+        INCLUDE_DIRS.append(os.path.join("src", "imu"))
+        SOURCE_DIRS.append(os.path.join("src", "imu"))
+    else:
+        print("ERROR - Unknown Project")
+        exit(1)
 
     #extra source files to include not in the above dirs
     SOURCE_FILES = [

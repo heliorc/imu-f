@@ -17,7 +17,7 @@ static void run_command(volatile imufCommand_t *command, volatile imufCommand_t 
             reply->command = reply->crc = BL_ERASE_ADDRESS_RANGE;
         break;
         case BL_REPORT_INFO:
-            volatile_uint32_copy( (uint32_t *)&(reply->param1), (uint32_t *)&flightVerson, sizeof(flightVerson));
+            memcpy((uint8_t*)&(reply->param1), (uint8_t*)&flightVerson, sizeof(flightVerson));
             reply->command = reply->crc = BL_REPORT_INFO;
         break;
         case BL_BOOT_TO_APP:
@@ -64,53 +64,52 @@ void bootloader_start(void)
 {
     //setup bootloader pin then wait 50 ms
     single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_UP);
-    //delay_ms(2);
+    delay_ms(2);
 
     //If boothandler tells us to, or if pin is hi, we enter BL mode
     //if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || read_digital_input(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) )
     if ( 1 ) //testing, force bl mode
     {
 
+        //set callback function
+        spiCallbackFunctionArray[BOARD_COMM_SPI_NUM] = bootloader_spi_callback_function;
+        //init board comm spi
         board_comm_init();
+        //clear imuf commands
         clear_imuf_command(&bcRx);
         clear_imuf_command(&bcTx);
+        //set first command, which is to listen
         bcTx.command = bcTx.crc = BL_LISTENING;
+        //start the process
         start_listening();
-
-        while(1)
-        {
-            //wait until transaction is complete, spiDoneFlag is set via exti 
-            while ( !spiDoneFlag )
-            {
-                if(  DMA_GetFlagStatus(BOARD_COMM_RX_DMA_FLAG_TC) == SET )
-                {
-                    spiDoneFlag = 1;
-                }
-                //doing this in a while loop for testing
-            }
-
-            board_comm_spi_complete(); //this needs to be called when the transaction is complete
-
-            if ( (bcTx.command == BL_LISTENING) && parse_imuf_command(&bcRx) )//we  were waiting for a command //we have a valid command
-            {
-                //command checks out
-                run_command(&bcRx,&bcTx);
-                bcRx.command = bcRx.crc = 0;
-                start_listening();
-            }
-            else
-            {
-                //bad command, listen for another
-                clear_imuf_command(&bcRx);
-                clear_imuf_command(&bcTx);
-                bcTx.command = bcTx.crc = BL_LISTENING;
-                start_listening();
-            }
-        }
+        //everything else is event based
+        while(1);
     }
     else 
     {
         //boot to app
         boot_to_address(APP_ADDRESS);
     }
+}
+
+void bootloader_spi_callback_function(void)
+{
+    board_comm_spi_complete(); //this needs to be called when the transaction is complete
+
+    if ( (bcTx.command == BL_LISTENING) && parse_imuf_command(&bcRx) )//we  were waiting for a command //we have a valid command
+    {
+        //command checks out
+        //run the command and generate the reply
+        run_command(&bcRx,&bcTx); 
+        
+    }
+    else
+    {
+        //bad command, listen for another
+        clear_imuf_command(&bcRx);
+        clear_imuf_command(&bcTx);
+        bcTx.command = bcTx.crc = BL_LISTENING;
+    }
+    //start the process again, bootloader always does this, no need to jump into runtime for gyro stuff
+    start_listening();
 }

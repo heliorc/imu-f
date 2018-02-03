@@ -56,10 +56,11 @@ typedef struct imufCommand {
 extern volatile imufCommand_t bcRx;
 extern volatile imufCommand_t bcTx;
 extern volatile uint32_t spiDoneFlag;
+extern volatile boardCommState_t boardCommState;
 
 extern void clear_imuf_command(volatile imufCommand_t* command);
-extern void volatile_uint32_copy(volatile uint32_t* dst, volatile uint32_t* src, uint32_t size);
 extern void board_comm_init(void);
 extern int  parse_imuf_command(volatile imufCommand_t* command);
 extern void start_listening(void);
 extern void board_comm_spi_complete(void);
+extern void board_comm_spi_callback_function(void);

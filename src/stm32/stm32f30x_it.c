@@ -161,7 +161,7 @@ void BOARD_COMM_EXTI_HANDLER(void)
     /* Make sure that interrupt flag is set */
     if (EXTI_GetITStatus(BOARD_COMM_EXTI_LINE) != RESET)
     {
-        spiDoneFlag=1;
+        spiCallbackFunctionArray[BOARD_COMM_SPI_NUM]();
         EXTI_ClearITPendingBit(BOARD_COMM_EXTI_LINE);
     }
 }

@@ -1,6 +1,5 @@
 #include "quaternions.h"
 #include "includes.h"
-#include "gyro.h"
 #include "imu.h"
 
 volatile quaternionUpdateState_t quatState;
