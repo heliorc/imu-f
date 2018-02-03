@@ -43,30 +43,21 @@ void board_comm_init(void)
     single_gpio_init(BOARD_COMM_MOSI_PORT, BOARD_COMM_MOSI_PIN_SRC, BOARD_COMM_MOSI_PIN, BOARD_COMM_MOSI_ALTERNATE, GPIO_Mode_AF, GPIO_OType_PP, GPIO_PuPd_NOPULL);
     single_gpio_init(BOARD_COMM_SCK_PORT,  BOARD_COMM_SCK_PIN_SRC,  BOARD_COMM_SCK_PIN,  BOARD_COMM_SCK_ALTERNATE,  GPIO_Mode_AF, GPIO_OType_PP, GPIO_PuPd_NOPULL);
 
-//single_gpio_init(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PORT_SRC, BOARD_COMM_EXTI_PIN, 0, GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
-//gpio_write_pin(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PIN, 0);
-//gpio_write_pin(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PIN, 1);
-//gpio_write_pin(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PIN, 0);
-//gpio_write_pin(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PIN, 1);
+    //single_gpio_init(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PORT_SRC, BOARD_COMM_EXTI_PIN, 0, GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
+    //gpio_write_pin(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PIN, 0);
+    //gpio_write_pin(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PIN, 1);
+    //gpio_write_pin(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PIN, 0);
+    //gpio_write_pin(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PIN, 1);
     //setup NSS GPIO if need be then init SPI and DMA for the SPI based on NSS type
-    if(BOARD_COMM_CS_TYPE == NSS_HARD)
-    {
-        single_gpio_init(BOARD_COMM_CS_PORT, BOARD_COMM_CS_PIN_SRC, BOARD_COMM_CS_PIN, BOARD_COMM_CS_ALTERNATE, BOARD_COMM_CS_TYPE, GPIO_OType_PP, GPIO_PuPd_NOPULL);
-        spi_init(&boardCommSpiInitStruct, &boardCommDmaInitStruct, BOARD_COMM_SPI, SPI_Mode_Slave, SPI_NSS_Hard);
-    }
-    else if(BOARD_COMM_CS_TYPE == NSS_SOFT)
-    {
-        single_gpio_init(BOARD_COMM_CS_PORT, BOARD_COMM_CS_PIN_SRC, BOARD_COMM_CS_PIN, BOARD_COMM_CS_ALTERNATE, BOARD_COMM_CS_TYPE, GPIO_OType_PP, GPIO_PuPd_NOPULL);
-        spi_init(&boardCommSpiInitStruct, &boardCommDmaInitStruct, BOARD_COMM_SPI, SPI_Mode_Slave, SPI_NSS_Soft);
-    }
-    else
-    {
+    #ifndef BOARD_COMM_CS_TYPE
         //exti is used for NSS
         gpio_exti_init(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PORT_SRC, BOARD_COMM_EXTI_PIN, BOARD_COMM_EXTI_PIN_SRC, BOARD_COMM_EXTI_LINE, EXTI_Trigger_Rising, BOARD_COMM_EXTI_IRQn, BOARD_COMM_EXTI_ISR_PRE_PRI, BOARD_COMM_EXTI_ISR_SUB_PRI);
-        spi_init(&boardCommSpiInitStruct, &boardCommDmaInitStruct, BOARD_COMM_SPI, SPI_Mode_Slave, SPI_NSS_Soft);
-    }
+        spi_init(&boardCommSpiInitStruct, &boardCommDmaInitStruct, BOARD_COMM_SPI, SPI_Mode_Slave, SPI_NSS_Soft); 
+    #else
+        single_gpio_init(BOARD_COMM_CS_PORT, BOARD_COMM_CS_PIN_SRC, BOARD_COMM_CS_PIN, BOARD_COMM_CS_ALTERNATE, BOARD_COMM_CS_TYPE, GPIO_OType_PP, GPIO_PuPd_NOPULL);
+        spi_init(&boardCommSpiInitStruct, &boardCommDmaInitStruct, BOARD_COMM_SPI, SPI_Mode_Slave, BOARD_COMM_CS_TYPE);
+    #endif
 
-    
     single_gpio_init(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN_SRC, BOARD_COMM_DATA_RDY_PIN, 0, GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
 
 }
