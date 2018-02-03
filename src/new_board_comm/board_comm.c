@@ -81,12 +81,15 @@ void start_listening(void)
 {
     spiDoneFlag = 0;
 
+    //this takes 1.42us to run
     spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, &boardCommSize, (uint8_t *)&bcTx, (uint8_t *)&bcRx);
     gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
 }
 
 void board_comm_spi_complete(void)
 {
+    
     gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
+    //this takes 0.78us to run
     cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA_FLAG_GL, BOARD_COMM_RX_DMA_FLAG_GL);
 }
