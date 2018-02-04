@@ -1,6 +1,12 @@
 #pragma once
 #include "includes.h"
 
+#define GYRO_TEMP_MULTIPLIER 0.0030599755201958f
+#define GYRO_DPS_SCALE_4000 0.1219512195121951f
+#define ACC_DPS_SCALE_4000 0.0009765625f
+#define GYRO_DPS_SCALE_2000 0.060975609756098f
+#define ACC_DPS_SCALE_2000 0.00048828125f
+
 typedef struct gyroFrame
 {
     uint8_t accAddress;  // needed to start rx/tx transfer when sending address
@@ -29,13 +35,9 @@ typedef struct gyro_data {
     uint8_t accDenom;
 } gyro_device_config_t;
 
-#define GYRO_TEMP_MULTIPLIER 0.0030599755201958f
-#define GYRO_DPS_SCALE_4000 0.1219512195121951f
-#define ACC_DPS_SCALE_4000 0.0009765625f
-#define GYRO_DPS_SCALE_2000 0.060975609756098f
-#define ACC_DPS_SCALE_2000 0.00048828125f
+typedef void (*gyro_read_done_t)(uint8_t reg, uint8_t* data, uint8_t length);
 
 extern float gyroRateMultiplier = GYRO_DPS_SCALE_2000;
 extern float gyroAccMultiplier = ACC_DPS_SCALE_2000;
 
-extern gyro_device_init(gyro_device_config_t* config);
+extern gyro_device_init(gyro_read_done_t doneFn);
