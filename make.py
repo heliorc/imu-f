@@ -109,13 +109,15 @@ def configure_target(TARGET):
         TARGET_SCRIPT = "stm32_flash_f30x_0x08001800_26k.ld"
         OPTIMIZE_FLAGS = "-O2"
         HSE_SPEED = str(16000000)
+        THIS_ADDRESS = str(0x08001800)
 
     elif TARGET == "F3SING":
         PROJECT = "C3PU"
         TARGET_DEVICE = "STM32F302x8"
-        TARGET_SCRIPT = "stm32_flash_f30x_32k.ld"
+        TARGET_SCRIPT = "stm32_flash_f30x_0x08001800_26k.ld"
         OPTIMIZE_FLAGS = "-O3"
         HSE_SPEED = str(16000000)
+        THIS_ADDRESS = str(0x08001800)
 
     elif TARGET == "F3BING":
         PROJECT = "C3PUBL"
@@ -123,24 +125,28 @@ def configure_target(TARGET):
         TARGET_SCRIPT = "stm32_flash_f30x_0x08000000_6k.ld"
         OPTIMIZE_FLAGS = "-Os"
         HSE_SPEED = str(16000000)
+        THIS_ADDRESS = str(0x08000000)
 
     elif TARGET == "F3BL":
         PROJECT = "C3PUBL"
         TARGET_SCRIPT = "stm32_flash_f30x_12k.ld"
         OPTIMIZE_FLAGS = "-Og"
         HSE_SPEED = str(16000000)
+        THIS_ADDRESS = str(0x08000000)
 
     elif TARGET == "F3_TEST":
         PROJECT = "C3PU"
         TARGET_SCRIPT = "stm32_flash_f30x_22k.ld"
         OPTIMIZE_FLAGS = "-O2"
         HSE_SPEED = str(8000000)
+        THIS_ADDRESS = str(0x08000000)
 
     elif TARGET == "F3BL_TEST":
         PROJECT = "C3PUBL"
         TARGET_SCRIPT = "stm32_flash_f30x_12k.ld"
         OPTIMIZE_FLAGS = "-Og"
         HSE_SPEED = str(8000000)
+        THIS_ADDRESS = str(0x08000000)
 
     else:
         print("ERROR - Select a target")
@@ -154,12 +160,10 @@ def configure_target(TARGET):
 
     #DFU_ADDRESS = str(0x1FF00000)
     #Not allowing DFU mode for the F3s
-    DFU_ADDRESS = str(0x08000000)
-    BL_ADDRESS = str(0x08000000)
-    APP_ADDRESS = str(0x08002000) #8k bl
-    MSP_ADDRESS = str(0x080E0000)
-    THIS_ADDRESS = str(0x08000000)
-    FLASH_END = str(0x08008000)
+    DFU_ADDRESS  = str(0x08000000)
+    BL_ADDRESS   = str(0x08000000)
+    APP_ADDRESS  = str(0x08001800) #6k bl
+    FLASH_END    = str(0x08008000)
 
     #extra D flags
     EXTRA_DEF_FLAGS = " -D__FPU_USED=1 -D__FPU_PRESENT=1 -DUSE_STDPERIPH_DRIVER -DTHIS_ADDRESS="+THIS_ADDRESS
@@ -215,7 +219,6 @@ def configure_target(TARGET):
     FLAGS = [
         " -D" + PROJECT,
         "PROJECT=" + PROJECT,
-        "MSP_ADDRESS=" + MSP_ADDRESS,
         "DFU_ADDRESS=" + DFU_ADDRESS,
         "BL_ADDRESS=" + BL_ADDRESS,
         "APP_ADDRESS=" + APP_ADDRESS,

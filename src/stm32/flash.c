@@ -65,7 +65,7 @@ void end_flash_for_program(void)
 int flash_program_word(uint32_t address, uint32_t data)
 {
 
-    if (address >= APP_ADDRESS)
+    if ( (address >= APP_ADDRESS) && (address < FLASH_END) )
     {
         if (flashUnlocked)
         {
