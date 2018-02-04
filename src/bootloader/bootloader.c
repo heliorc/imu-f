@@ -3,6 +3,8 @@
 #include "board_comm.h"
 #include "config.h"
 
+volatile int rebootMe = 0;
+
 static void run_command(volatile imufCommand_t *command, volatile imufCommand_t *reply)
 {
     clear_imuf_command(reply);
@@ -21,7 +23,8 @@ static void run_command(volatile imufCommand_t *command, volatile imufCommand_t 
             reply->command = reply->crc = BL_REPORT_INFO;
         break;
         case BL_BOOT_TO_APP:
-            boot_to_address(APP_ADDRESS);     //can't reply of course
+            delay_ms(5000);
+            rebootMe = 1;
         break;
         case BL_BOOT_TO_LOCATION:
             boot_to_address(command->param1); //can't reply of course
@@ -62,10 +65,12 @@ static void run_command(volatile imufCommand_t *command, volatile imufCommand_t 
 
 void bootloader_start(void)
 {
-    //setup bootloader pin then wait 10 ms
+    //delay_ms(10);
+    //boot_to_address(APP_ADDRESS);
+    //setup bootloader pin then wait 30 ms
     single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_DOWN);
     single_gpio_init(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN_SRC, BOARD_COMM_DATA_RDY_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_DOWN);
-    delay_ms(10);
+    delay_ms(30);
 
     //If boothandler tells us to, or if pin is hi, we enter BL mode
     if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || read_digital_input(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN) )
@@ -84,7 +89,13 @@ void bootloader_start(void)
         //start the process
         start_listening();
         //everything else is event based
-        while(1);
+        while(1)
+        {
+            if (rebootMe)
+            {
+                boot_to_address(APP_ADDRESS);
+            }
+        }
     }
     else 
     {

@@ -49,10 +49,6 @@ uint32_t micros(void)
 
 static void sys_tick_config(void)
 {
-
-    //DWT->CYCCNT = 0;
-    //DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
     DWT->CYCCNT = 0;
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
