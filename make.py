@@ -30,7 +30,8 @@ class ColorFallback(object):
         return ""
 
 try:
-    from colorama import Fore, Style
+    from colorama import init, Fore, Back, Style
+    init(convert=True)
 except ImportError:
     Fore = Style = ColorFallback()
 
@@ -68,7 +69,7 @@ LIBRARY_PATH = os.path.join(this_dir, "vendor")
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('-C', "--clean", help="clean up output folder", action='store_true')
 parser.add_argument('-D', "--debug", help="build debug target", action='store_true')
-parser.add_argument('-j', "--threads", help="number of threads to run", default=10, type=int)
+parser.add_argument('-j', "--threads", help="number of threads to run", default=4, type=int)
 parser.add_argument('-v', "--verbose", help="print compiler calls", action='store_true')
 parser.add_argument("-T", "--target", help="target controller to build", default="", nargs='*')
 args = parser.parse_args()
