@@ -68,9 +68,13 @@ void bootloader_start(void)
     //delay_ms(10);
     //boot_to_address(APP_ADDRESS);
     //setup bootloader pin then wait 30 ms
+
     single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_DOWN);
-    single_gpio_init(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN_SRC, BOARD_COMM_DATA_RDY_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_DOWN);
-    delay_ms(30);
+    if(complex_boot())
+    {
+        single_gpio_init(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN_SRC, BOARD_COMM_DATA_RDY_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_DOWN);
+        delay_ms(30);
+    }
 
     //If boothandler tells us to, or if pin is hi, we enter BL mode
     if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || read_digital_input(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN) )
@@ -80,14 +84,20 @@ void bootloader_start(void)
         //set callback function
         spiCallbackFunctionArray[BOARD_COMM_SPI_NUM] = bootloader_spi_callback_function;
         //init board comm spi
-        board_comm_init();
+        if(complex_boot())
+        {
+            board_comm_init();
+        }
         //clear imuf commands
         clear_imuf_command(&bcRx);
         clear_imuf_command(&bcTx);
         //set first command, which is to listen
         bcTx.command = bcTx.crc = BL_LISTENING;
         //start the process
-        start_listening();
+        if(complex_boot())
+        {
+            start_listening();
+        }
         //everything else is event based
         while(1)
         {
