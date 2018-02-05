@@ -32,17 +32,17 @@ void erase_range(uint32_t beginAddress, uint32_t endAddress)
 {
     if (beginAddress > endAddress)
     {
-        while (1)
-        {
+        //while (1)
+        //{
             //TODO add error handler
-        }
+        //}
     }
     else if (beginAddress < APP_ADDRESS)
     {
-        while (1)
-        {
+        //while (1)
+        //{
             //TODO add error handler
-        }
+        //}
     }
     else
     {
@@ -64,16 +64,18 @@ void end_flash_for_program(void)
 
 int flash_program_word(uint32_t address, uint32_t data)
 {
-    if (flashUnlocked == 0)
+
+    if ( (address >= APP_ADDRESS) && (address < FLASH_END) )
     {
-        return 0;
+        if (flashUnlocked)
+        {
+            if (FLASH_ProgramWord(address, data) == FLASH_COMPLETE)
+            {
+                return 1;
+            }
+        }
     }
-    if (FLASH_ProgramWord(address, data) == FLASH_COMPLETE)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
+
+    return 0;
+
 }

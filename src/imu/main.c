@@ -10,6 +10,16 @@ int main(void)
     board_init();       //inits the clocks  
     set_version();      //fill version info (should be static instead)
 
+    single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
+
+    while(1)
+    {
+        gpio_write_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, 1);
+        delay_ms(250);
+        gpio_write_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, 0);
+        delay_ms(125);
+    }
+
     ///////////////////////////////////////////////////////////////////
     ////board comm init, maybe all this should go into board_comm.c////
     ///////////////////////////////////////////////////////////////////

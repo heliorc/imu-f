@@ -2,6 +2,8 @@
 #include "bootloader.h"
 #include "board_comm.h"
 #include "config.h"
+#include "caesar.h"
+
 
 static void run_command(volatile imufCommand_t *command, volatile imufCommand_t *reply)
 {
@@ -21,10 +23,11 @@ static void run_command(volatile imufCommand_t *command, volatile imufCommand_t 
             reply->command = reply->crc = BL_REPORT_INFO;
         break;
         case BL_BOOT_TO_APP:
-            boot_to_address(APP_ADDRESS);     //can't reply of course
+            boot_to_address(THIS_ADDRESS);    //can't reply of course
         break;
         case BL_BOOT_TO_LOCATION:
-            boot_to_address(command->param1); //can't reply of course
+            //boot_to_address(command->param1); //can't reply of course
+            boot_to_address(THIS_ADDRESS);    //can't reply of course
         break;
         case BL_RESTART:
             boot_to_address(THIS_ADDRESS);    //can't reply of course
@@ -36,13 +39,13 @@ static void run_command(volatile imufCommand_t *command, volatile imufCommand_t 
         case BL_WRITE_FIRMWARES:
             //write 8 words in one spi transaction
             flash_program_word(command->param1, command->param2);
-            flash_program_word(command->param1, command->param3);
-            flash_program_word(command->param1, command->param4);
-            flash_program_word(command->param1, command->param5);
-            flash_program_word(command->param1, command->param6);
-            flash_program_word(command->param1, command->param7);
-            flash_program_word(command->param1, command->param8);
-            flash_program_word(command->param1, command->param9);
+            flash_program_word(command->param1+4, command->param3);
+            flash_program_word(command->param1+8, command->param4);
+            flash_program_word(command->param1+12, command->param5);
+            flash_program_word(command->param1+16, command->param6);
+            flash_program_word(command->param1+20, command->param7);
+            flash_program_word(command->param1+24, command->param8);
+            flash_program_word(command->param1+28, command->param9);
             reply->command = reply->crc = BL_WRITE_FIRMWARES;
         break;
         case BL_PREPARE_PROGRAM:
@@ -62,33 +65,51 @@ static void run_command(volatile imufCommand_t *command, volatile imufCommand_t 
 
 void bootloader_start(void)
 {
-    //setup bootloader pin then wait 50 ms
-    single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_UP);
-    delay_ms(2);
+    //delay_ms(10);
+    //boot_to_address(APP_ADDRESS);
+    //setup bootloader pin then wait 30 ms
+
+    single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_DOWN);
+    if(this_is_sparta())
+    {
+        single_gpio_init(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN_SRC, BOARD_COMM_DATA_RDY_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_DOWN);
+        delay_ms(30);
+    }
 
     //If boothandler tells us to, or if pin is hi, we enter BL mode
-    //if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || read_digital_input(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN) )
-    if ( 1 ) //testing, force bl mode
+    if ( (BOOT_MAGIC_ADDRESS == THIS_ADDRESS) || read_digital_input(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN) )
+    //if ( 1 ) //testing, force bl mode
     {
 
         //set callback function
         spiCallbackFunctionArray[BOARD_COMM_SPI_NUM] = bootloader_spi_callback_function;
         //init board comm spi
-        board_comm_init();
+        if(this_is_sparta())
+        {
+            board_comm_init();
+        }
         //clear imuf commands
         clear_imuf_command(&bcRx);
         clear_imuf_command(&bcTx);
         //set first command, which is to listen
         bcTx.command = bcTx.crc = BL_LISTENING;
         //start the process
-        start_listening();
+        if(this_is_sparta())
+        {
+            start_listening();
+        }
         //everything else is event based
-        while(1);
+        while(1)
+        {
+        }
     }
     else 
     {
         //boot to app
-        boot_to_address(APP_ADDRESS);
+        if(this_is_sparta())
+        {
+            boot_to_address(APP_ADDRESS);
+        }
     }
 }
 

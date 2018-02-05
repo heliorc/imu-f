@@ -30,7 +30,8 @@ class ColorFallback(object):
         return ""
 
 try:
-    from colorama import Fore, Style
+    from colorama import init, Fore, Back, Style
+    init(convert=True)
 except ImportError:
     Fore = Style = ColorFallback()
 
@@ -68,7 +69,7 @@ LIBRARY_PATH = os.path.join(this_dir, "vendor")
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('-C', "--clean", help="clean up output folder", action='store_true')
 parser.add_argument('-D', "--debug", help="build debug target", action='store_true')
-parser.add_argument('-j', "--threads", help="number of threads to run", default=10, type=int)
+parser.add_argument('-j', "--threads", help="number of threads to run", default=4, type=int)
 parser.add_argument('-v', "--verbose", help="print compiler calls", action='store_true')
 parser.add_argument("-T", "--target", help="target controller to build", default="", nargs='*')
 args = parser.parse_args()
@@ -107,40 +108,51 @@ def configure_target(TARGET):
         PROJECT = "C3PU"
         TARGET_DEVICE = "STM32F302x8"
         TARGET_SCRIPT = "stm32_flash_f30x_0x08001800_26k.ld"
-        OPTIMIZE_FLAGS = "-O2"
-        HSE_SPEED = str(16000000)
-
-    elif TARGET == "F3SING":
-        PROJECT = "C3PU"
-        TARGET_DEVICE = "STM32F302x8"
-        TARGET_SCRIPT = "stm32_flash_f30x_32k.ld"
         OPTIMIZE_FLAGS = "-O3"
         HSE_SPEED = str(16000000)
+        THIS_ADDRESS = str(0x08001800)
+        APP_ADDRESS  = str(0x08001800) #6k bl
 
-    elif TARGET == "F3BING":
+    elif TARGET == "F3BL":
         PROJECT = "C3PUBL"
         TARGET_DEVICE = "STM32F302x8"
         TARGET_SCRIPT = "stm32_flash_f30x_0x08000000_6k.ld"
         OPTIMIZE_FLAGS = "-Os"
         HSE_SPEED = str(16000000)
+        THIS_ADDRESS = str(0x08000000)
+        APP_ADDRESS  = str(0x08001800) #6k bl
 
-    elif TARGET == "F3BL":
-        PROJECT = "C3PUBL"
-        TARGET_SCRIPT = "stm32_flash_f30x_12k.ld"
+    elif TARGET == "F3SING":
+        PROJECT = "C3PU"
+        TARGET_DEVICE = "STM32F302x8"
+        TARGET_SCRIPT = "stm32_flash_f30x_0x08003000_20k.ld"
         OPTIMIZE_FLAGS = "-Og"
         HSE_SPEED = str(16000000)
+        THIS_ADDRESS = str(0x08003000)
+        APP_ADDRESS  = str(0x08003000) #12k bl
+
+    elif TARGET == "F3BING":
+        PROJECT = "C3PUBL"
+        TARGET_DEVICE = "STM32F302x8"
+        TARGET_SCRIPT = "stm32_flash_f30x_0x08000000_12k.ld"
+        OPTIMIZE_FLAGS = "-Og"
+        HSE_SPEED = str(16000000)
+        THIS_ADDRESS = str(0x08000000)
+        APP_ADDRESS  = str(0x08003000) #12k bl
 
     elif TARGET == "F3_TEST":
         PROJECT = "C3PU"
         TARGET_SCRIPT = "stm32_flash_f30x_22k.ld"
         OPTIMIZE_FLAGS = "-O2"
         HSE_SPEED = str(8000000)
+        THIS_ADDRESS = str(0x08000000)
 
     elif TARGET == "F3BL_TEST":
         PROJECT = "C3PUBL"
         TARGET_SCRIPT = "stm32_flash_f30x_12k.ld"
         OPTIMIZE_FLAGS = "-Og"
         HSE_SPEED = str(8000000)
+        THIS_ADDRESS = str(0x08000000)
 
     else:
         print("ERROR - Select a target")
@@ -154,15 +166,12 @@ def configure_target(TARGET):
 
     #DFU_ADDRESS = str(0x1FF00000)
     #Not allowing DFU mode for the F3s
-    DFU_ADDRESS = str(0x08000000)
-    BL_ADDRESS = str(0x08000000)
-    APP_ADDRESS = str(0x08002000) #8k bl
-    MSP_ADDRESS = str(0x080E0000)
-    THIS_ADDRESS = str(0x08000000)
-    FLASH_END = str(0x08008000)
+    DFU_ADDRESS  = str(0x08000000)
+    BL_ADDRESS   = str(0x08000000)
+    FLASH_END    = str(0x08008000)
 
     #extra D flags
-    EXTRA_DEF_FLAGS = " -D__FPU_USED=1 -D__FPU_PRESENT=1 -DUSE_STDPERIPH_DRIVER -DTHIS_ADDRESS="+THIS_ADDRESS
+    EXTRA_DEF_FLAGS = " -D__FPU_USED=1 -D__FPU_PRESENT=1 -DUSE_STDPERIPH_DRIVER"
 
     #extra source files to include not in the below dirs
     SOURCE_FILES = [
@@ -176,6 +185,8 @@ def configure_target(TARGET):
         os.path.join("src", "target"),
         os.path.join("src", "board_comm"),
         os.path.join("src", "new_gyro"),
+        os.path.join("src", "imu"),
+        os.path.join("src", "bootloader"),
         LIBRARY_PATH + "/CMSIS_std/Device/ST/STM32F30x/Include",
         LIBRARY_PATH + "/STM32F30x_StdPeriph_Driver/inc",
         LIBRARY_PATH + "/CMSIS_std/Include"
@@ -193,11 +204,9 @@ def configure_target(TARGET):
 
     if PROJECT == "C3PUBL":
         print("C3PUBL - C3PUBL")
-        INCLUDE_DIRS.append(os.path.join("src", "bootloader"))
         SOURCE_DIRS.append(os.path.join("src", "bootloader"))
     elif PROJECT == "C3PU":
         print("C3PU - C3PU")
-        INCLUDE_DIRS.append(os.path.join("src", "imu"))
         SOURCE_DIRS.append(os.path.join("src", "imu"))
         INCLUDE_DIRS.append(os.path.join("src", "filter"))
         SOURCE_DIRS.append(os.path.join("src", "filter"))
@@ -215,7 +224,7 @@ def configure_target(TARGET):
     FLAGS = [
         " -D" + PROJECT,
         "PROJECT=" + PROJECT,
-        "MSP_ADDRESS=" + MSP_ADDRESS,
+        "THIS_ADDRESS=" + THIS_ADDRESS,
         "DFU_ADDRESS=" + DFU_ADDRESS,
         "BL_ADDRESS=" + BL_ADDRESS,
         "APP_ADDRESS=" + APP_ADDRESS,

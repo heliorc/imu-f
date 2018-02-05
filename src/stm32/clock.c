@@ -8,10 +8,7 @@ static void sys_tick_config(void);
 
 void delay_ms(uint32_t ms)
 {
-    while (ms-- > 0)
-    {
-        delay_us(1000);
-    }
+    delay_us(ms*1000);
 }
 
 void delay_us(uint32_t us)
@@ -52,7 +49,7 @@ uint32_t micros(void)
 
 static void sys_tick_config(void)
 {
-
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
     DWT->CYCCNT = 0;
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
