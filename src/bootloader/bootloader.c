@@ -2,8 +2,8 @@
 #include "bootloader.h"
 #include "board_comm.h"
 #include "config.h"
+#include "caesar.h"
 
-volatile int rebootMe = 0;
 
 static void run_command(volatile imufCommand_t *command, volatile imufCommand_t *reply)
 {
@@ -23,11 +23,11 @@ static void run_command(volatile imufCommand_t *command, volatile imufCommand_t 
             reply->command = reply->crc = BL_REPORT_INFO;
         break;
         case BL_BOOT_TO_APP:
-            delay_ms(5000);
-            rebootMe = 1;
+            boot_to_address(THIS_ADDRESS);    //can't reply of course
         break;
         case BL_BOOT_TO_LOCATION:
-            boot_to_address(command->param1); //can't reply of course
+            //boot_to_address(command->param1); //can't reply of course
+            boot_to_address(THIS_ADDRESS);    //can't reply of course
         break;
         case BL_RESTART:
             boot_to_address(THIS_ADDRESS);    //can't reply of course
@@ -91,16 +91,15 @@ void bootloader_start(void)
         //everything else is event based
         while(1)
         {
-            if (rebootMe)
-            {
-                boot_to_address(APP_ADDRESS);
-            }
         }
     }
     else 
     {
         //boot to app
-        boot_to_address(APP_ADDRESS);
+        if(complex_boot())
+        {
+            boot_to_address(APP_ADDRESS);
+        }
     }
 }
 
