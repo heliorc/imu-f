@@ -167,7 +167,7 @@ def configure_target(TARGET):
     FLASH_END    = str(0x08008000)
 
     #extra D flags
-    EXTRA_DEF_FLAGS = " -D__FPU_USED=1 -D__FPU_PRESENT=1 -DUSE_STDPERIPH_DRIVER -DTHIS_ADDRESS="+THIS_ADDRESS
+    EXTRA_DEF_FLAGS = " -D__FPU_USED=1 -D__FPU_PRESENT=1 -DUSE_STDPERIPH_DRIVER"
 
     #extra source files to include not in the below dirs
     SOURCE_FILES = [
@@ -220,6 +220,7 @@ def configure_target(TARGET):
     FLAGS = [
         " -D" + PROJECT,
         "PROJECT=" + PROJECT,
+        "THIS_ADDRESS=" + THIS_ADDRESS
         "DFU_ADDRESS=" + DFU_ADDRESS,
         "BL_ADDRESS=" + BL_ADDRESS,
         "APP_ADDRESS=" + APP_ADDRESS,
