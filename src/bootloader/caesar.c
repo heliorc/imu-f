@@ -298,22 +298,20 @@ static int check_sn(uint32_t input)
 
     }
     if (
+        (serialText[121] == caesar( (uint8_t)(flightVerson.uid1 >> 24) & 0xFF ) ) &&
+        (serialText[242] == caesar( (uint8_t)(flightVerson.uid1 >> 16) & 0xFF ) ) &&
+        (serialText[163] == caesar( (uint8_t)(flightVerson.uid1 >> 8) & 0xFF ) ) &&
+        (serialText[12] == caesar( (uint8_t)(flightVerson.uid1) & 0xFF ) ) &&
 
-        (serialText[121] == caesar( (flightVerson.uid1 >> 24) & 0xFF ) ) &&
-        (serialText[242] == caesar( (flightVerson.uid1 >> 16) & 0xFF ) ) &&
-        (serialText[163] == caesar( (flightVerson.uid1 >> 8) & 0xFF ) ) &&
-        (serialText[12] == caesar( (flightVerson.uid1) & 0xFF ) ) &&
+        (serialText[9] == caesar( (uint8_t)(flightVerson.uid2 >> 24) & 0xFF ) ) &&
+        (serialText[77] == caesar( (uint8_t)(flightVerson.uid2 >> 16) & 0xFF ) ) &&
+        (serialText[2] == caesar( (uint8_t)(flightVerson.uid2 >> 8) & 0xFF ) ) &&
+        (serialText[172] == caesar( (uint8_t)(flightVerson.uid2) & 0xFF ) ) &&
 
-        (serialText[9] == caesar( (flightVerson.uid2 >> 24) & 0xFF ) ) &&
-        (serialText[77] == caesar( (flightVerson.uid2 >> 16) & 0xFF ) ) &&
-        (serialText[2] == caesar( (flightVerson.uid2 >> 8) & 0xFF ) ) &&
-        (serialText[172] == caesar( (flightVerson.uid2) & 0xFF ) ) &&
-
-        (serialText[231] == caesar( (flightVerson.uid3 >> 24) & 0xFF ) ) &&
-        (serialText[28] == caesar( (flightVerson.uid3 >> 16) & 0xFF ) ) &&
-        (serialText[17] == caesar( (flightVerson.uid3 >> 8) & 0xFF ) ) &&
-        (serialText[79] == caesar( (flightVerson.uid3) & 0xFF ) )
-
+        (serialText[231] == caesar( (uint8_t)(flightVerson.uid3 >> 24) & 0xFF ) ) &&
+        (serialText[28] == caesar( (uint8_t)(flightVerson.uid3 >> 16) & 0xFF ) ) &&
+        (serialText[17] == caesar( (uint8_t)(flightVerson.uid3 >> 8) & 0xFF ) ) &&
+        (serialText[79] == caesar( (uint8_t)(flightVerson.uid3) & 0xFF ) )
     )
     {
         return 1;
