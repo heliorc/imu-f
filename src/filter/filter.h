@@ -4,4 +4,4 @@
 
 extern biquad_state_t lpfFilterStateRate;
 
-extern void filter_data(axisData_t *gyroRateData, axisData_t *gyroAccData,float gyroTempData, filteredData_t *filteredData);
+extern void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAccData, float gyroTempData, filteredData_t* filteredData);

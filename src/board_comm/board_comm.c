@@ -1,130 +1,133 @@
 #include "includes.h"
-#include "gyro.h"
-#include "spi.h"
 #include "board_comm.h"
-#include "includes.h"
-#include "boothandler.h"
-#include "fast_kalman.h"
+#include "gyro.h"
 
-#define simpleDelay_ASM(us) do {\
-	asm volatile (	"MOV R0,%[loops]\n\t"\
-			"1: \n\t"\
-			"SUB R0, #1\n\t"\
-			"CMP R0, #0\n\t"\
-			"BNE 1b \n\t" : : [loops] "r" (92*us) : "memory"\
-		      );\
-} while(0)
-
-//SPI 3 is for the f4/f3
-SPI_HandleTypeDef boardCommSPIHandle;
-DMA_HandleTypeDef hdmaBoardCommSPIRx;
-DMA_HandleTypeDef hdmaBoardCommSPITx;
-volatile imufCommand_t imufCommandTx;
-volatile imufCommand_t imufCommandRx;
-volatile uint32_t timeBoardCommSetupIsr;
-
+//board_comm spi stuff lives here, actually, it all should probably go under boardCommState_t
+SPI_InitTypeDef boardCommSpiInitStruct;
+DMA_InitTypeDef boardCommDmaInitStruct;
+volatile imufCommand_t bcRx;
+volatile imufCommand_t bcTx;
+volatile uint8_t* bcRxPtr;
+volatile uint8_t* bcTxPtr;
+volatile uint32_t spiDoneFlag;
 volatile boardCommState_t boardCommState;
 
-static void run_command(volatile imufCommand_t* newCommand);
-static void start_board_comm_isr(void);
+static void run_command(volatile imufCommand_t* command, volatile imufCommand_t* reply);
 
-void board_comm_init(void) 
+void clear_imuf_command(volatile imufCommand_t* command)
 {
-    //default states for boardCommState
-    boardCommState.commMode     = GTBCM_SETUP;     
-
-    //set this pin to high since we're set at the default buffer size of GTBCM_SETUP
-    HAL_GPIO_WritePin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, 1);
-    
-    spiIrqCallbackFunctionArray[BOARD_COMM_SPI_NUM] = board_comm_spi_irq_callback;
-    spi_init(&boardCommSPIHandle, BOARD_COMM_SPI, SPI_BAUDRATEPRESCALER_2, SPI_MODE_SLAVE, BOARD_COMM_SPI_IRQn, BOARD_COMM_SPI_ISR_PRE_PRI, BOARD_COMM_SPI_ISR_SUB_PRI);
-    spi_dma_init(&boardCommSPIHandle, &hdmaBoardCommSPIRx, &hdmaBoardCommSPITx, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA, BOARD_COMM_SPI_RX_DMA_IRQn, BOARD_COMM_SPI_TX_DMA_IRQn);
-
-    //put the SPI into DMA
-    start_board_comm_isr();
+    memset((uint8_t*)command, 0, sizeof(imufCommand_t));
 }
 
+void board_comm_init(void)
+{
+    //set comm size based on size of structure
+    boardCommState.bufferSize = sizeof(imufCommand_t) - sizeof(uint32_t); //last word is for overflow, the syncWord
+    boardCommState.commMode   = GTBCM_SETUP;
 
-int parse_imuf_command(volatile imufCommand_t* newCommand){
-    //copy received data into command structure
+    //set uint8_t pointer to avoid casting each time
+    bcRxPtr = (volatile uint8_t *)&bcRx;
+    bcTxPtr = (volatile uint8_t *)&bcTx;
 
-    if (!(newCommand->command && newCommand->command == newCommand->crc))
-    {
-        newCommand->command = BC_NONE;
-        return 0;
-    }
-    else
+    // setup board_comm spi mappings and gpio init
+    single_gpio_init(BOARD_COMM_MISO_PORT, BOARD_COMM_MISO_PIN_SRC, BOARD_COMM_MISO_PIN, BOARD_COMM_MISO_ALTERNATE, GPIO_Mode_AF, GPIO_OType_PP, GPIO_PuPd_NOPULL);
+    single_gpio_init(BOARD_COMM_MOSI_PORT, BOARD_COMM_MOSI_PIN_SRC, BOARD_COMM_MOSI_PIN, BOARD_COMM_MOSI_ALTERNATE, GPIO_Mode_AF, GPIO_OType_PP, GPIO_PuPd_NOPULL);
+    single_gpio_init(BOARD_COMM_SCK_PORT,  BOARD_COMM_SCK_PIN_SRC,  BOARD_COMM_SCK_PIN,  BOARD_COMM_SCK_ALTERNATE,  GPIO_Mode_AF, GPIO_OType_PP, GPIO_PuPd_NOPULL);
+
+    //setup NSS GPIO if need be then init SPI and DMA for the SPI based on NSS type
+    #ifndef BOARD_COMM_CS_TYPE
+        //exti is used for NSS
+        gpio_exti_init(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PORT_SRC, BOARD_COMM_EXTI_PIN, BOARD_COMM_EXTI_PIN_SRC, BOARD_COMM_EXTI_LINE, EXTI_Trigger_Rising, BOARD_COMM_EXTI_IRQn, BOARD_COMM_EXTI_ISR_PRE_PRI, BOARD_COMM_EXTI_ISR_SUB_PRI);
+        spi_init(&boardCommSpiInitStruct, &boardCommDmaInitStruct, BOARD_COMM_SPI, SPI_Mode_Slave, SPI_NSS_Soft); 
+    #else
+        single_gpio_init(BOARD_COMM_CS_PORT, BOARD_COMM_CS_PIN_SRC, BOARD_COMM_CS_PIN, BOARD_COMM_CS_ALTERNATE, BOARD_COMM_CS_TYPE, GPIO_OType_PP, GPIO_PuPd_NOPULL);
+        spi_init(&boardCommSpiInitStruct, &boardCommDmaInitStruct, BOARD_COMM_SPI, SPI_Mode_Slave, BOARD_COMM_CS_TYPE);
+    #endif
+
+    single_gpio_init(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN_SRC, BOARD_COMM_DATA_RDY_PIN, 0, GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
+
+}
+
+int parse_imuf_command(volatile imufCommand_t* command)
+{
+    if (command->command && command->command == command->crc)
     {
         return 1;
     }
-}
-
-static void start_board_comm_isr(void)
-{
-    SPI_HandleTypeDef* hspi = &boardCommSPIHandle;
-    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0); //ready to communicate
-    rewind_board_comm_spi();
-    simpleDelay_ASM(5);
-
-    timeBoardCommSetupIsr = HAL_GetTick();
-    memset((uint8_t *)&imufCommandTx, 0, sizeof(imufCommandTx));
-    memset((uint8_t *)&imufCommandRx, 0, sizeof(imufCommandRx));
-    imufCommandTx.command = BC_IMUF_LISTENING; //we're  listening for a command
-    imufCommandTx.crc     = BC_IMUF_LISTENING;
-    volatile uint32_t cat = sizeof(imufCommandTx);
-
-    HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, (uint8_t *)&imufCommandTx, (uint8_t *)&imufCommandRx, COM_BUFFER_SIZE+2);
-    //hspi->pTxBuffPtr  = (uint8_t*)&imufCommandTx;
-    //hspi->TxXferSize  = COM_BUFFER_SIZE;
-    //hspi->TxXferCount = COM_BUFFER_SIZE;
-    //hspi->pRxBuffPtr  = (uint8_t*)&imufCommandRx;
-    //hspi->RxXferSize  = COM_BUFFER_SIZE;
-    //hspi->RxXferCount = COM_BUFFER_SIZE;
-    //SET_BIT(hspi->Instance->CR2, SPI_CR2_RXDMAEN);
-    //SET_BIT(hspi->Instance->CR2, SPI_CR2_TXDMAEN);
-    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //ready to communicate
-}
-
-void check_board_comm_setup_timeout(void)
-{
-
-    if(HAL_GetTick() - timeBoardCommSetupIsr > 2000)
+    else
     {
-        //timeout every 10 ms
-        start_board_comm_isr();
+        return 0;
     }
 }
 
-static void run_command(volatile imufCommand_t* newCommand)
+void start_listening(void)
 {
-    int validCommand = 0;
-    HAL_StatusTypeDef check = HAL_TIMEOUT;
-    switch (newCommand->command)
+    spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 
+    //this takes 1.19us to run
+    spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), bcTxPtr, bcRxPtr);
+    gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
+}
+
+void board_comm_spi_complete(void)
+{
+    gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
+    //this takes 0.78us to run
+    cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA_FLAG_GL, BOARD_COMM_RX_DMA_FLAG_GL, BOARD_COMM_SPI_RST_MSK);
+}
+
+void board_comm_spi_callback_function(void)
+{
+    board_comm_spi_complete(); //this needs to be called when the transaction is complete
+
+    //calibration won't work this way
+    if ( (bcTx.command == BC_IMUF_LISTENING) && parse_imuf_command(&bcRx) )//we  were waiting for a command //we have a valid command
+    {
+        //command checks out
+        //run the command and generate the reply
+        run_command(&bcRx,&bcTx); 
+        
+    }
+    else if ( (bcTx.command == BC_IMUF_SETUP) && parse_imuf_command(&bcRx) ) //we just replied that we got proper setup commands, let's activate them now
+    {
+        //set flight mode now
+        boardCommState.bufferSize = sizeof(imufCommand_t) - sizeof(uint32_t); //last word is for overflow, the syncWord
+        boardCommState.commMode   = GTBCM_SETUP;
+    }
+    else 
+    {
+        //bad command, listen for another
+        clear_imuf_command(&bcRx);
+        clear_imuf_command(&bcTx);
+        bcTx.command = bcTx.crc = BC_IMUF_LISTENING;
+    }
+
+    //start the process again, if still in setup mode
+    if (boardCommState.commMode == GTBCM_SETUP)
+    {
+        start_listening();
+    }
+
+}
+
+static void run_command(volatile imufCommand_t* command, volatile imufCommand_t* reply)
+{
+    switch (command->command)
     {
         case BC_IMUF_CALIBRATE:
             //might be good to make sure we're not flying when we run this command
-            //this reply can only happen when not in setup mode
+            //this reply can only happen when in setup mode
             if(boardCommState.commMode == GTBCM_SETUP)
             {
-                memset((uint8_t *)&imufCommandTx, 0, sizeof(imufCommandTx));
-                imufCommandTx.command = BC_IMUF_CALIBRATE;
-                imufCommandTx.crc     = BC_IMUF_CALIBRATE;
-                HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
-                check = HAL_SPI_TransmitReceive(&boardCommSPIHandle, (uint8_t *)&imufCommandTx, (uint8_t *)&imufCommandRx, GTBCM_SETUP+2, 40);
-                HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
+                memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
+                reply->command = reply->crc = BC_IMUF_CALIBRATE;
             }
             calibratingGyro=1;
         break;
         case BC_IMUF_REPORT_INFO:
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime
             {
-                memset((uint8_t *)&imufCommandTx, 0, sizeof(imufCommandTx));
-                memcpy((uint8_t *)&imufCommandTx.param1, (uint8_t *)&flightVerson, sizeof(flightVerson));
-                imufCommandTx.command = BC_IMUF_REPORT_INFO;
-                imufCommandTx.crc     = BC_IMUF_REPORT_INFO;
-                HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
-                check = HAL_SPI_TransmitReceive(&boardCommSPIHandle, (uint8_t *)&imufCommandTx, (uint8_t *)&imufCommandRx, GTBCM_SETUP+2, 40);
-                HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
+                memcpy((uint8_t*)&(reply->param1), (uint8_t*)&flightVerson, sizeof(flightVerson));
+                reply->command = reply->crc = BC_IMUF_REPORT_INFO;
             }
         break;
         case BC_IMUF_SETUP:
@@ -132,121 +135,25 @@ static void run_command(volatile imufCommand_t* newCommand)
             {
                 //let's pretend the f4 sent this for now
 
+                //commenting this out until the rest of the imu stuff is added
                 //f4 needs to send all valid setup commands
-                uint32_t filterMode      = newCommand->param1;
-                uint32_t gyroOrientation = newCommand->param2;
-                filterConfig.pitch_q  = ((float)(newCommand->param3 & 0xFFFF));
-                filterConfig.pitch_r  = ((float)(newCommand->param3 >> 16));
-                filterConfig.roll_q   = ((float)(newCommand->param4 & 0xFFFF));
-                filterConfig.roll_r   = ((float)(newCommand->param4 >> 16));
-                filterConfig.yaw_q    = ((float)(newCommand->param5 & 0xFFFF));
-                filterConfig.yaw_r    = ((float)(newCommand->param5 >> 16));
-                memset((uint8_t *)&imufCommandTx, 0, sizeof(imufCommandTx));
-                imufCommandTx.command = BC_IMUF_SETUP;
-                imufCommandTx.crc     = BC_IMUF_SETUP;
-                HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
-                check = HAL_SPI_TransmitReceive(&boardCommSPIHandle, (uint8_t *)&imufCommandTx, (uint8_t *)&imufCommandRx, GTBCM_SETUP+2, 40);
-                HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
-                if (check == HAL_OK)
-                {
-                    //message succsessfully sent to F4, switch to new comm mode now since f4 expects it now
-                    boardCommState.commMode = (filterMode);
-                    //gyro.c will now handle communication
-                    timeBoardCommSetupIsr = HAL_GetTick();
-                    rewind_board_comm_spi(); 
-                }
+                //uint32_t filterMode      = newCommand->param1;
+                //uint32_t gyroOrientation = newCommand->param2;
+                //We should NOT use floats here at all. We should change this so the only ISR with floats does the conversion
+                //filterConfig.pitch_q  = ((float)(newCommand->param3 & 0xFFFF));
+                //filterConfig.pitch_r  = ((float)(newCommand->param3 >> 16));
+                //filterConfig.roll_q   = ((float)(newCommand->param4 & 0xFFFF));
+                //filterConfig.roll_r   = ((float)(newCommand->param4 >> 16));
+                //filterConfig.yaw_q    = ((float)(newCommand->param5 & 0xFFFF));
+                //filterConfig.yaw_r    = ((float)(newCommand->param5 >> 16));
+                //memset((uint8_t *)&imufCommandTx, 0, sizeof(imufCommandTx));
+                //imufCommandTx.command = BC_IMUF_SETUP;
+                //imufCommandTx.crc     = BC_IMUF_SETUP;
+                memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
+                reply->command = reply->crc = BC_IMUF_SETUP;
             }
         break;
         default:
         break;
     }
-}
-
-void board_comm_callback_function(SPI_HandleTypeDef *hspi)
-{
-
-    //rx complete, do pin thing here
-    HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
-    timeBoardCommSetupIsr = HAL_GetTick();
-
-    if ( imufCommandRx.command == 0x7f7f7f7F)
-    {
-        BootToAddress(THIS_ADDRESS);
-    }
-    if ( imufCommandRx.command == 0x63636363)
-    {
-        calibratingGyro = 1;
-    }
-    if (parse_imuf_command(&imufCommandRx))
-    {
-        run_command(&imufCommandRx);  //this command will handle the message start handling
-    }
-
-    //restart listening if in setup mode
-    if(boardCommState.commMode == GTBCM_SETUP)
-        timeBoardCommSetupIsr = 0;
-
-}
-
-void board_comm_spi_irq_callback(void)
-{
-    //irq handler
-    HAL_SPI_IRQHandler(&boardCommSPIHandle);
-}
-
-void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
-{
-    /* if(hspi->Instance == SPI1)
-    {
-		spiCallbackFunctionArray[0](hspi);
-    }
-    else  */
-    if(hspi->Instance == BOARD_COMM_SPI)
-    {
-		volatile int error_2 = 1;
-    }
-    else if(hspi->Instance == GYRO_SPI)
-    {
-		volatile int error_3 = 2;
-    }
-}
-
-//To keep sync, we tell the SPI to expect more data than will be sent, when the proper data amount comes in we reset the SPI
-void rewind_board_comm_spi(void)
-{
-    #define SPI_I2S_DMAReq_Tx               ((uint16_t)0x0002)
-    #define SPI_I2S_DMAReq_Rx               ((uint16_t)0x0001)
-    #define DMA_CCR1_EN                     ((uint16_t)0x0001)
-
-    // Clear DMA1 global flags
-    //SET_BIT(DMA1->IFCR, BOARD_COMM_RX_DMA_FLAG);
-    //SET_BIT(DMA1->IFCR, BOARD_COMM_TX_DMA_FLAG);
-
-    // Disable the DMA channels
-    //BOARD_COMM_RX_DMA->CCR &= (uint16_t)(~DMA_CCR1_EN);
-    //BOARD_COMM_TX_DMA->CCR &= (uint16_t)(~DMA_CCR1_EN);
-
-    // Bring back SPI2 DMAs to start of Rx & Tx buffers -
-    // CPAR/CMAR stay the same after disable, no need to
-    // `restore` those.
-    //BOARD_COMM_RX_DMA->CNDTR = GTBCM_SETUP;
-    //BOARD_COMM_TX_DMA->CNDTR = GTBCM_SETUP;
-
-    /* Reset SPI2 (clears TXFIFO). */
-    RCC->APB1RSTR |= BOARD_COMM_SPI_RST_MSK;
-    RCC->APB1RSTR &= ~BOARD_COMM_SPI_RST_MSK;
-
-    /* Reconfigure SPI2. */
-    spi_init(&boardCommSPIHandle, BOARD_COMM_SPI, SPI_BAUDRATEPRESCALER_2, SPI_MODE_SLAVE, BOARD_COMM_SPI_IRQn, BOARD_COMM_SPI_ISR_PRE_PRI, BOARD_COMM_SPI_ISR_SUB_PRI);
-    //spi_dma_init(&boardCommSPIHandle, &hdmaBoardCommSPIRx, &hdmaBoardCommSPITx, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA, BOARD_COMM_SPI_RX_DMA_IRQn, BOARD_COMM_SPI_TX_DMA_IRQn);
-
-    //HAL_SPI_DeInit(&boardCommSPIHandle);
-    //HAL_SPI_Init(&boardCommSPIHandle);
-
-    /* Re-enable SPI2 and DMA channels. */
-    //BOARD_COMM_SPI->CR2 |= SPI_I2S_DMAReq_Rx;
-    //BOARD_COMM_RX_DMA->CCR |= DMA_CCR1_EN;
-    //BOARD_COMM_TX_DMA->CCR |= DMA_CCR1_EN;
-    //BOARD_COMM_SPI->CR2 |= SPI_I2S_DMAReq_Rx;
-    //BOARD_COMM_SPI->CR1 |= SPI_CR1_SPE;
 }

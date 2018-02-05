@@ -42,4 +42,3 @@ extern fastKalman_t fastKalmanFilterStateRate[];
 
 extern void fast_kalman_init(filterTypedef_t type);
 extern float fast_kalman_pdate(filterAxisTypedef_t axis, float input);
-extern void filter_data(axisData_t* gyroRateData,axisData_t* gyroAccData,float gyroTempData, filteredData_t* filteredData);

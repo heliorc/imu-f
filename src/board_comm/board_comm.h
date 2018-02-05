@@ -1,8 +1,6 @@
 #pragma once
 #include "includes.h"
 
-#define COM_BUFFER_SIZE 52
-
 typedef enum gyroToBoardCommMode
 {
     GTBCM_SETUP                  = 52, //max number
@@ -31,6 +29,7 @@ typedef enum
     BL_WRITE_FIRMWARES      = 29,
     BL_PREPARE_PROGRAM      = 30,
     BL_END_PROGRAM          = 31,
+    BL_LISTENING            = 32,
     BC_IMUF_CALIBRATE       = 99,
     BC_IMUF_LISTENING       = 108,
     BC_IMUF_REPORT_INFO     = 121,
@@ -38,9 +37,7 @@ typedef enum
     BC_IMUF_RESTART         = 127,
 } imufCommandsList_t;
 
-
 typedef struct imufCommand {
-   uint32_t param0;
    uint32_t command;
    uint32_t param1;
    uint32_t param2;
@@ -53,21 +50,17 @@ typedef struct imufCommand {
    uint32_t param9;
    uint32_t param10;
    uint32_t crc;
-   uint32_t param11;
-} __attribute__ ((aligned (16), packed)) imufCommand_t;
+   uint32_t syncWord; //overflow, used for sync
+} __attribute__ ((packed)) imufCommand_t;
 
-extern SPI_HandleTypeDef boardCommSPIHandle;
-extern DMA_HandleTypeDef hdmaBoardCommSPIRx;
-extern DMA_HandleTypeDef hdmaBoardCommSPITx;
-extern volatile imufCommand_t imufCommandRx;
-
+extern volatile imufCommand_t bcRx;
+extern volatile imufCommand_t bcTx;
+extern volatile uint32_t spiDoneFlag;
 extern volatile boardCommState_t boardCommState;
-extern volatile uint32_t timeBoardCommSetupIsr;
 
+extern void clear_imuf_command(volatile imufCommand_t* command);
 extern void board_comm_init(void);
-extern void board_comm_callback_function(SPI_HandleTypeDef *hspi);
-extern int  parse_imuf_command(volatile imufCommand_t* newCommand);
-extern void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi);
-extern void rewind_board_comm_spi(void);
-extern void board_comm_spi_irq_callback(void);
-extern void check_board_comm_setup_timeout(void);
+extern int  parse_imuf_command(volatile imufCommand_t* command);
+extern void start_listening(void);
+extern void board_comm_spi_complete(void);
+extern void board_comm_spi_callback_function(void);
