@@ -111,6 +111,7 @@ def configure_target(TARGET):
         OPTIMIZE_FLAGS = "-O3"
         HSE_SPEED = str(16000000)
         THIS_ADDRESS = str(0x08001800)
+        APP_ADDRESS  = str(0x08001800) #6k bl
 
     elif TARGET == "F3BL":
         PROJECT = "C3PUBL"
@@ -118,6 +119,7 @@ def configure_target(TARGET):
         OPTIMIZE_FLAGS = "-Os"
         HSE_SPEED = str(16000000)
         THIS_ADDRESS = str(0x08000000)
+        APP_ADDRESS  = str(0x08001800) #6k bl
 
     elif TARGET == "F3SING":
         PROJECT = "C3PU"
@@ -125,7 +127,8 @@ def configure_target(TARGET):
         TARGET_SCRIPT = "stm32_flash_f30x_0x08003000_20k.ld"
         OPTIMIZE_FLAGS = "-Og"
         HSE_SPEED = str(16000000)
-        THIS_ADDRESS = str(0x08001800)
+        THIS_ADDRESS = str(0x08003000)
+        APP_ADDRESS  = str(0x08003000) #12k bl
 
     elif TARGET == "F3BING":
         PROJECT = "C3PUBL"
@@ -134,6 +137,7 @@ def configure_target(TARGET):
         OPTIMIZE_FLAGS = "-Og"
         HSE_SPEED = str(16000000)
         THIS_ADDRESS = str(0x08000000)
+        APP_ADDRESS  = str(0x08003000) #12k bl
 
     elif TARGET == "F3_TEST":
         PROJECT = "C3PU"
@@ -163,7 +167,6 @@ def configure_target(TARGET):
     #Not allowing DFU mode for the F3s
     DFU_ADDRESS  = str(0x08000000)
     BL_ADDRESS   = str(0x08000000)
-    APP_ADDRESS  = str(0x08001800) #6k bl
     FLASH_END    = str(0x08008000)
 
     #extra D flags
