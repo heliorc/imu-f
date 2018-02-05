@@ -115,6 +115,7 @@ def configure_target(TARGET):
 
     elif TARGET == "F3BL":
         PROJECT = "C3PUBL"
+        TARGET_DEVICE = "STM32F302x8"
         TARGET_SCRIPT = "stm32_flash_f30x_0x08000000_6k.ld"
         OPTIMIZE_FLAGS = "-Os"
         HSE_SPEED = str(16000000)
