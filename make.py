@@ -184,7 +184,7 @@ def configure_target(TARGET):
         os.path.join("src", "stm32"),
         os.path.join("src", "target"),
         os.path.join("src", "board_comm"),
-        os.path.join("src", "new_gyro"),
+        os.path.join("src", "gyro"),
         os.path.join("src", "imu"),
         os.path.join("src", "bootloader"),
         LIBRARY_PATH + "/CMSIS_std/Device/ST/STM32F30x/Include",
@@ -197,7 +197,7 @@ def configure_target(TARGET):
         os.path.join("src", "stm32"),
         os.path.join("src", "target"),
         os.path.join("src", "board_comm"),
-        os.path.join("src", "new_gyro"),
+        os.path.join("src", "gyro"),
         LIBRARY_PATH + "/CMSIS_std/Device/ST/STM32F30x/Source",
         LIBRARY_PATH + "/STM32F30x_StdPeriph_Driver/src"
     ]
