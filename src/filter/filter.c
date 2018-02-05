@@ -4,7 +4,7 @@
 
 biquad_state_t lpfFilterStateRate;
 
-void filter_data(axisData_t *gyroRateData, axisData_t *gyroAccData,float gyroTempData, filteredData_t *filteredData)
+void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAccData, float gyroTempData, filteredData_t* filteredData)
 {
 	static int firstRun = 1;
 

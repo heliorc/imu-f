@@ -2,13 +2,16 @@
 #include "gyro.h"
 #include "gyro_device.h"
 #include "imuf_device.h"
+#include "imu.h"
+#include "board_comm.h"
+#include "quaternions.h"
+#include "filter.h"
 
 volatile int calibratingGyro;
 volatile axisData_t gyroSum;
 volatile axisData_t gyroCalibrationTrim;
 volatile axisData_t rawAccData;
 volatile axisData_t rawRateData;
-
 
 float gyroTempData;
 filteredData_t filteredData;
@@ -65,7 +68,6 @@ void gyro_read_done(uint8_t reg, uint8_t* data, uint8_t length) {
 
     uint32_t accTracker = 8; //start at 7, so 8 is run first
     volatile quaternion_buffer_t *quatBuffer = &(quatBufferA); //start working on this buffer
-    (void)(hspi); //we don't care about which handle this is as we only have one gyro
     //default rateDatafilteredData
     uint8_t* memptr = (uint8_t*)&filteredData.rateData;
 

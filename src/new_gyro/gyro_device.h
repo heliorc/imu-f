@@ -7,6 +7,9 @@
 #define GYRO_DPS_SCALE_2000 0.060975609756098f
 #define ACC_DPS_SCALE_2000 0.00048828125f
 
+#define CALIBRATION_CYCLES 1900
+#define GYRO_BUFFER_SIZE 256
+
 typedef struct gyroFrame
 {
     uint8_t accAddress;  // needed to start rx/tx transfer when sending address
@@ -37,7 +40,9 @@ typedef struct gyro_data {
 
 typedef void (*gyro_read_done_t)(uint8_t reg, uint8_t* data, uint8_t length);
 
-extern float gyroRateMultiplier = GYRO_DPS_SCALE_2000;
-extern float gyroAccMultiplier = ACC_DPS_SCALE_2000;
-
-extern gyro_device_init(gyro_read_done_t doneFn);
+extern const gyro_device_config_t gyroConfig;
+extern float gyroRateMultiplier;
+extern float gyroAccMultiplier;
+extern gyroFrame_t gyroRxFrame;
+extern gyroFrame_t gyroTxFrame;
+extern void gyro_device_init(gyro_read_done_t doneFn);
