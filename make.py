@@ -220,7 +220,7 @@ def configure_target(TARGET):
     FLAGS = [
         " -D" + PROJECT,
         "PROJECT=" + PROJECT,
-        "THIS_ADDRESS=" + THIS_ADDRESS
+        "THIS_ADDRESS=" + THIS_ADDRESS,
         "DFU_ADDRESS=" + DFU_ADDRESS,
         "BL_ADDRESS=" + BL_ADDRESS,
         "APP_ADDRESS=" + APP_ADDRESS,
