@@ -12,4 +12,4 @@ extern volatile uint32_t map7;
 extern volatile uint32_t map8;
 extern volatile uint32_t map9;
 
-extern int complex_boot(void);
+extern int this_is_sparta(void);

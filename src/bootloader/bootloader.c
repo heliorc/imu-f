@@ -70,7 +70,7 @@ void bootloader_start(void)
     //setup bootloader pin then wait 30 ms
 
     single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_DOWN);
-    if(complex_boot())
+    if(this_is_sparta())
     {
         single_gpio_init(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN_SRC, BOARD_COMM_DATA_RDY_PIN, 0, GPIO_Mode_IN, GPIO_OType_PP, GPIO_PuPd_DOWN);
         delay_ms(30);
@@ -84,7 +84,7 @@ void bootloader_start(void)
         //set callback function
         spiCallbackFunctionArray[BOARD_COMM_SPI_NUM] = bootloader_spi_callback_function;
         //init board comm spi
-        if(complex_boot())
+        if(this_is_sparta())
         {
             board_comm_init();
         }
@@ -94,7 +94,7 @@ void bootloader_start(void)
         //set first command, which is to listen
         bcTx.command = bcTx.crc = BL_LISTENING;
         //start the process
-        if(complex_boot())
+        if(this_is_sparta())
         {
             start_listening();
         }
@@ -106,7 +106,7 @@ void bootloader_start(void)
     else 
     {
         //boot to app
-        if(complex_boot())
+        if(this_is_sparta())
         {
             boot_to_address(APP_ADDRESS);
         }

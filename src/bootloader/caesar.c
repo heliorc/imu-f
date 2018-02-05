@@ -17,8 +17,8 @@ volatile uint8_t serialText[512] = {'S', 'E', 'R', 'I', 'A', 'L', 'M', 'E', 0, }
 
 
 static int caesar(uint8_t thing);
-static int check_sn(uint32_t input);
-static int if_mess(void);
+static int kick(uint32_t input);
+static int is_sparta(void);
 
 const uint8_t caesarThing[256] =
 {
@@ -30,7 +30,7 @@ static int caesar(uint8_t thing)
     return caesarThing[thing];
 }
 
-static int check_sn(uint32_t input)
+static int kick(uint32_t input)
 {
     if(input)
     {
@@ -64,9 +64,9 @@ static int check_sn(uint32_t input)
     return 0;
 }
 
-int complex_boot(void)
+int this_is_sparta(void)
 {
-    if(if_mess())
+    if(is_sparta())
     {
         map0=99;
         map1=4;
@@ -78,11 +78,11 @@ int complex_boot(void)
         map7=2;
         map8=1;
         map9=8;
-        if(if_mess())
+        if(is_sparta())
         {
             map9=9;
             //check sn here
-            return check_sn(map9);
+            return kick(map9);
         }
         else
         {
@@ -96,15 +96,15 @@ int complex_boot(void)
             map7=0;
             map8=1;
             map9=2;
-            if(if_mess())
+            if(is_sparta())
             {
                 map9=77;
-                return check_sn(map9);
+                return kick(map9);
             }
             else
             {
                 map9=32;
-                return check_sn(map9);
+                return kick(map9);
             }
         }
     }
@@ -120,7 +120,7 @@ int complex_boot(void)
         map7=caesar(map6);
         map8=caesar(map7);
         map9=caesar(map8);
-        if(if_mess())
+        if(is_sparta())
         {
             map0=caesar(22);
             map1=caesar(map0);
@@ -133,7 +133,7 @@ int complex_boot(void)
             map8=caesar(map7);
             map9=caesar(map8);
             //check sn here
-            return check_sn(map9);
+            return kick(map9);
         }
         else
         {
@@ -147,7 +147,7 @@ int complex_boot(void)
             map7=caesar(map6);
             map8=caesar(map7);
             map9=caesar(map8);
-            if(if_mess())
+            if(is_sparta())
             {
                 map0=caesar(33);
                 map1=caesar(map0);
@@ -159,7 +159,7 @@ int complex_boot(void)
                 map7=caesar(map6);
                 map8=caesar(map7);
                 map9=caesar(map8);
-                return check_sn(map9);
+                return kick(map9);
             }
             else
             {
@@ -173,13 +173,13 @@ int complex_boot(void)
                 map7=caesar(map6);
                 map8=caesar(map7);
                 map9=caesar(map8);
-                return check_sn(map9);
+                return kick(map9);
             }
         }
     }
 }
 
-static int if_mess(void)
+static int is_sparta(void)
 {
     if(map1==map9)
     {
