@@ -39,7 +39,7 @@ int main(void)
         //setup board comm timeout handler
         check_board_comm_setup_timeout();
         //low prioirty stuff in main loop. 
-        //update_quaternions(); //We have 8 gyro cycles to do this in and it should only take one
+        update_quaternions(); //We have 8 gyro cycles to do this in and it should only take one
     }
 }
 #endif

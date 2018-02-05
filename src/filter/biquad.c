@@ -1,9 +1,8 @@
 #include "includes.h"
 #include "biquad.h"
 
-biquad_state_t lpfFilterStateRate[3];
 
-void biquad_init(float filterCutFreq, biquad_state_t *newState, float refreshRateSeconds, uint32_t filterType, biquad_state_t *oldState, float bandwidth)
+void biquad_init(float filterCutFreq, biquad_axis_state_t *newState, float refreshRateSeconds, uint32_t filterType, biquad_axis_state_t *oldState, float bandwidth)
 {
 
 	float samplingRate;
@@ -76,7 +75,7 @@ void biquad_init(float filterCutFreq, biquad_state_t *newState, float refreshRat
 
 }
 
-float biquad_update(float sample, biquad_state_t *state)
+float biquad_update(float sample, biquad_axis_state_t *state)
 {
     float result;
 

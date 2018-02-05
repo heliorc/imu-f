@@ -29,6 +29,8 @@
         "stm32f3xx_hal_conf.h": "c",
         "default.h": "c",
         "stm32f3xx.h": "c",
-        "boothandler.h": "c"
+        "boothandler.h": "c",
+        "config.h": "c",
+        "imu.h": "c"
     }
 }

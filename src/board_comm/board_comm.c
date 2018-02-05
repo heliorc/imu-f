@@ -4,6 +4,7 @@
 #include "board_comm.h"
 #include "includes.h"
 #include "boothandler.h"
+#include "fast_kalman.h"
 
 #define simpleDelay_ASM(us) do {\
 	asm volatile (	"MOV R0,%[loops]\n\t"\
@@ -130,9 +131,16 @@ static void run_command(volatile imufCommand_t* newCommand)
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime
             {
                 //let's pretend the f4 sent this for now
-                newCommand->param1 = (GTBCM_GYRO_ACC_FILTER_F << 24);
-                //f4 needs to send all valid setup commands
 
+                //f4 needs to send all valid setup commands
+                uint32_t filterMode      = newCommand->param1;
+                uint32_t gyroOrientation = newCommand->param2;
+                filterConfig.pitch_q  = ((float)(newCommand->param3 & 0xFFFF));
+                filterConfig.pitch_r  = ((float)(newCommand->param3 >> 16));
+                filterConfig.roll_q   = ((float)(newCommand->param4 & 0xFFFF));
+                filterConfig.roll_r   = ((float)(newCommand->param4 >> 16));
+                filterConfig.yaw_q    = ((float)(newCommand->param5 & 0xFFFF));
+                filterConfig.yaw_r    = ((float)(newCommand->param5 >> 16));
                 memset((uint8_t *)&imufCommandTx, 0, sizeof(imufCommandTx));
                 imufCommandTx.command = BC_IMUF_SETUP;
                 imufCommandTx.crc     = BC_IMUF_SETUP;
@@ -142,8 +150,10 @@ static void run_command(volatile imufCommand_t* newCommand)
                 if (check == HAL_OK)
                 {
                     //message succsessfully sent to F4, switch to new comm mode now since f4 expects it now
-                    boardCommState.commMode = (GTBCM_GYRO_ACC_FILTER_F); //first 8 bits are comm mode, need to verify it's a valid command  though
+                    boardCommState.commMode = (filterMode);
                     //gyro.c will now handle communication
+                    timeBoardCommSetupIsr = HAL_GetTick();
+                    rewind_board_comm_spi(); 
                 }
             }
         break;
@@ -162,6 +172,10 @@ void board_comm_callback_function(SPI_HandleTypeDef *hspi)
     if ( imufCommandRx.command == 0x7f7f7f7F)
     {
         BootToAddress(THIS_ADDRESS);
+    }
+    if ( imufCommandRx.command == 0x63636363)
+    {
+        calibratingGyro = 1;
     }
     if (parse_imuf_command(&imufCommandRx))
     {
@@ -223,11 +237,11 @@ void rewind_board_comm_spi(void)
     RCC->APB1RSTR &= ~BOARD_COMM_SPI_RST_MSK;
 
     /* Reconfigure SPI2. */
-    //spi_init(&boardCommSPIHandle, BOARD_COMM_SPI, SPI_BAUDRATEPRESCALER_2, SPI_MODE_SLAVE, BOARD_COMM_SPI_IRQn, BOARD_COMM_SPI_ISR_PRE_PRI, BOARD_COMM_SPI_ISR_SUB_PRI);
+    spi_init(&boardCommSPIHandle, BOARD_COMM_SPI, SPI_BAUDRATEPRESCALER_2, SPI_MODE_SLAVE, BOARD_COMM_SPI_IRQn, BOARD_COMM_SPI_ISR_PRE_PRI, BOARD_COMM_SPI_ISR_SUB_PRI);
     //spi_dma_init(&boardCommSPIHandle, &hdmaBoardCommSPIRx, &hdmaBoardCommSPITx, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA, BOARD_COMM_SPI_RX_DMA_IRQn, BOARD_COMM_SPI_TX_DMA_IRQn);
 
-    HAL_SPI_DeInit(&boardCommSPIHandle);
-    HAL_SPI_Init(&boardCommSPIHandle);
+    //HAL_SPI_DeInit(&boardCommSPIHandle);
+    //HAL_SPI_Init(&boardCommSPIHandle);
 
     /* Re-enable SPI2 and DMA channels. */
     //BOARD_COMM_SPI->CR2 |= SPI_I2S_DMAReq_Rx;

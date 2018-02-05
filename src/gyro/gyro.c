@@ -7,6 +7,7 @@
 #include "imu.h"
 #include "board_comm.h"
 #include "boothandler.h"
+#include "quaternions.h"
 
 
 volatile uint32_t debug1=0;
@@ -58,9 +59,6 @@ static void gyro_configure(void)
     {
         error_handler(GYRO_DETECT_FAILURE);
     }
-    // reset gyro
-	gyro_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_H_RESET);
-	HAL_Delay(80);
 
     // set gyro clock to Z axis gyro
     gyro_verify_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_CLK_Z);
@@ -118,12 +116,11 @@ static int gyro_device_detect(void)
     // reset gyro
     gyro_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_H_RESET);
     HAL_Delay(80);
-    gyro_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_H_RESET);
 
     // poll for the who am i register while device resets
     for (attempt = 0; attempt < 250; attempt++)
     {
-        HAL_Delay(80);
+        HAL_Delay(2);
 
         gyro_read_data(INVENS_RM_WHO_AM_I, &data, 1);
         switch (data)
@@ -262,8 +259,8 @@ static void gyro_int_to_float(void)
 
 void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
 {
-    uint32_t accTracker = 8; //start at 8, so 9 is run first
-    uint32_t quatBufferNum = 0; //start working on this buffer
+    uint32_t accTracker = 8; //start at 7, so 8 is run first
+    volatile quaternion_buffer_t *quatBuffer = &(quatBufferA); //start working on this buffer
     (void)(hspi); //we don't care about which handle this is as we only have one gyro
 
     if(GYRO_CS_TYPE  == NSS_SOFT)
@@ -286,15 +283,15 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
         filter_data(&rawRateData,&rawAccData,gyroTempData,&filteredData); //profile: this takes 2.45us to run with O3 optimization, before adding biquad at least
     }
 
-    /*
+    
     if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F){
         //set flags and do quats in main loop
         //we have to fill the gyro data here though
 
         //add rate data for later usage in quats. This is reset in imu.c
-        quatBuffer[quatBufferNum].x += filteredData.rateData.x;
-        quatBuffer[quatBufferNum].y += filteredData.rateData.y;
-        quatBuffer[quatBufferNum].z += filteredData.rateData.z;
+        quatBuffer->vector.x += filteredData.rateData.x;
+        quatBuffer->vector.y += filteredData.rateData.y;
+        quatBuffer->vector.z += filteredData.rateData.z;
 
         accTracker++;
         switch(accTracker)
@@ -302,47 +299,55 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
             case 9:
                 //update quaternions, these were calculated in imu.c
                 filteredData.quaternion[0] = attitudeFrameQuat.w;
-                filteredData.quaternion[1] = attitudeFrameQuat.x;
-                filteredData.quaternion[2] = attitudeFrameQuat.y;
-                filteredData.quaternion[3] = attitudeFrameQuat.z;
+                filteredData.quaternion[1] = attitudeFrameQuat.vector.x;
+                filteredData.quaternion[2] = attitudeFrameQuat.vector.y;
+                filteredData.quaternion[3] = attitudeFrameQuat.vector.z;
                 //put acc into quat buffer
-                quatBuffer[0].accx = filteredData.accData.x;
-                quatBuffer[0].accy = filteredData.accData.y;
-                quatBuffer[0].accz = filteredData.accData.z;
+                quatBuffer->accVector.x = filteredData.accData.x;
+                quatBuffer->accVector.y = filteredData.accData.y;
+                quatBuffer->accVector.z = filteredData.accData.z;
                 quatState = QUAT_PROCESS_BUFFER_0;
                 //switch buffers
-                quatBufferNum = 1;
+                quatBuffer = &quatBufferB;
                 break;
             case 17:
                 //reset acc tracker
                 accTracker = 1;
                 //update quaternions, these were calculated in imu.c
                 filteredData.quaternion[0] = attitudeFrameQuat.w;
-                filteredData.quaternion[1] = attitudeFrameQuat.x;
-                filteredData.quaternion[2] = attitudeFrameQuat.y;
-                filteredData.quaternion[3] = attitudeFrameQuat.z;
+                filteredData.quaternion[1] = attitudeFrameQuat.vector.x;
+                filteredData.quaternion[2] = attitudeFrameQuat.vector.y;
+                filteredData.quaternion[3] = attitudeFrameQuat.vector.z;
                 //put acc into quat buffer
-                quatBuffer[1].accx = filteredData.accData.x;
-                quatBuffer[1].accy = filteredData.accData.y;
-                quatBuffer[1].accz = filteredData.accData.z;
+                quatBuffer->accVector.x = filteredData.accData.x;
+                quatBuffer->accVector.y = filteredData.accData.y;
+                quatBuffer->accVector.z = filteredData.accData.z;
                 quatState = QUAT_PROCESS_BUFFER_1;
                 //switch buffers
-                quatBufferNum = 0;
+                quatBuffer = &quatBufferA;
                 break;
         }
     }
-    */
+    
 
-    static int everyOther = 1;
-    if (everyOther-- < 1)
+    static int everyOther = 3;
+    if (boardCommState.commMode != GTBCM_SETUP)
     {
-        #ifdef DEBUG
-        everyOther = 8;
-        #else
-        everyOther = 1;
-        #endif
-        if (boardCommState.commMode != GTBCM_SETUP)
+        if (everyOther-- < 1)
         {
+            #ifdef DEBUG
+            everyOther = 3;
+            #else
+            if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F)
+            {
+                everyOther = 3;
+            }
+            else
+            {
+                everyOther = 1;
+            }
+            #endif
+
             timeBoardCommSetupIsr = HAL_GetTick();
             //profile:
             //HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
@@ -355,13 +360,16 @@ void gyro_rx_complete_callback(SPI_HandleTypeDef *hspi)
                 {
                     BootToAddress(THIS_ADDRESS);
                 }
+                if ( imufCommandRx.command == 0x63636363)
+                {
+                    calibratingGyro = 1;
+                }
                 imufCommandRx.command = BC_NONE; //no command
                 //transmit from the memptr to save CPU cycles, receive into the command rx struct, saves about 2us of time
-                HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, memptr, (uint8_t *)&imufCommandRx, boardCommState.commMode+2); //profile: this takes 2.14us to run with O3 optimization
+                HAL_SPI_TransmitReceive_DMA(&boardCommSPIHandle, memptr, (uint8_t *)&imufCommandRx, boardCommState.commMode); //profile: this takes 2.14us to run with O3 optimization
                 HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); // a quick spike for EXTI
                 HAL_GPIO_WritePin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0); // a quick spike for EXTI
             }
-
         }
     }
 }
