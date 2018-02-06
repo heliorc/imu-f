@@ -19,71 +19,55 @@ volatile gyro_read_done_t gyro_read_done_callback;
 SPI_InitTypeDef gyroSpiInitStruct;
 DMA_InitTypeDef gyroDmaInitStruct;
 
-static uint8_t gyro_read_reg(uint8_t reg, uint8_t data);
-static uint8_t gyro_write_reg(uint8_t reg, uint8_t data);
+static void gyro_read_reg(uint8_t reg, uint8_t data);
+static void gyro_write_reg(uint8_t reg, uint8_t data);
+static uint8_t gyro_read_reg_setup(uint8_t reg, uint8_t data);
+static uint8_t gyro_write_reg_setup(uint8_t reg, uint8_t data);
 
-
-static void gyro_device_read_start(void)
+void GYRO_SPI_RX_DMA_HANDLER(void)
 {
-    // start read from accel, set high bit to read
-    gyroTxFrame.accAddress = INVENS_RM_ACCEL_XOUT_H | 0x80;
-    // read 15 bytes, this includes ACC, TEMP, GYRO
-    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 0); //high to deactive cs on gyro
-    spi_transfer_blocking(GYRO_SPI, gyroTxFramePtr, gyroRxFramePtr, 15);
-    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
-    gyro_read_done_callback(&gyroRxFrame);
+    if(DMA_GetITStatus(GYRO_RX_DMA_FLAG_TC))
+    {
+        //Clear DMA1 Channel1 Half Transfer, Transfer Complete and Global interrupt pending bits
+        gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
+        cleanup_spi(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, GYRO_TX_DMA_FLAG_GL, GYRO_RX_DMA_FLAG_GL, GYRO_SPI_RST_MSK);
+        gyro_read_done_callback(&gyroRxFrame);
+        DMA_ClearITPendingBit(GYRO_RX_DMA_FLAG_GL);         
+    }
 }
 
-static uint8_t gyro_read_reg(uint8_t reg, uint8_t data)
+void GYRO_EXTI_HANDLER(void)
 {
-    return gyro_write_reg(reg | 0x80, data);
+    /* Make sure that interrupt flag is set */
+    if (EXTI_GetITStatus(GYRO_EXTI_LINE) != RESET)
+    {
+        //writing 2 bytes, reg and data, anything that's read back will be returned
+        gyroTxFrame.accAddress = INVENS_RM_ACCEL_XOUT_H | 0x80;
+        uint32_t size = 2;
+        //send/receive data, return zero if we time out
+        //set cs pin
+        gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 0); //low to active cs on gyro
+        //start the dma transfer
+        spi_fire_dma(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, &gyroDmaInitStruct, &size, gyroTxFramePtr, gyroRxFramePtr);
+        DMA_ITConfig(GYRO_RX_DMA, DMA_IT_TC, ENABLE);
+        EXTI_ClearITPendingBit(GYRO_EXTI_LINE);
+    }
 }
 
-static uint8_t gyro_write_reg(uint8_t reg, uint8_t data)
+static uint8_t gyro_read_reg_setup(uint8_t reg, uint8_t data)
+{
+    return gyro_write_reg_setup(reg | 0x80, data);
+}
+
+static uint8_t gyro_write_reg_setup(uint8_t reg, uint8_t data)
 {
     //writing 2 bytes, reg and data, anything that's read back will be returned
-    //set buffer
-    uint8_t buff1[20];
-    uint8_t buff2[20];
-    buff1[0] = reg;
-    buff1[1] = data;
-    buff2[0] = 0;
-    buff2[1] = 0;
-    //gyroTxFramePtr[0] = reg;
-    //gyroTxFramePtr[1] = data;
-    uint32_t size = 2;
-
+    gyroTxFrame.accAddress = reg;
+    gyroTxFrame.accelX_H = data;
     gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 0); //high to deactive cs on gyro
-    spi_transfer_blocking(GYRO_SPI, buff1, buff2, 2);
+    spi_transfer_blocking(GYRO_SPI, gyroTxFramePtr, gyroRxFramePtr, 2);
     gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
-    return buff2[1];
-
-/*
-    uint32_t timeout = millis();
-    // return 0;
-    //send/receive data, return zero if we time out
-     //set cs pin
-    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 0); //low to active cs on gyro
-    //start the dma transfer
-    volatile uint32_t mouse1 = DMA_GetFlagStatus(GYRO_TX_DMA_FLAG_TC);
-    //spi_fire_dma(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, &gyroDmaInitStruct, &size, buff1, buff2);
-    volatile uint32_t mouse2 = DMA_GetFlagStatus(GYRO_TX_DMA_FLAG_TC);
-    while (DMA_GetFlagStatus(GYRO_TX_DMA_FLAG_TC) == RESET)
-    {
-        if (millis() - timeout > 80) //10 MS TIMEOUT
-        {
-            volatile uint32_t timeww = millis();
-            cleanup_spi(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, GYRO_TX_DMA_FLAG_GL, GYRO_RX_DMA_FLAG_GL, GYRO_SPI_RST_MSK);
-            gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
-            return 0;
-        }
-    }
-    volatile uint32_t mouse3 = DMA_GetFlagStatus(GYRO_TX_DMA_FLAG_TC);
-    //if we got here than the TX/RX was a success
-    cleanup_spi(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, GYRO_TX_DMA_FLAG_GL, GYRO_RX_DMA_FLAG_GL, GYRO_SPI_RST_MSK);
-    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
-    return buff2[1];
-*/
+    return gyroRxFrame.accelX_H;
 }
 
 static uint32_t gyro_verify_write_reg(uint8_t reg, uint8_t data)
@@ -92,9 +76,9 @@ static uint32_t gyro_verify_write_reg(uint8_t reg, uint8_t data)
 
     for (attempt = 0; attempt < 20; attempt++)
     {
-    	gyro_write_reg(reg, data);
+    	gyro_write_reg_setup(reg, data);
         delay_ms(2);
-        data_verify = gyro_read_reg(reg, data);
+        data_verify = gyro_read_reg_setup(reg, data);
         if (data_verify == data)
         {
             return 1;
@@ -111,13 +95,13 @@ static int gyro_device_detect(void)
     uint32_t attempt;
     uint8_t data = 0;
     // reset gyro
-    gyro_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_H_RESET);
+    gyro_write_reg_setup(INVENS_RM_PWR_MGMT_1, INVENS_CONST_H_RESET);
     delay_ms(150);
     // poll for the who am i register while device resets
     for (attempt = 0; attempt < 100; attempt++)
     {
         delay_ms(2);
-        data = gyro_read_reg(INVENS_RM_WHO_AM_I, data);
+        data = gyro_read_reg_setup(INVENS_RM_WHO_AM_I, data);
         if (data == ICM20601_WHO_AM_I)
         {
             gyroRateMultiplier = GYRO_DPS_SCALE_4000;
@@ -147,11 +131,11 @@ static void gyro_configure(void)
     gyro_verify_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_CLK_Z);
 
     // clear low power states
-    gyro_write_reg(INVENS_RM_PWR_MGMT_2, 0);
+    gyro_write_reg_setup(INVENS_RM_PWR_MGMT_2, 0);
 
     // disable I2C Interface, clear fifo, and reset sensor signal paths
     // TODO: shouldn't disable i2c on non-spi
-    gyro_write_reg(INVENS_RM_USER_CTRL, INVENS_CONST_I2C_IF_DIS | INVENS_CONST_FIFO_RESET | INVENS_CONST_SIG_COND_RESET);
+    gyro_write_reg_setup(INVENS_RM_USER_CTRL, INVENS_CONST_I2C_IF_DIS | INVENS_CONST_FIFO_RESET | INVENS_CONST_SIG_COND_RESET);
 
     // set gyro sample divider rate
     gyro_verify_write_reg(INVENS_RM_SMPLRT_DIV, gyroConfig.rateDiv - 1);
@@ -198,7 +182,6 @@ void gyro_device_init(gyro_read_done_t readFn)
     gyroTxFramePtr = (uint8_t *)&gyroTxFrame;
 
     gyro_read_done_callback = readFn;
-    spiCallbackFunctionArray[GYRO_SPI_NUM] = gyro_device_read_start;
     //setup gyro 
     gyro_spi_setup();
     //reset and configure gyro
