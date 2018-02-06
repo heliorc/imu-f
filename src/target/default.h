@@ -18,14 +18,19 @@
 #define GYRO_SPI                        SPI3
 #define GYRO_SPI_NUM                    2   //SPI3 = 2, SPI2 = 1, SPI1 = 0,
 #define GYRO_SPI_IRQn                   SPI3_IRQn
+#define GYRO_SPI_RST_MSK                RCC_APB1RSTR_SPI3RST
 #define GYRO_RX_DMA                     DMA1_Channel2
 #define GYRO_TX_DMA                     DMA1_Channel3
+#define GYRO_RX_DMA_FLAG_GL             DMA1_FLAG_GL2
+#define GYRO_TX_DMA_FLAG_GL             DMA1_FLAG_GL3
+#define GYRO_RX_DMA_FLAG_TC             DMA1_FLAG_TC2
+#define GYRO_TX_DMA_FLAG_TC             DMA1_FLAG_TC3
 #define GYRO_CS_TYPE                    NSS_SOFT
 #define GYRO_CS_PIN_SRC                 GPIO_PinSource4
 #define GYRO_CS_PIN                     GPIO_Pin_4
 #define GYRO_CS_PORT                    GPIOA
 #define GYRO_CS_ALTERNATE               0
-#define GYRO_CS_MODE                    GPIO_MODE_OUTPUT_PP
+#define GYRO_CS_MODE                    GPIO_OType_PP
 #define GYRO_MISO_PIN                   GPIO_PinSource4
 #define GYRO_MISO_PORT                  GPIOB
 #define GYRO_MISO_ALTERNATE             GPIO_AF_6

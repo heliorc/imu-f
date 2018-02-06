@@ -8,6 +8,9 @@ const gyro_device_config_t gyroConfig = {1, 0, INVENS_CONST_GYRO_FCB_32_8800, 0,
 gyroFrame_t gyroRxFrame;
 gyroFrame_t gyroTxFrame;
 
+uint8_t *gyroRxFramePtr;
+uint8_t *gyroTxFramePtr;
+
 float gyroRateMultiplier = GYRO_DPS_SCALE_2000;
 float gyroAccMultiplier = ACC_DPS_SCALE_2000;
 
@@ -15,6 +18,10 @@ volatile gyro_read_done_t gyro_read_callback;
 
 SPI_InitTypeDef gyroSpiInitStruct;
 DMA_InitTypeDef gyroDmaInitStruct;
+
+static uint8_t gyro_read_reg(uint8_t reg, uint8_t data);
+static uint8_t gyro_write_reg(uint8_t reg, uint8_t data);
+static uint32_t gyro_device_blocking_read_write(uint8_t txBuffer[], uint8_t rxBuffer[], uint32_t size);
 
 
 static void gyro_device_read(void)
@@ -25,39 +32,59 @@ static void gyro_device_read(void)
     gyro_read_callback((uint32_t)&gyroTxFrame.accAddress, &gyroRxFrame.accAddress, 15);
 }
 
-static uint32_t gyro_write_reg(uint8_t reg, uint8_t data)
+void gyro_device_send_receive_dma(uint8_t txBuffer[], uint8_t rxBuffer[], uint32_t size)
 {
-	uint32_t timeout;
+    //set cs pin
+    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 0); //low to active cs on gyro
+    //start the dma transfer
+    spi_fire_dma(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, &gyroDmaInitStruct, &size, txBuffer, rxBuffer);
+}
 
-    // poll until SPI is ready in case of ongoing DMA
-	for (timeout = 0;timeout<10;timeout++)
+static uint32_t gyro_device_blocking_read_write(uint8_t txBuffer[], uint8_t rxBuffer[], uint32_t size)
+{
+    uint32_t timeout = millis();
+
+    //send dma here
+    gyro_device_send_receive_dma(txBuffer, rxBuffer, size);
+
+    while (DMA_GetFlagStatus(GYRO_RX_DMA_FLAG_TC) == RESET)
     {
-		// if (HAL_SPI_GetState(&gyroSPIHandle) == HAL_SPI_STATE_READY)
-		// 	break;
-		// HAL_Delay(1);
-	}
+        if (millis() - timeout > 10) //10 MS TIMEOUT
+        {
+            cleanup_spi(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, GYRO_TX_DMA_FLAG_GL, GYRO_RX_DMA_FLAG_GL, GYRO_SPI_RST_MSK);
+            gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
+            return 0;
+        }
+    }
 
-	if (timeout == 10) {
-		return 0;
-	}
-
-    // if(GYRO_CS_TYPE  == NSS_SOFT)
-    // {
-    //     HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_RESET);
-    // }
-    // HAL_Delay(2);
-
-    // TODO: what should these timeouts be?
-    // HAL_SPI_Transmit(&gyroSPIHandle, &reg, 1, 25);
-    // HAL_SPI_Transmit(&gyroSPIHandle, &data, 1, 25);
-
-    // if(GYRO_CS_TYPE  == NSS_SOFT)
-    // {
-    //     HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
-    // }
-    // HAL_Delay(2);
-
+    //if we got here than the TX/RX was a success
+    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
     return 1;
+
+
+}
+
+static uint8_t gyro_read_reg(uint8_t reg, uint8_t data)
+{
+    return gyro_write_reg(reg | 0x80, data);
+}
+
+static uint8_t gyro_write_reg(uint8_t reg, uint8_t data)
+{
+
+    //writing 2 bytes, reg and data, anything that's read back will be returned
+
+    //set buffer
+    gyroTxFramePtr[0] = reg;
+    gyroTxFramePtr[1] = data;
+
+    //send/receive data, return zero if we time out
+    if ( gyro_device_blocking_read_write(gyroTxFramePtr, gyroRxFramePtr, 2) )
+    {
+        return gyroRxFramePtr[1]; //answer will be here
+    }
+
+    return 0;
 }
 
 static uint32_t gyro_verify_write_reg(uint8_t reg, uint8_t data)
@@ -142,18 +169,23 @@ static void gyro_configure(void)
 
 static void gyro_spi_setup(void)
 {
-    // setup board_comm spi mappings and gpio init
+    // setup GYRO spi mappings and gpio init
     single_gpio_init(GYRO_MISO_PORT, GYRO_MISO_PIN, GYRO_MISO_PIN, GYRO_MISO_ALTERNATE, GPIO_Mode_AF, GPIO_OType_PP, GPIO_PuPd_NOPULL);
     single_gpio_init(GYRO_MOSI_PORT, GYRO_MOSI_PIN, GYRO_MOSI_PIN, GYRO_MOSI_ALTERNATE, GPIO_Mode_AF, GPIO_OType_PP, GPIO_PuPd_NOPULL);
     single_gpio_init(GYRO_SCK_PORT,  GYRO_SCK_PIN,  GYRO_SCK_PIN,  GYRO_SCK_ALTERNATE,  GPIO_Mode_AF, GPIO_OType_PP, GPIO_PuPd_NOPULL);
+    single_gpio_init(GYRO_CS_PORT,   GYRO_CS_PIN,   GYRO_CS_PIN,   GYRO_CS_ALTERNATE,   GYRO_CS_MODE, GPIO_OType_PP, GPIO_PuPd_NOPULL);
 
     //setup NSS GPIO if need be then init SPI and DMA for the SPI based on NSS type
     gpio_exti_init(GYRO_EXTI_PORT, GYRO_EXTI_PORT_SRC, GYRO_EXTI_PIN, GYRO_EXTI_PIN_SRC, GYRO_EXTI_LINE, EXTI_Trigger_Rising, GYRO_EXTI_IRQn, GYRO_EXTI_ISR_PRE_PRI, GYRO_EXTI_ISR_SUB_PRI);
-    spi_init(&gyroSpiInitStruct, &gyroDmaInitStruct, GYRO_SPI, SPI_Mode_Master, SPI_NSS_Soft); 
+    spi_init(&gyroSpiInitStruct, &gyroDmaInitStruct, GYRO_SPI, SPI_Mode_Master, SPI_NSS_Soft, SPI_CPOL_High, SPI_CPHA_2Edge); 
 }
 
 void gyro_device_init(gyro_read_done_t readFn) 
 {
+    //set uint8_t ptrs so we don't have to type cast
+    gyroRxFramePtr = (uint8_t *)&gyroRxFrame;
+    gyroTxFramePtr = (uint8_t *)&gyroTxFrame;
+
     gyro_read_callback = readFn;
     spiCallbackFunctionArray[GYRO_SPI_NUM] = gyro_device_read;
     //setup gyro 
