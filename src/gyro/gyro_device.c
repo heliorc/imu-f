@@ -60,8 +60,6 @@ static uint32_t gyro_device_blocking_read_write(uint8_t txBuffer[], uint8_t rxBu
     //if we got here than the TX/RX was a success
     gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
     return 1;
-
-
 }
 
 static uint8_t gyro_read_reg(uint8_t reg, uint8_t data)
@@ -71,19 +69,16 @@ static uint8_t gyro_read_reg(uint8_t reg, uint8_t data)
 
 static uint8_t gyro_write_reg(uint8_t reg, uint8_t data)
 {
-
     //writing 2 bytes, reg and data, anything that's read back will be returned
-
     //set buffer
     gyroTxFramePtr[0] = reg;
     gyroTxFramePtr[1] = data;
 
     //send/receive data, return zero if we time out
-    if ( gyro_device_blocking_read_write(gyroTxFramePtr, gyroRxFramePtr, 2) )
+    if (gyro_device_blocking_read_write(gyroTxFramePtr, gyroRxFramePtr, 2) )
     {
         return gyroRxFramePtr[1]; //answer will be here
     }
-
     return 0;
 }
 
@@ -94,8 +89,7 @@ static uint32_t gyro_verify_write_reg(uint8_t reg, uint8_t data)
     for (attempt = 0; attempt < 20; attempt++)
     {
     	gyro_write_reg(reg, data);
-        // HAL_Delay(2);
-        // gyro_device_read(reg, &data_verify, 1, 1);
+        gyro_device_read(reg, &data_verify, 1, 1);
         if (data_verify == data)
         {
             return 1;
@@ -112,12 +106,13 @@ static int gyro_device_detect(void)
     uint8_t attempt, data = 0;
     // reset gyro
     gyro_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_H_RESET);
-    // HAL_Delay(80);
+    delay_ms(80);
     // poll for the who am i register while device resets
     for (attempt = 0; attempt < 250; attempt++)
     {
         // HAL_Delay(2);
-        // gyro_device_read(INVENS_RM_WHO_AM_I, &data, 1, 0);
+        delay_ms(2);
+        gyro_device_read(INVENS_RM_WHO_AM_I, &data, 1, 0);
         if (data == ICM20601_WHO_AM_I) {
             gyroRateMultiplier = GYRO_DPS_SCALE_4000;
             gyroAccMultiplier  = ACC_DPS_SCALE_4000;
@@ -129,7 +124,7 @@ static int gyro_device_detect(void)
 
 static void gyro_configure(void)
 {
-    // HAL_Delay(5);
+    delay_ms(5);
     if (!gyro_device_detect())
     {
         // error_handler(GYRO_DETECT_FAILURE);
