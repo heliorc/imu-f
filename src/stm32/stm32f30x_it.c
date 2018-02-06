@@ -156,6 +156,21 @@ void SysTick_Handler(void)
 /*  file (startup_stm32f30x.s).                                            */
 /******************************************************************************/
 
+void GYRO_SPI_RX_DMA_HANDLER(void)
+{
+
+}
+
+void GYRO_EXTI_HANDLER(void)
+{
+    /* Make sure that interrupt flag is set */
+    if (EXTI_GetITStatus(GYRO_EXTI_LINE) != RESET)
+    {
+        spiCallbackFunctionArray[GYRO_SPI_NUM]();
+        EXTI_ClearITPendingBit(GYRO_EXTI_LINE);
+    }
+}
+
 void BOARD_COMM_EXTI_HANDLER(void)
 {
     /* Make sure that interrupt flag is set */

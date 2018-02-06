@@ -38,11 +38,9 @@ typedef struct gyro_data {
     uint8_t accDenom;
 } gyro_device_config_t;
 
-typedef void (*gyro_read_done_t)(uint8_t reg, uint8_t* data, uint8_t length);
+typedef void (*gyro_read_done_t)(gyroFrame_t* gyroRxFrame);
 
 extern const gyro_device_config_t gyroConfig;
 extern float gyroRateMultiplier;
 extern float gyroAccMultiplier;
-extern gyroFrame_t gyroRxFrame;
-extern gyroFrame_t gyroTxFrame;
 extern void gyro_device_init(gyro_read_done_t doneFn);

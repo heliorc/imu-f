@@ -36,6 +36,7 @@
         "stm32f30x_it.h": "c",
         "isr_priority.h": "c",
         "reset.h": "c",
-        "filter.h": "c"
+        "filter.h": "c",
+        "gyro_device.h": "c"
     }
 }

@@ -14,7 +14,7 @@ uint8_t *gyroTxFramePtr;
 float gyroRateMultiplier = GYRO_DPS_SCALE_2000;
 float gyroAccMultiplier = ACC_DPS_SCALE_2000;
 
-volatile gyro_read_done_t gyro_read_callback;
+volatile gyro_read_done_t gyro_read_done_callback;
 
 SPI_InitTypeDef gyroSpiInitStruct;
 DMA_InitTypeDef gyroDmaInitStruct;
@@ -23,34 +23,21 @@ static uint8_t gyro_read_reg(uint8_t reg, uint8_t data);
 static uint8_t gyro_write_reg(uint8_t reg, uint8_t data);
 
 
-static void gyro_device_read(void)
+static void gyro_device_read_start(void)
 {
     // start read from accel, set high bit to read
     gyroTxFrame.accAddress = INVENS_RM_ACCEL_XOUT_H | 0x80;
     // read 15 bytes, this includes ACC, TEMP, GYRO
-    gyro_read_callback((uint32_t)&gyroTxFrame.accAddress, &gyroRxFrame.accAddress, 15);
+    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 0); //high to deactive cs on gyro
+    spi_transfer_blocking(GYRO_SPI, gyroTxFramePtr, gyroRxFramePtr, 15);
+    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
+    gyro_read_done_callback(&gyroRxFrame);
 }
 
 static uint8_t gyro_read_reg(uint8_t reg, uint8_t data)
 {
     return gyro_write_reg(reg | 0x80, data);
 }
-
-
-int spi_transfer_blocking(SPI_TypeDef* spi, const uint8_t* txBuff, uint8_t* rxBuff, int len)
-{
-    //TODO: Check timeout
-    while (len--)
-    {
-        while(SPI_I2S_GetFlagStatus(spi, SPI_I2S_FLAG_TXE) == RESET); //tx buffer empyt?
-        SPI_SendData8(spi, *(txBuff++));
-        while( spi->SR & SPI_I2S_FLAG_BSY ); // wait until SPI is not busy anymore
-        *(rxBuff++) = SPI_ReceiveData8(spi);
-    }
-
-    return 1;
-}
-
 
 static uint8_t gyro_write_reg(uint8_t reg, uint8_t data)
 {
@@ -201,7 +188,7 @@ static void gyro_spi_setup(void)
 
     //setup NSS GPIO if need be then init SPI and DMA for the SPI based on NSS type
     gpio_exti_init(GYRO_EXTI_PORT, GYRO_EXTI_PORT_SRC, GYRO_EXTI_PIN, GYRO_EXTI_PIN_SRC, GYRO_EXTI_LINE, EXTI_Trigger_Rising, GYRO_EXTI_IRQn, GYRO_EXTI_ISR_PRE_PRI, GYRO_EXTI_ISR_SUB_PRI);
-    spi_init(&gyroSpiInitStruct, &gyroDmaInitStruct, GYRO_SPI, SPI_Mode_Master, SPI_NSS_Soft, SPI_CPOL_High, SPI_CPHA_2Edge, SPI_BaudRatePrescaler_32); 
+    spi_init(&gyroSpiInitStruct, &gyroDmaInitStruct, GYRO_SPI, SPI_Mode_Master, SPI_NSS_Soft, SPI_CPOL_High, SPI_CPHA_2Edge, SPI_BaudRatePrescaler_4); 
 }
 
 void gyro_device_init(gyro_read_done_t readFn) 
@@ -210,8 +197,8 @@ void gyro_device_init(gyro_read_done_t readFn)
     gyroRxFramePtr = (uint8_t *)&gyroRxFrame;
     gyroTxFramePtr = (uint8_t *)&gyroTxFrame;
 
-    gyro_read_callback = readFn;
-    spiCallbackFunctionArray[GYRO_SPI_NUM] = gyro_device_read;
+    gyro_read_done_callback = readFn;
+    spiCallbackFunctionArray[GYRO_SPI_NUM] = gyro_device_read_start;
     //setup gyro 
     gyro_spi_setup();
     //reset and configure gyro

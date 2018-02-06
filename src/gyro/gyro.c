@@ -18,7 +18,7 @@ filteredData_t filteredData;
 
 DMA_InitTypeDef gyroDmaInitStruct;
 
-static void gyro_int_to_float(void)
+static void gyro_int_to_float(gyroFrame_t* gyroRxFrame)
 {
     static uint32_t gyroCalibrationCycles = 0;
     static int gyroLoopCounter = 0;
@@ -27,10 +27,10 @@ static void gyro_int_to_float(void)
     {
         //if accDenom is 8, then we should do a switch case for quatenrion math.
         gyroLoopCounter = gyroConfig.accDenom;
-        rawAccData.x = ((int16_t)((gyroRxFrame.accelX_H << 8) | gyroRxFrame.accelX_L)) * gyroAccMultiplier;
-		rawAccData.y = ((int16_t)((gyroRxFrame.accelY_H << 8) | gyroRxFrame.accelY_L)) * gyroAccMultiplier;
-		rawAccData.z = ((int16_t)((gyroRxFrame.accelZ_H << 8) | gyroRxFrame.accelZ_L)) * gyroAccMultiplier;
-        gyroTempData   = ((int16_t)((gyroRxFrame.temp_H << 8)   | gyroRxFrame.temp_L))   * GYRO_TEMP_MULTIPLIER + 25;
+        rawAccData.x = ((int16_t)((gyroRxFrame->accelX_H << 8) | gyroRxFrame->accelX_L)) * gyroAccMultiplier;
+		rawAccData.y = ((int16_t)((gyroRxFrame->accelY_H << 8) | gyroRxFrame->accelY_L)) * gyroAccMultiplier;
+		rawAccData.z = ((int16_t)((gyroRxFrame->accelZ_H << 8) | gyroRxFrame->accelZ_L)) * gyroAccMultiplier;
+        gyroTempData = ((int16_t)((gyroRxFrame->temp_H << 8)   | gyroRxFrame->temp_L))   * GYRO_TEMP_MULTIPLIER + 25;
         //= (TEMP_OUT[15:0]/Temp_Sensitivity) +
         //RoomTemp_Offset
         //where Temp_Sensitivity = 326.8 LSB/ºC and
@@ -59,12 +59,12 @@ static void gyro_int_to_float(void)
     }
 
     //f*f+f is one operation on FPU
-    rawRateData.x = (float)((int16_t)((gyroRxFrame.gyroX_H << 8) | gyroRxFrame.gyroX_L)) * gyroRateMultiplier + gyroCalibrationTrim.x;
-	rawRateData.y = (float)((int16_t)((gyroRxFrame.gyroY_H << 8) | gyroRxFrame.gyroY_L)) * gyroRateMultiplier + gyroCalibrationTrim.y;
-	rawRateData.z = (float)((int16_t)((gyroRxFrame.gyroZ_H << 8) | gyroRxFrame.gyroZ_L)) * gyroRateMultiplier + gyroCalibrationTrim.z;
+    rawRateData.x = (float)((int16_t)((gyroRxFrame->gyroX_H << 8) | gyroRxFrame->gyroX_L)) * gyroRateMultiplier + gyroCalibrationTrim.x;
+	rawRateData.y = (float)((int16_t)((gyroRxFrame->gyroY_H << 8) | gyroRxFrame->gyroY_L)) * gyroRateMultiplier + gyroCalibrationTrim.y;
+	rawRateData.z = (float)((int16_t)((gyroRxFrame->gyroZ_H << 8) | gyroRxFrame->gyroZ_L)) * gyroRateMultiplier + gyroCalibrationTrim.z;
 }
 
-void gyro_read_done(uint8_t reg, uint8_t* data, uint8_t length) {
+void gyro_read_done(gyroFrame_t* gyroRxFrame) {
 
     uint32_t accTracker = 8; //start at 7, so 8 is run first
     volatile quaternion_buffer_t *quatBuffer = &(quatBufferA); //start working on this buffer
@@ -73,14 +73,14 @@ void gyro_read_done(uint8_t reg, uint8_t* data, uint8_t length) {
 
     if (boardCommState.commMode == GTBCM_GYRO_ONLY_PASSTHRU) 
     {
-        memptr = (uint8_t*)&gyroTxFrame.gyroX_H;
+        memptr = (uint8_t*)&(gyroRxFrame->gyroX_H);
     } else if (boardCommState.commMode == GTBCM_GYRO_ACC_PASSTHRU) 
     {
-        memptr = (uint8_t*)&gyroTxFrame.accAddress;
+        memptr = (uint8_t*)&(gyroRxFrame->accAddress);
     }
 
     if (boardCommState.commMode == GTBCM_GYRO_ACC_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ONLY_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F){
-        gyro_int_to_float();
+        gyro_int_to_float(gyroRxFrame);
         filter_data(&rawRateData, &rawAccData, gyroTempData, &filteredData); //profile: this takes 2.45us to run with O3 optimization, before adding biquad at least
     }
     

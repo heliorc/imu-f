@@ -42,6 +42,7 @@ void spi_fire_dma(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_Type
     //DMA channel Rx of SPI Configuration
     dmaInitStructure->DMA_BufferSize = *size;
     dmaInitStructure->DMA_PeripheralBaseAddr = (uint32_t)((uint32_t)spi+0x0C);
+    dmaInitStructure->DMA_PeripheralBaseAddr = (uint32_t)(&spi->DR);
     dmaInitStructure->DMA_MemoryBaseAddr = (uint32_t)rxBuff;
     dmaInitStructure->DMA_DIR = DMA_DIR_PeripheralSRC;
     dmaInitStructure->DMA_Priority = DMA_Priority_High;
@@ -91,4 +92,18 @@ void cleanup_spi(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_TypeD
     /* Disable the SPI Rx and Tx DMA requests */
     SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Tx, DISABLE); //simp
     SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Rx, DISABLE); //simp
+}
+
+int spi_transfer_blocking(SPI_TypeDef* spi, const uint8_t* txBuff, uint8_t* rxBuff, int len)
+{
+    //TODO: Check timeout
+    while (len--)
+    {
+        while(SPI_I2S_GetFlagStatus(spi, SPI_I2S_FLAG_TXE) == RESET); //tx buffer empyt?
+        SPI_SendData8(spi, *(txBuff++));
+        while( spi->SR & SPI_I2S_FLAG_BSY ); // wait until SPI is not busy anymore
+        *(rxBuff++) = SPI_ReceiveData8(spi);
+    }
+
+    return 1;
 }
