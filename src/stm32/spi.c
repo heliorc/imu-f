@@ -7,7 +7,7 @@ volatile spi_tx_done_callback spiCallbackFunctionArray[3] = {0,};
 //volatile spi_irq_callback_function_pointer spiIrqCallbackFunctionArray[3] = {0,};
 
 //setup the DMA
-void spi_init(SPI_InitTypeDef *spiInitStructure, DMA_InitTypeDef *dmaInitStructure, SPI_TypeDef *spi, uint16_t mode, uint16_t nss, uint16_t cpol, uint16_t cpha)
+void spi_init(SPI_InitTypeDef *spiInitStructure, DMA_InitTypeDef *dmaInitStructure, SPI_TypeDef *spi, uint16_t mode, uint16_t nss, uint16_t cpol, uint16_t cpha, uint16_t BaudRatePrescaler)
 {
     SPI_I2S_DeInit(spi);
     spiInitStructure->SPI_Mode = mode;
@@ -16,7 +16,7 @@ void spi_init(SPI_InitTypeDef *spiInitStructure, DMA_InitTypeDef *dmaInitStructu
     spiInitStructure->SPI_CPOL = cpol;
     spiInitStructure->SPI_CPHA = cpha;
     spiInitStructure->SPI_NSS = nss;
-    spiInitStructure->SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
+    spiInitStructure->SPI_BaudRatePrescaler = BaudRatePrescaler;
     spiInitStructure->SPI_FirstBit = SPI_FirstBit_MSB;
     spiInitStructure->SPI_CRCPolynomial = 7;
     SPI_Init(spi, spiInitStructure);

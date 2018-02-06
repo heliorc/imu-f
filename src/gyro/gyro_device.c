@@ -47,10 +47,11 @@ static uint32_t gyro_device_blocking_read_write(uint8_t txBuffer[], uint8_t rxBu
     //send dma here
     gyro_device_send_receive_dma(txBuffer, rxBuffer, size);
 
-    while (DMA_GetFlagStatus(GYRO_RX_DMA_FLAG_TC) == RESET)
+    while (DMA_GetFlagStatus(GYRO_TX_DMA_FLAG_TC) == RESET)
     {
-        if (millis() - timeout > 10) //10 MS TIMEOUT
+        if (millis() - timeout > 80) //10 MS TIMEOUT
         {
+            volatile uint32_t timeww = millis();
             cleanup_spi(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, GYRO_TX_DMA_FLAG_GL, GYRO_RX_DMA_FLAG_GL, GYRO_SPI_RST_MSK);
             gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
             return 0;
@@ -94,8 +95,8 @@ static uint32_t gyro_verify_write_reg(uint8_t reg, uint8_t data)
     for (attempt = 0; attempt < 20; attempt++)
     {
     	gyro_write_reg(reg, data);
-        // HAL_Delay(2);
-        // gyro_device_read(reg, &data_verify, 1, 1);
+        delay_ms(2);
+        data_verify = gyro_read_reg(reg, data);
         if (data_verify == data)
         {
             return 1;
@@ -133,6 +134,7 @@ static void gyro_configure(void)
     if (!gyro_device_detect())
     {
         // error_handler(GYRO_DETECT_FAILURE);
+        volatile int failed = 1;
     }
 
     // set gyro clock to Z axis gyro
@@ -177,7 +179,7 @@ static void gyro_spi_setup(void)
 
     //setup NSS GPIO if need be then init SPI and DMA for the SPI based on NSS type
     gpio_exti_init(GYRO_EXTI_PORT, GYRO_EXTI_PORT_SRC, GYRO_EXTI_PIN, GYRO_EXTI_PIN_SRC, GYRO_EXTI_LINE, EXTI_Trigger_Rising, GYRO_EXTI_IRQn, GYRO_EXTI_ISR_PRE_PRI, GYRO_EXTI_ISR_SUB_PRI);
-    spi_init(&gyroSpiInitStruct, &gyroDmaInitStruct, GYRO_SPI, SPI_Mode_Master, SPI_NSS_Soft, SPI_CPOL_High, SPI_CPHA_2Edge); 
+    spi_init(&gyroSpiInitStruct, &gyroDmaInitStruct, GYRO_SPI, SPI_Mode_Master, SPI_NSS_Soft, SPI_CPOL_High, SPI_CPHA_2Edge, SPI_BaudRatePrescaler_8); 
 }
 
 void gyro_device_init(gyro_read_done_t readFn) 
