@@ -152,16 +152,6 @@ static void gyro_spi_setup(void)
     spi_init(&gyroSpiInitStruct, &gyroDmaInitStruct, GYRO_SPI, SPI_Mode_Master, SPI_NSS_Soft); 
 }
 
-void hal_spi_gyro_tx_rx(uint8_t reg, uint8_t *data, uint8_t length) 
-{
-    // HAL_SPI_Transmit(&gyroSPIHandle, &reg, 1, 100);
-    // HAL_SPI_Receive(&gyroSPIHandle, data, length, 100);
-    // if(GYRO_CS_TYPE  == NSS_SOFT)
-    // {
-    //     HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
-    // }
-}
-
 void gyro_device_init(gyro_read_done_t readFn) 
 {
     gyro_read_callback = readFn;
