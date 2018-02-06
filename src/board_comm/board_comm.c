@@ -77,6 +77,7 @@ void board_comm_spi_complete(void)
 
 void board_comm_spi_callback_function(void)
 {
+
     board_comm_spi_complete(); //this needs to be called when the transaction is complete
 
     //calibration won't work this way
