@@ -21,7 +21,6 @@ DMA_InitTypeDef gyroDmaInitStruct;
 
 static uint8_t gyro_read_reg(uint8_t reg, uint8_t data);
 static uint8_t gyro_write_reg(uint8_t reg, uint8_t data);
-static uint32_t gyro_device_blocking_read_write(uint8_t txBuffer[], uint8_t rxBuffer[], uint32_t size);
 
 
 static void gyro_device_read(void)
@@ -40,30 +39,6 @@ void gyro_device_send_receive_dma(uint8_t txBuffer[], uint8_t rxBuffer[], uint32
     spi_fire_dma(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, &gyroDmaInitStruct, &size, txBuffer, rxBuffer);
 }
 
-static uint32_t gyro_device_blocking_read_write(uint8_t txBuffer[], uint8_t rxBuffer[], uint32_t size)
-{
-    uint32_t timeout = millis();
-
-    //send dma here
-    gyro_device_send_receive_dma(txBuffer, rxBuffer, size);
-
-    while (DMA_GetFlagStatus(GYRO_RX_DMA_FLAG_TC) == RESET)
-    {
-        if (millis() - timeout > 80) //10 MS TIMEOUT
-        {
-            volatile uint32_t timeww = millis();
-            cleanup_spi(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, GYRO_TX_DMA_FLAG_GL, GYRO_RX_DMA_FLAG_GL, GYRO_SPI_RST_MSK);
-            gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
-            return 0;
-        }
-    }
-
-    //if we got here than the TX/RX was a success
-    //cleanup_spi(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, GYRO_TX_DMA_FLAG_GL, GYRO_RX_DMA_FLAG_GL, GYRO_SPI_RST_MSK);
-    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
-    return 1;
-}
-
 static uint8_t gyro_read_reg(uint8_t reg, uint8_t data)
 {
     return gyro_write_reg(reg | 0x80, data);
@@ -76,12 +51,24 @@ static uint8_t gyro_write_reg(uint8_t reg, uint8_t data)
     gyroTxFramePtr[0] = reg;
     gyroTxFramePtr[1] = data;
 
-    //send/receive data, return zero if we time out
-    if (gyro_device_blocking_read_write(gyroTxFramePtr, gyroRxFramePtr, 2) )
-    {
-        return gyroRxFramePtr[1]; //answer will be here
-    }
+    uint32_t timeout = millis();
     return 0;
+    //send/receive data, return zero if we time out
+    gyro_device_send_receive_dma(gyroTxFramePtr, gyroRxFramePtr, 2);
+    while (DMA_GetFlagStatus(GYRO_RX_DMA_FLAG_TC) == RESET)
+    {
+        if (millis() - timeout > 80) //10 MS TIMEOUT
+        {
+            volatile uint32_t timeww = millis();
+            cleanup_spi(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, GYRO_TX_DMA_FLAG_GL, GYRO_RX_DMA_FLAG_GL, GYRO_SPI_RST_MSK);
+            gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
+            return 0;
+        }
+    }
+    //if we got here than the TX/RX was a success
+    //cleanup_spi(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, GYRO_TX_DMA_FLAG_GL, GYRO_RX_DMA_FLAG_GL, GYRO_SPI_RST_MSK);
+    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
+    return gyroRxFramePtr[1];
 }
 
 static uint32_t gyro_verify_write_reg(uint8_t reg, uint8_t data)
