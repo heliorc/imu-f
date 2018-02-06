@@ -72,7 +72,7 @@ void spi_fire_dma(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_Type
 void cleanup_spi(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_TypeDef *rxDma, uint32_t txDmaFlag, uint32_t rxDmaFlag, uint32_t resetMask)
 {
 
-    // Reset SPI2 (clears TXFIFO).
+    // Reset SPI (clears TXFIFO).
     RCC->APB1RSTR |= resetMask;
     RCC->APB1RSTR &= ~resetMask;
 

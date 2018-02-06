@@ -40,8 +40,15 @@ static uint8_t gyro_write_reg(uint8_t reg, uint8_t data)
 {
     //writing 2 bytes, reg and data, anything that's read back will be returned
     //set buffer
-    gyroTxFramePtr[0] = reg;
-    gyroTxFramePtr[1] = data;
+    uint8_t buff1[20];
+    uint8_t buff2[20];
+    buff1[0] = reg;
+    buff1[1] = data;
+    buff2[0] = 0;
+    buff2[1] = 0;
+    //gyroTxFramePtr[0] = reg;
+    //gyroTxFramePtr[1] = data;
+    uint32_t size = 2;
 
     uint32_t timeout = millis();
     // return 0;
@@ -49,8 +56,8 @@ static uint8_t gyro_write_reg(uint8_t reg, uint8_t data)
      //set cs pin
     gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 0); //low to active cs on gyro
     //start the dma transfer
-    spi_fire_dma(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, &gyroDmaInitStruct, 2, gyroTxFramePtr, gyroRxFramePtr);
-    while (DMA_GetFlagStatus(GYRO_RX_DMA_FLAG_TC) == RESET)
+    spi_fire_dma(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, &gyroDmaInitStruct, &size, buff1, buff2);
+    while (DMA_GetFlagStatus(GYRO_TX_DMA_FLAG_TC) == RESET)
     {
         if (millis() - timeout > 80) //10 MS TIMEOUT
         {
@@ -61,9 +68,9 @@ static uint8_t gyro_write_reg(uint8_t reg, uint8_t data)
         }
     }
     //if we got here than the TX/RX was a success
-    //cleanup_spi(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, GYRO_TX_DMA_FLAG_GL, GYRO_RX_DMA_FLAG_GL, GYRO_SPI_RST_MSK);
+    cleanup_spi(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, GYRO_TX_DMA_FLAG_GL, GYRO_RX_DMA_FLAG_GL, GYRO_SPI_RST_MSK);
     gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
-    return gyroRxFramePtr[1];
+    return buff2[1];
 }
 
 static uint32_t gyro_verify_write_reg(uint8_t reg, uint8_t data)
@@ -97,7 +104,7 @@ static int gyro_device_detect(void)
     for (attempt = 0; attempt < 2500000; attempt++)
     {
         // HAL_Delay(2);
-        delay_ms(2);
+        delay_us(200);
         data = gyro_read_reg(INVENS_RM_WHO_AM_I, data);
         if (data == ICM20601_WHO_AM_I) {
             gyroRateMultiplier = GYRO_DPS_SCALE_4000;
@@ -152,10 +159,13 @@ static void gyro_configure(void)
 static void gyro_spi_setup(void)
 {
     // setup GYRO spi mappings and gpio init
-    single_gpio_init(GYRO_MISO_PORT, GYRO_MISO_PIN_SRC, GYRO_MISO_PIN, GYRO_MISO_ALTERNATE, GPIO_Mode_AF,  GPIO_OType_PP, GPIO_PuPd_NOPULL);
-    single_gpio_init(GYRO_MOSI_PORT, GYRO_MOSI_PIN_SRC, GYRO_MOSI_PIN, GYRO_MOSI_ALTERNATE, GPIO_Mode_AF,  GPIO_OType_PP, GPIO_PuPd_NOPULL);
-    single_gpio_init(GYRO_SCK_PORT,  GYRO_SCK_PIN_SRC,  GYRO_SCK_PIN,  GYRO_SCK_ALTERNATE,  GPIO_Mode_AF,  GPIO_OType_PP, GPIO_PuPd_DOWN);
+    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1);
+
+    single_gpio_init(GYRO_MISO_PORT, GYRO_MISO_PIN_SRC, GYRO_MISO_PIN, GYRO_MISO_ALTERNATE, GPIO_Mode_AF,  GPIO_OType_PP, GPIO_PuPd_UP);
+    single_gpio_init(GYRO_MOSI_PORT, GYRO_MOSI_PIN_SRC, GYRO_MOSI_PIN, GYRO_MOSI_ALTERNATE, GPIO_Mode_AF,  GPIO_OType_PP, GPIO_PuPd_UP);
+    single_gpio_init(GYRO_SCK_PORT,  GYRO_SCK_PIN_SRC,  GYRO_SCK_PIN,  GYRO_SCK_ALTERNATE,  GPIO_Mode_AF,  GPIO_OType_PP, GPIO_PuPd_NOPULL);
     single_gpio_init(GYRO_CS_PORT,   GYRO_CS_PIN_SRC,   GYRO_CS_PIN,   GYRO_CS_ALTERNATE,   GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
+    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1);
 
     //setup NSS GPIO if need be then init SPI and DMA for the SPI based on NSS type
     gpio_exti_init(GYRO_EXTI_PORT, GYRO_EXTI_PORT_SRC, GYRO_EXTI_PIN, GYRO_EXTI_PIN_SRC, GYRO_EXTI_LINE, EXTI_Trigger_Rising, GYRO_EXTI_IRQn, GYRO_EXTI_ISR_PRE_PRI, GYRO_EXTI_ISR_SUB_PRI);

@@ -70,7 +70,7 @@ void clock_config(void)
     //TODO: Will need to add all the clocks
     //Enable SPI clocks
     RCC_I2SCLKConfig(RCC_I2S2CLKSource_SYSCLK);
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
+    //RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE);
 
     //enable DMA clock
