@@ -41,7 +41,7 @@ void spi_fire_dma(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_Type
     //setting the init structure piece by peice just to fill some regs is pricey when we can just set the regs ourselves
     //DMA channel Rx of SPI Configuration
     dmaInitStructure->DMA_BufferSize = *size;
-    dmaInitStructure->DMA_PeripheralBaseAddr = (uint32_t)(&spi->DR);
+    dmaInitStructure->DMA_PeripheralBaseAddr = (uint32_t)((uint32_t)spi+0x0C);
     dmaInitStructure->DMA_MemoryBaseAddr = (uint32_t)rxBuff;
     dmaInitStructure->DMA_DIR = DMA_DIR_PeripheralSRC;
     dmaInitStructure->DMA_Priority = DMA_Priority_High;
@@ -56,16 +56,17 @@ void spi_fire_dma(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_Type
     //dmaInitStructure->DMA_Priority = DMA_Priority_High;
     DMA_Init(txDma, dmaInitStructure); //comp
 
-    /* Enable the SPI Rx and Tx DMA requests */
-    SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Rx, ENABLE); //simp
-    SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Tx, ENABLE); //simp
+    /* Enable the SPI peripheral */
+    SPI_Cmd(spi, ENABLE); //simp
 
     /* Enable the DMA channels */
     DMA_Cmd(rxDma, ENABLE); //simp
     DMA_Cmd(txDma, ENABLE); //simp
 
-    /* Enable the SPI peripheral */
-    SPI_Cmd(spi, ENABLE); //simp
+    /* Enable the SPI Rx and Tx DMA requests */
+    SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Rx, ENABLE); //simp
+    SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Tx, ENABLE); //simp
+
 }
 
 //after spi transaction is done

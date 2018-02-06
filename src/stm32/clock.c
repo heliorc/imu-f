@@ -68,11 +68,6 @@ static void sys_tick_config(void)
 void clock_config(void)
 {
     //TODO: Will need to add all the clocks
-    //Enable SPI clocks
-    RCC_I2SCLKConfig(RCC_I2S2CLKSource_SYSCLK);
-    //RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE);
-
     //enable DMA clock
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
 
@@ -89,6 +84,11 @@ void clock_config(void)
 
     //enable SYSCFG clock
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+
+    //Enable SPI clocks
+    RCC_I2SCLKConfig(RCC_I2S2CLKSource_SYSCLK);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE);
 
     sys_tick_config();
 }
