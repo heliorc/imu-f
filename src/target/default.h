@@ -25,25 +25,34 @@
 #define GYRO_TX_DMA_FLAG_GL             DMA1_FLAG_GL3
 #define GYRO_RX_DMA_FLAG_TC             DMA1_FLAG_TC2
 #define GYRO_TX_DMA_FLAG_TC             DMA1_FLAG_TC3
-#define GYRO_CS_TYPE                    NSS_SOFT
+
+//#define GYRO_CS_TYPE                    NSS_SOFT
 #define GYRO_CS_PIN_SRC                 GPIO_PinSource4
 #define GYRO_CS_PIN                     GPIO_Pin_4
 #define GYRO_CS_PORT                    GPIOA
 #define GYRO_CS_ALTERNATE               0
 #define GYRO_CS_MODE                    GPIO_OType_PP
-#define GYRO_MISO_PIN                   GPIO_PinSource4
+
+#define GYRO_MISO_PIN_SRC               GPIO_PinSource4
+#define GYRO_MISO_PIN                   GPIO_Pin_4
 #define GYRO_MISO_PORT                  GPIOB
 #define GYRO_MISO_ALTERNATE             GPIO_AF_6
-#define GYRO_MOSI_PIN                   GPIO_PinSource5
+
+#define GYRO_MOSI_PIN_SRC               GPIO_PinSource5
+#define GYRO_MOSI_PIN                   GPIO_Pin_5
 #define GYRO_MOSI_PORT                  GPIOB
 #define GYRO_MOSI_ALTERNATE             GPIO_AF_6
-#define GYRO_SCK_PIN                    GPIO_PinSource3
+
+#define GYRO_SCK_PIN_SRC                GPIO_PinSource3
+#define GYRO_SCK_PIN                    GPIO_Pin_3
 #define GYRO_SCK_PORT                   GPIOB
 #define GYRO_SCK_ALTERNATE              GPIO_AF_6
+
 #define GYRO_SPI_RX_DMA_HANDLER         DMA1_Channel2_IRQHandler
 #define GYRO_SPI_TX_DMA_HANDLER         DMA1_Channel3_IRQHandler
 #define GYRO_SPI_RX_DMA_IRQn            DMA1_Channel2_IRQn
 #define GYRO_SPI_TX_DMA_IRQn            DMA1_Channel3_IRQn
+
 
 #define GYRO_EXTI_PORT                  GPIOA
 #define GYRO_EXTI_PORT_SRC              EXTI_PortSourceGPIOA

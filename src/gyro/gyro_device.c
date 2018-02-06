@@ -47,7 +47,7 @@ static uint32_t gyro_device_blocking_read_write(uint8_t txBuffer[], uint8_t rxBu
     //send dma here
     gyro_device_send_receive_dma(txBuffer, rxBuffer, size);
 
-    while (DMA_GetFlagStatus(GYRO_TX_DMA_FLAG_TC) == RESET)
+    while (DMA_GetFlagStatus(GYRO_RX_DMA_FLAG_TC) == RESET)
     {
         if (millis() - timeout > 80) //10 MS TIMEOUT
         {
@@ -59,6 +59,7 @@ static uint32_t gyro_device_blocking_read_write(uint8_t txBuffer[], uint8_t rxBu
     }
 
     //if we got here than the TX/RX was a success
+    //cleanup_spi(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, GYRO_TX_DMA_FLAG_GL, GYRO_RX_DMA_FLAG_GL, GYRO_SPI_RST_MSK);
     gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
     return 1;
 }
@@ -105,16 +106,17 @@ static uint32_t gyro_verify_write_reg(uint8_t reg, uint8_t data)
 
 static int gyro_device_detect(void)
 {
-    uint8_t attempt, data = 0;
+    uint32_t attempt;
+    uint8_t data = 0;
     // reset gyro
     gyro_write_reg(INVENS_RM_PWR_MGMT_1, INVENS_CONST_H_RESET);
     delay_ms(80);
     // poll for the who am i register while device resets
-    for (attempt = 0; attempt < 250; attempt++)
+    for (attempt = 0; attempt < 2500000; attempt++)
     {
         // HAL_Delay(2);
         delay_ms(2);
-        gyro_device_read(INVENS_RM_WHO_AM_I, &data, 1, 0);
+        data = gyro_read_reg(INVENS_RM_WHO_AM_I, data);
         if (data == ICM20601_WHO_AM_I) {
             gyroRateMultiplier = GYRO_DPS_SCALE_4000;
             gyroAccMultiplier  = ACC_DPS_SCALE_4000;
@@ -168,10 +170,10 @@ static void gyro_configure(void)
 static void gyro_spi_setup(void)
 {
     // setup GYRO spi mappings and gpio init
-    single_gpio_init(GYRO_MISO_PORT, GYRO_MISO_PIN, GYRO_MISO_PIN, GYRO_MISO_ALTERNATE, GPIO_Mode_AF, GPIO_OType_PP, GPIO_PuPd_NOPULL);
-    single_gpio_init(GYRO_MOSI_PORT, GYRO_MOSI_PIN, GYRO_MOSI_PIN, GYRO_MOSI_ALTERNATE, GPIO_Mode_AF, GPIO_OType_PP, GPIO_PuPd_NOPULL);
-    single_gpio_init(GYRO_SCK_PORT,  GYRO_SCK_PIN,  GYRO_SCK_PIN,  GYRO_SCK_ALTERNATE,  GPIO_Mode_AF, GPIO_OType_PP, GPIO_PuPd_NOPULL);
-    single_gpio_init(GYRO_CS_PORT,   GYRO_CS_PIN,   GYRO_CS_PIN,   GYRO_CS_ALTERNATE,   GYRO_CS_MODE, GPIO_OType_PP, GPIO_PuPd_NOPULL);
+    single_gpio_init(GYRO_MISO_PORT, GYRO_MISO_PIN_SRC, GYRO_MISO_PIN, GYRO_MISO_ALTERNATE, GPIO_Mode_AF,  GPIO_OType_PP, GPIO_PuPd_NOPULL);
+    single_gpio_init(GYRO_MOSI_PORT, GYRO_MOSI_PIN_SRC, GYRO_MOSI_PIN, GYRO_MOSI_ALTERNATE, GPIO_Mode_AF,  GPIO_OType_PP, GPIO_PuPd_NOPULL);
+    single_gpio_init(GYRO_SCK_PORT,  GYRO_SCK_PIN_SRC,  GYRO_SCK_PIN,  GYRO_SCK_ALTERNATE,  GPIO_Mode_AF,  GPIO_OType_PP, GPIO_PuPd_DOWN);
+    single_gpio_init(GYRO_CS_PORT,   GYRO_CS_PIN_SRC,   GYRO_CS_PIN,   GYRO_CS_ALTERNATE,   GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
 
     //setup NSS GPIO if need be then init SPI and DMA for the SPI based on NSS type
     gpio_exti_init(GYRO_EXTI_PORT, GYRO_EXTI_PORT_SRC, GYRO_EXTI_PIN, GYRO_EXTI_PIN_SRC, GYRO_EXTI_LINE, EXTI_Trigger_Rising, GYRO_EXTI_IRQn, GYRO_EXTI_ISR_PRE_PRI, GYRO_EXTI_ISR_SUB_PRI);
