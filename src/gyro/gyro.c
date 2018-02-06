@@ -127,8 +127,6 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
                 break;
         }
     }
-    //send the filtered data to the device
-    imuf_write_data(&filteredData);
 }
 
 void gyro_init(void) 
@@ -139,4 +137,5 @@ void gyro_init(void)
     gyroSum.y = 0.0f;
     gyroSum.z = 0.0f;
     gyro_device_init(&gyro_read_done);
+    imuf_init();
 }

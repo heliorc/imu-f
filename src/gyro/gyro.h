@@ -17,6 +17,6 @@ typedef struct filteredData
 } __attribute__((__packed__)) filteredData_t;
 
 extern volatile int calibratingGyro;
-extern volatile filteredData_t filteredData;
+extern filteredData_t filteredData;
 
 extern void gyro_init(void);
