@@ -31,14 +31,6 @@ static void gyro_device_read(void)
     gyro_read_callback((uint32_t)&gyroTxFrame.accAddress, &gyroRxFrame.accAddress, 15);
 }
 
-void gyro_device_send_receive_dma(uint8_t txBuffer[], uint8_t rxBuffer[], uint32_t size)
-{
-    //set cs pin
-    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 0); //low to active cs on gyro
-    //start the dma transfer
-    spi_fire_dma(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, &gyroDmaInitStruct, &size, txBuffer, rxBuffer);
-}
-
 static uint8_t gyro_read_reg(uint8_t reg, uint8_t data)
 {
     return gyro_write_reg(reg | 0x80, data);
@@ -52,9 +44,12 @@ static uint8_t gyro_write_reg(uint8_t reg, uint8_t data)
     gyroTxFramePtr[1] = data;
 
     uint32_t timeout = millis();
-    return 0;
+    // return 0;
     //send/receive data, return zero if we time out
-    gyro_device_send_receive_dma(gyroTxFramePtr, gyroRxFramePtr, 2);
+     //set cs pin
+    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 0); //low to active cs on gyro
+    //start the dma transfer
+    spi_fire_dma(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, &gyroDmaInitStruct, 2, gyroTxFramePtr, gyroRxFramePtr);
     while (DMA_GetFlagStatus(GYRO_RX_DMA_FLAG_TC) == RESET)
     {
         if (millis() - timeout > 80) //10 MS TIMEOUT
