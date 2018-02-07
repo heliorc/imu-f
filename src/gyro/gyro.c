@@ -127,8 +127,20 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
                 break;
         }
     }
-    //send the filtered data to the device
-    imuf_write_data(&filteredData);
+    if (boardCommState.commMode != GTBCM_GYRO_ACC_QUAT_FILTER_F)
+    {
+        //send the filtered data to the device
+        if ( bcRx.command == 0x63636363)
+        {
+            calibratingGyro = 1;
+        }
+        bcRx.command = BC_NONE; //no command
+        spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 
+        //this takes 1.19us to run
+        spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), memptr, bcRxPtr);
+        gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //a quick spike for EXTI
+        gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0); //a quick spike for EXTI
+    }
 }
 
 void gyro_init(void) 

@@ -1,6 +1,7 @@
 #include "includes.h"
 #include "board_comm.h"
 #include "gyro.h"
+#include "fast_kalman.h"
 
 //board_comm spi stuff lives here, actually, it all should probably go under boardCommState_t
 SPI_InitTypeDef boardCommSpiInitStruct;
@@ -11,6 +12,8 @@ volatile uint8_t* bcRxPtr;
 volatile uint8_t* bcTxPtr;
 volatile uint32_t spiDoneFlag;
 volatile boardCommState_t boardCommState;
+volatile uint32_t filterMode;
+volatile uint32_t gyroOrientation;
 
 static void run_command(volatile imufCommand_t* command, volatile imufCommand_t* reply);
 
@@ -22,7 +25,7 @@ void clear_imuf_command(volatile imufCommand_t* command)
 void board_comm_init(void)
 {
     //set comm size based on size of structure
-    boardCommState.bufferSize = sizeof(imufCommand_t) - sizeof(uint32_t); //last word is for overflow, the syncWord
+    boardCommState.bufferSize = sizeof(imufCommand_t) - 2; //last word is for overflow, the syncWord
     boardCommState.commMode   = GTBCM_SETUP;
 
     //set uint8_t pointer to avoid casting each time
@@ -88,11 +91,12 @@ void board_comm_spi_callback_function(void)
         run_command(&bcRx,&bcTx); 
         
     }
-    else if ( (bcTx.command == BC_IMUF_SETUP) && parse_imuf_command(&bcRx) ) //we just replied that we got proper setup commands, let's activate them now
+    else if ( (bcTx.command == BC_IMUF_SETUP) ) //we just replied that we got proper setup commands, let's activate them now
     {
+        bcTx.command = 0;
         //set flight mode now
-        boardCommState.bufferSize = sizeof(imufCommand_t) - sizeof(uint32_t); //last word is for overflow, the syncWord
-        boardCommState.commMode   = GTBCM_SETUP;
+        boardCommState.bufferSize = filterMode;
+        boardCommState.commMode   = filterMode;
     }
     else 
     {
@@ -134,22 +138,16 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
         case BC_IMUF_SETUP:
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime
             {
-                //let's pretend the f4 sent this for now
 
-                //commenting this out until the rest of the imu stuff is added
-                //f4 needs to send all valid setup commands
-                //uint32_t filterMode      = newCommand->param1;
-                //uint32_t gyroOrientation = newCommand->param2;
-                //We should NOT use floats here at all. We should change this so the only ISR with floats does the conversion
-                //filterConfig.pitch_q  = ((float)(newCommand->param3 & 0xFFFF));
-                //filterConfig.pitch_r  = ((float)(newCommand->param3 >> 16));
-                //filterConfig.roll_q   = ((float)(newCommand->param4 & 0xFFFF));
-                //filterConfig.roll_r   = ((float)(newCommand->param4 >> 16));
-                //filterConfig.yaw_q    = ((float)(newCommand->param5 & 0xFFFF));
-                //filterConfig.yaw_r    = ((float)(newCommand->param5 >> 16));
-                //memset((uint8_t *)&imufCommandTx, 0, sizeof(imufCommandTx));
-                //imufCommandTx.command = BC_IMUF_SETUP;
-                //imufCommandTx.crc     = BC_IMUF_SETUP;
+                filterMode            = command->param1;
+                gyroOrientation       = command->param2;
+                filterConfig.pitch_q  = ((float)(command->param3 & 0xFFFF));
+                filterConfig.pitch_r  = ((float)(command->param3 >> 16));
+                filterConfig.roll_q   = ((float)(command->param4 & 0xFFFF));
+                filterConfig.roll_r   = ((float)(command->param4 >> 16));
+                filterConfig.yaw_q    = ((float)(command->param5 & 0xFFFF));
+                filterConfig.yaw_r    = ((float)(command->param5 >> 16));
+
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
                 reply->command = reply->crc = BC_IMUF_SETUP;
             }

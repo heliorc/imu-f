@@ -4,11 +4,13 @@
 #include "filter.h"
 #include "board_comm.h"
 
-void imuf_write_data(filteredData_t* data) {
-    
+void imuf_write_data(uint32_t* data)
+{
+
 }
 
-void imuf_write_quaternion_data(quaternion_record_t* data) {
+void imuf_write_quaternion_data(quaternion_record_t* data)
+{
 
 }
 

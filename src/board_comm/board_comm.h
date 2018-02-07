@@ -53,6 +53,11 @@ typedef struct imufCommand {
    uint32_t syncWord; //overflow, used for sync
 } __attribute__ ((packed)) imufCommand_t;
 
+//todo: this should only live here
+extern SPI_InitTypeDef boardCommSpiInitStruct;
+extern DMA_InitTypeDef boardCommDmaInitStruct;
+extern volatile uint8_t* bcRxPtr;
+extern volatile uint8_t* bcTxPtr;
 extern volatile imufCommand_t bcRx;
 extern volatile imufCommand_t bcTx;
 extern volatile uint32_t spiDoneFlag;
