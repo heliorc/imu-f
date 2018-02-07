@@ -8,12 +8,52 @@
 uint8_t buff1[2];
 uint8_t buff2[2];
 
+
+void cs_lo(void)
+{
+    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 0);
+}
+
+void cs_hi(void)
+{
+    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1);
+}
+
+void GYRO_SPI_RX_DMA_HANDLER(void)
+{
+    if(DMA_GetITStatus(GYRO_RX_DMA_FLAG_TC))
+    {
+        volatile int cat = 1;
+        /* Clear DMA Flags */
+        DMA_ClearFlag(DMA1_FLAG_GL2 | DMA1_FLAG_HT2 | DMA1_FLAG_TC2 | DMA1_FLAG_GL3 | DMA1_FLAG_HT3 | DMA1_FLAG_TC3);
+
+        /* Disable DMA SPI TX Stream */
+        DMA_Cmd(GYRO_TX_DMA,DISABLE);
+
+        /* Disable DMA SPI RX Stream */
+        DMA_Cmd(GYRO_RX_DMA,DISABLE);  
+
+        /* Disable SPI DMA TX Requsts */
+        SPI_I2S_DMACmd(GYRO_SPI, SPI_I2S_DMAReq_Tx, DISABLE);
+
+        /* Disable SPI DMA RX Requsts */
+        SPI_I2S_DMACmd(GYRO_SPI, SPI_I2S_DMAReq_Rx, DISABLE);
+
+        /* Disable the SPI peripheral */
+        SPI_Cmd(GYRO_SPI, DISABLE);
+
+        // Release the CS
+        cs_hi();
+        DMA_ClearITPendingBit(GYRO_RX_DMA_FLAG_GL);         
+    }
+}
+
 void spi_init_test(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
     SPI_InitTypeDef SPI_InitStructure;
     DMA_InitTypeDef DMA_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
+    NVIC_InitTypeDef nvic_init_struct;
 
     // Configure SPI pins: CS
     GPIO_InitStructure.GPIO_Pin = GYRO_CS_PIN;
@@ -81,16 +121,14 @@ void spi_init_test(void)
     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;          // Peripheral to Memory
 
     DMA_Init(GYRO_RX_DMA, &DMA_InitStructure);            // Initialize RX DMA
-}
 
-void cs_lo(void)
-{
-    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 0);
-}
-
-void cs_hi(void)
-{
-    gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1);
+    /* Initialize NVIC Struct for DMA */
+    nvic_init_struct.NVIC_IRQChannel = GYRO_SPI_RX_DMA_IRQn;
+    nvic_init_struct.NVIC_IRQChannelPreemptionPriority = GYRO_SPI_DMA_RX_PRE_PRI;
+    nvic_init_struct.NVIC_IRQChannelSubPriority = GYRO_SPI_DMA_RX_SUB_PRI;
+    nvic_init_struct.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&nvic_init_struct);
+    DMA_ITConfig(GYRO_RX_DMA, DMA_IT_TC, ENABLE);
 }
 
 void spi_tran_test(void)
@@ -123,39 +161,6 @@ void spi_tran_test(void)
     /* Enable the SPI peripheral */
     SPI_Cmd(GYRO_SPI, ENABLE);
 
-    /* Waiting the end of Data transfer */
-    volatile unsigned int timeoutCounter = 0;
-    while ((DMA_GetFlagStatus(GYRO_TX_DMA_FLAG_TC)==RESET) && (timeoutCounter < 200000))
-    {
-        timeoutCounter++;
-    }
-    timeoutCounter = 0;
-
-    while ((DMA_GetFlagStatus(GYRO_RX_DMA_FLAG_TC)==RESET) && (timeoutCounter < 200000))
-    {
-        timeoutCounter++;
-    }
-
-    /* Clear DMA Flags */
-    DMA_ClearFlag(DMA1_FLAG_GL2 | DMA1_FLAG_HT2 | DMA1_FLAG_TC2 | DMA1_FLAG_GL3 | DMA1_FLAG_HT3 | DMA1_FLAG_TC3);
-
-    /* Disable DMA SPI TX Stream */
-    DMA_Cmd(GYRO_TX_DMA,DISABLE);
-
-    /* Disable DMA SPI RX Stream */
-    DMA_Cmd(GYRO_RX_DMA,DISABLE);  
-
-    /* Disable SPI DMA TX Requsts */
-    SPI_I2S_DMACmd(GYRO_SPI, SPI_I2S_DMAReq_Tx, DISABLE);
-
-    /* Disable SPI DMA RX Requsts */
-    SPI_I2S_DMACmd(GYRO_SPI, SPI_I2S_DMAReq_Rx, DISABLE);
-
-    /* Disable the SPI peripheral */
-    SPI_Cmd(GYRO_SPI, DISABLE);
-
-    // Release the CS
-    cs_hi();
 }
 
 int main(void)
@@ -172,16 +177,20 @@ int main(void)
     buff2[0] = 0;
     buff2[1] = 0;
     spi_tran_test();
+    delay_ms(10);
     
     buff1[0] = 245; //who am i?
     buff1[1] = 0;
     buff2[0] = 0;
     buff2[1] = 0;
     spi_tran_test();
-    
+    delay_ms(10);
+
     buff1[0] = 244; //who am i?
     buff1[1] = 0;
     buff2[0] = 0;
     buff2[1] = 0;
     spi_tran_test();
+    delay_ms(10);
+
 }

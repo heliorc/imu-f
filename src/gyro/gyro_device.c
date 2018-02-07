@@ -24,18 +24,6 @@ static void gyro_write_reg(uint8_t reg, uint8_t data);
 static uint8_t gyro_read_reg_setup(uint8_t reg, uint8_t data);
 static uint8_t gyro_write_reg_setup(uint8_t reg, uint8_t data);
 
-void GYRO_SPI_RX_DMA_HANDLER(void)
-{
-    if(DMA_GetITStatus(GYRO_RX_DMA_FLAG_TC))
-    {
-        //Clear DMA1 Channel1 Half Transfer, Transfer Complete and Global interrupt pending bits
-        gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 1); //high to deactive cs on gyro
-        cleanup_spi(GYRO_SPI, GYRO_TX_DMA, GYRO_RX_DMA, GYRO_TX_DMA_FLAG_GL, GYRO_RX_DMA_FLAG_GL, GYRO_SPI_RST_MSK);
-        gyro_read_done_callback(&gyroRxFrame);
-        DMA_ClearITPendingBit(GYRO_RX_DMA_FLAG_GL);         
-    }
-}
-
 void GYRO_EXTI_HANDLER(void)
 {
     /* Make sure that interrupt flag is set */
