@@ -25,6 +25,7 @@
 #define GYRO_TX_DMA_FLAG_GL             DMA1_FLAG_GL3
 #define GYRO_RX_DMA_FLAG_TC             DMA1_FLAG_TC2
 #define GYRO_TX_DMA_FLAG_TC             DMA1_FLAG_TC3
+#define GYRO_ALL_DMA_FLAGS              DMA1_FLAG_GL2 | DMA1_FLAG_HT2 | DMA1_FLAG_TC2 | DMA1_FLAG_GL3 | DMA1_FLAG_HT3 | DMA1_FLAG_TC3
 
 //#define GYRO_CS_TYPE                    NSS_SOFT
 #define GYRO_CS_PIN_SRC                 GPIO_PinSource4
