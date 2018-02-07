@@ -95,10 +95,6 @@ void cs_hi(void)
 
 void spi_tran_test(void)
 {     
-    buff1[0] = 245; //who am i?
-    buff1[1] = 0;
-    buff2[0] = 0;
-    buff2[1] = 0;
 
     DMA_SetCurrDataCounter(GYRO_TX_DMA, 2);
     DMA_SetCurrDataCounter(GYRO_RX_DMA, 2);
@@ -165,9 +161,27 @@ void spi_tran_test(void)
 int main(void)
 {
 
+
     board_init();       //inits the clocks  
 
     spi_init_test();
     delay_ms(5);
+    
+    buff1[0] = 245; //who am i?
+    buff1[1] = 0;
+    buff2[0] = 0;
+    buff2[1] = 0;
+    spi_tran_test();
+    
+    buff1[0] = 245; //who am i?
+    buff1[1] = 0;
+    buff2[0] = 0;
+    buff2[1] = 0;
+    spi_tran_test();
+    
+    buff1[0] = 244; //who am i?
+    buff1[1] = 0;
+    buff2[0] = 0;
+    buff2[1] = 0;
     spi_tran_test();
 }
