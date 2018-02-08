@@ -123,7 +123,6 @@ void update_imu(volatile vector_record_t *gyroVector, volatile vector_record_t *
 {
 	volatile float accTrust = 1000.0f;
 	float norm;
-    static int interationCounter = 0;
     static uint32_t forcedUntilBelow = 0;
 	static uint32_t forcedUntilAbove = 0;
 
@@ -131,10 +130,9 @@ void update_imu(volatile vector_record_t *gyroVector, volatile vector_record_t *
 	arm_sqrt_f32( SQUARE(gyroVector->x) + SQUARE(gyroVector->y) + SQUARE(gyroVector->z), &norm);
 	currentSpinRate = norm;
     //trust ACC a LOT for first 7 seconds
-	interationCounter++;
-    if(interationCounter++ < 7000) //7000 is 7 seconds
+    if(millis() < 7000) //7000 is 7 seconds
     {
-        accTrust = 1000.0f;
+        accTrust = 10000.0f;
     }
     else
     {
