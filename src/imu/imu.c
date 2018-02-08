@@ -167,7 +167,7 @@ void update_imu(volatile vector_record_t *gyroVector, volatile vector_record_t *
 	QuaternionConjugate(&conjQuat, &attitudeFrameQuat);
 	MultiplyQuatAndVector(&multQuat, &conjQuat, accBodyVector);
 	MultiplyQuaternionByQuaternion(&tempQuat, &multQuat,  &attitudeFrameQuat);
-	VectorCrossProduct(&errorWorldVector, &(tempQuat.vector), &verticalVector);             //find correction error from ACC readings
+	VectorCrossProduct(&errorWorldVector,  (vector_record_t *)&(tempQuat.vector), &verticalVector);             //find correction error from ACC readings
 	QuaternionZeroRotation(&conjQuat);
 	QuaternionZeroRotation(&multQuat);
 	QuaternionZeroRotation(&tempQuat);
