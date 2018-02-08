@@ -108,7 +108,7 @@ def configure_target(TARGET):
         PROJECT = "C3PU"
         TARGET_DEVICE = "STM32F302x8"
         TARGET_SCRIPT = "stm32_flash_f30x_0x08001800_26k.ld"
-        OPTIMIZE_FLAGS = "-O3"
+        OPTIMIZE_FLAGS = "-O2"
         HSE_SPEED = str(16000000)
         THIS_ADDRESS = str(0x08001800)
         APP_ADDRESS  = str(0x08001800) #6k bl

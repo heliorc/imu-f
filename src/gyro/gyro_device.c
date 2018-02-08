@@ -34,6 +34,21 @@ static void gyro_cs_hi(void);
 static void gyro_spi_init(void);
 static void gyro_setup_exti_fn(gyroFrame_t* gyroRxFrame);
 
+static void super_error(uint32_t time)
+{
+    volatile int cat = 1;
+    single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
+    gpio_write_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, 0);
+    while(1)
+    {
+        cat++;
+        gpio_write_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, 1);
+        delay_ms(time);
+        gpio_write_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, 0);
+        delay_ms(time);
+    }
+}
+
 inline static void gyro_cs_lo(void)
 {
     gpio_write_pin(GYRO_CS_PORT, GYRO_CS_PIN, 0);
@@ -112,7 +127,7 @@ static void gyro_spi_init(void)
     spiInitStruct.SPI_CPOL = SPI_CPOL_High;
     spiInitStruct.SPI_CPHA = SPI_CPHA_2Edge;
     spiInitStruct.SPI_NSS = SPI_NSS_Soft;
-    spiInitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
+    spiInitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
     spiInitStruct.SPI_FirstBit = SPI_FirstBit_MSB;
     spiInitStruct.SPI_CRCPolynomial = 7;
     SPI_Init(GYRO_SPI, &spiInitStruct);
@@ -262,9 +277,10 @@ static int gyro_device_detect(void)
     uint8_t data = 0;
     // reset gyro
     gyro_write_reg_setup(INVENS_RM_PWR_MGMT_1, INVENS_CONST_H_RESET, NULL);
-    delay_ms(150);
+    delay_ms(120);
+
     // poll for the who am i register while device resets
-    for (attempt = 0; attempt < 100; attempt++)
+    for (attempt = 0; attempt < 500; attempt++)
     {
         delay_ms(2);
         gyro_read_reg_setup(INVENS_RM_WHO_AM_I, data, &data);
@@ -290,7 +306,6 @@ static void gyro_configure(void)
     if (!gyro_device_detect())
     {
         // error_handler(GYRO_DETECT_FAILURE);
-        volatile int failed = 1;
     }
 
     // set gyro clock to Z axis gyro
@@ -342,8 +357,10 @@ void gyro_device_init(gyro_read_done_t readFn)
     gyro_spi_init();
     //reset and configure gyro
     gyro_configure();
+
     //setup new read callback
     gyro_read_done_callback = readFn;
+    delay_us(100);
     //setup EXTI last
     gpio_exti_init(GYRO_EXTI_PORT, GYRO_EXTI_PORT_SRC, GYRO_EXTI_PIN, GYRO_EXTI_PIN_SRC, GYRO_EXTI_LINE, EXTI_Trigger_Rising, GYRO_EXTI_IRQn, GYRO_EXTI_ISR_PRE_PRI, GYRO_EXTI_ISR_SUB_PRI);
 }

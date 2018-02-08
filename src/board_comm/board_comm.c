@@ -2,6 +2,7 @@
 #include "board_comm.h"
 #include "gyro.h"
 #include "fast_kalman.h"
+#include "filter.h"
 
 //board_comm spi stuff lives here, actually, it all should probably go under boardCommState_t
 SPI_InitTypeDef boardCommSpiInitStruct;
@@ -73,9 +74,15 @@ void start_listening(void)
 
 void board_comm_spi_complete(void)
 {
-    gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
-    //this takes 0.78us to run
-    cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA_FLAG_GL, BOARD_COMM_RX_DMA_FLAG_GL, BOARD_COMM_SPI_RST_MSK);
+    spiDoneFlag = 1;
+
+    //if (boardCommState.commMode == GTBCM_SETUP)
+    //{
+        gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
+        //this takes 0.78us to run
+        cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA_FLAG_GL, BOARD_COMM_RX_DMA_FLAG_GL, BOARD_COMM_SPI_RST_MSK);
+    //}
+
 }
 
 void board_comm_spi_callback_function(void)
@@ -97,6 +104,7 @@ void board_comm_spi_callback_function(void)
         //set flight mode now
         boardCommState.bufferSize = filterMode;
         boardCommState.commMode   = filterMode;
+        filter_init();
     }
     else 
     {
@@ -150,6 +158,8 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
 
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
                 reply->command = reply->crc = BC_IMUF_SETUP;
+                //gyro handles sync
+                //NVIC_DisableIRQ(BOARD_COMM_EXTI_IRQn);
             }
         break;
         default:

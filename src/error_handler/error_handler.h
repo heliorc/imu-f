@@ -12,4 +12,6 @@ typedef enum errorMask
     GYRO_DETECT_FAILURE = 1 << 5,
 } errorMask_t;
 
+extern void super_error(uint32_t time);
+extern void pulse_error(uint32_t time);
 extern void error_handler(errorMask_t error);

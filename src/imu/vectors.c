@@ -8,7 +8,7 @@ void VectorCrossProduct(vector_record_t *vectorOut, vector_record_t *vectorIn1, 
     vectorOut->z = vectorIn1->x * vectorIn2->y - vectorIn1->y * vectorIn2->x;
 }
 
-void VectorAddVector(vector_record_t *vectorOut, vector_record_t *vectorIn, float trust)
+void VectorAddVector(volatile vector_record_t *vectorOut, volatile vector_record_t *vectorIn, float trust)
 {
     vectorOut->x += vectorIn->x * trust;
     vectorOut->y += vectorIn->y * trust;

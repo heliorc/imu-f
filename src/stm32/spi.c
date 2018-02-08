@@ -20,15 +20,32 @@ void spi_init(SPI_InitTypeDef *spiInitStructure, DMA_InitTypeDef *dmaInitStructu
     spiInitStructure->SPI_FirstBit = SPI_FirstBit_MSB;
     spiInitStructure->SPI_CRCPolynomial = 7;
     SPI_Init(spi, spiInitStructure);
-    //SPI_RxFIFOThresholdConfig(spi, SPI_RxFIFOThreshold_QF); 
+    SPI_RxFIFOThresholdConfig(spi,SPI_RxFIFOThreshold_QF);
   
+    //set DMA to default state
+    DMA_DeInit(BOARD_COMM_TX_DMA);
+    DMA_DeInit(BOARD_COMM_RX_DMA);
+
+    dmaInitStructure->DMA_M2M = DMA_M2M_Disable;
+    dmaInitStructure->DMA_Mode = DMA_Mode_Normal;
+    dmaInitStructure->DMA_Priority = DMA_Priority_High;
+    dmaInitStructure->DMA_DIR = DMA_DIR_PeripheralDST;
 
     dmaInitStructure->DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-    dmaInitStructure->DMA_MemoryDataSize =  DMA_MemoryDataSize_Byte;
     dmaInitStructure->DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+    dmaInitStructure->DMA_PeripheralBaseAddr = (uint32_t)&BOARD_COMM_SPI->DR;
+
+    dmaInitStructure->DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
     dmaInitStructure->DMA_MemoryInc = DMA_MemoryInc_Enable;
-    dmaInitStructure->DMA_Mode = DMA_Mode_Normal;
-    dmaInitStructure->DMA_M2M = DMA_M2M_Disable;
+    dmaInitStructure->DMA_MemoryBaseAddr = 0; //this is set later when we fire the DMA
+
+    dmaInitStructure->DMA_BufferSize = 1;     //this is set later when we fire the DMA
+
+    DMA_Init(BOARD_COMM_TX_DMA, dmaInitStructure);
+
+    dmaInitStructure->DMA_DIR = DMA_DIR_PeripheralSRC;
+
+    DMA_Init(BOARD_COMM_RX_DMA, dmaInitStructure);
 
     SPI_Cmd(spi, ENABLE);
 
@@ -37,60 +54,46 @@ void spi_init(SPI_InitTypeDef *spiInitStructure, DMA_InitTypeDef *dmaInitStructu
 //start the dma transaction
 void spi_fire_dma(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_TypeDef *rxDma, DMA_InitTypeDef *dmaInitStructure, uint32_t *size, volatile uint8_t *txBuff, volatile uint8_t *rxBuff)
 {
-    //These two blocks of code are kind of expensive, we can make them much smaller and we need to for runtime.
-    //setting the init structure piece by peice just to fill some regs is pricey when we can just set the regs ourselves
-    //DMA channel Rx of SPI Configuration
-    dmaInitStructure->DMA_BufferSize = *size;
-    dmaInitStructure->DMA_PeripheralBaseAddr = (uint32_t)(&spi->DR);
-    dmaInitStructure->DMA_MemoryBaseAddr = (uint32_t)rxBuff;
-    dmaInitStructure->DMA_DIR = DMA_DIR_PeripheralSRC;
-    dmaInitStructure->DMA_Priority = DMA_Priority_High;
-    DMA_Init(rxDma, dmaInitStructure); //comp
+    //set buffer size
+    DMA_SetCurrDataCounter(txDma, *size);
+    DMA_SetCurrDataCounter(rxDma, *size);
 
-    //setting the init structure piece by peice just to fill some regs is pricey when we can just set the regs ourselves
-    //DMA channel Tx of SPI Configuration
-    //dmaInitStructure->DMA_BufferSize = *size;
-    //dmaInitStructure->DMA_PeripheralBaseAddr = (uint32_t)(&spi->DR);
-    dmaInitStructure->DMA_MemoryBaseAddr = (uint32_t)txBuff;
-    dmaInitStructure->DMA_DIR = DMA_DIR_PeripheralDST;
-    //dmaInitStructure->DMA_Priority = DMA_Priority_High;
-    DMA_Init(txDma, dmaInitStructure); //comp
+    //set buffer
+    txDma->CMAR = (uint32_t)txBuff;
+    rxDma->CMAR = (uint32_t)rxBuff;
 
-   /* Enable the SPI Rx and Tx DMA requests */
-    SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Rx, ENABLE); //simp
-    SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Tx, ENABLE); //simp
+    //enable DMA SPI streams
+    DMA_Cmd(txDma, ENABLE);
+    DMA_Cmd(rxDma, ENABLE);
 
-    /* Enable the SPI peripheral */
-    SPI_Cmd(spi, ENABLE); //simp
+    //enable DMA SPI requests
+    SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Tx, ENABLE);
+    SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Rx, ENABLE);
 
-    /* Enable the DMA channels */
-    DMA_Cmd(rxDma, ENABLE); //simp
-    DMA_Cmd(txDma, ENABLE); //simp
-
+    //enable and send
+    SPI_Cmd(spi, ENABLE);
 }
 
 //after spi transaction is done
 void cleanup_spi(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_TypeDef *rxDma, uint32_t txDmaFlag, uint32_t rxDmaFlag, uint32_t resetMask)
 {
+    //clear DMA flags
+    DMA_ClearFlag(BOARD_COMM_ALL_DMA_FLAGS);
+
+    //disable DMAs
+    DMA_Cmd(txDma,DISABLE);
+    DMA_Cmd(rxDma,DISABLE);  
+
+    //disable SPI DMA requests
+    SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Tx, DISABLE);
+    SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Rx, DISABLE);
 
     // Reset SPI (clears TXFIFO).
     RCC->APB1RSTR |= resetMask;
     RCC->APB1RSTR &= ~resetMask;
 
-    /* Clear DMA1 global flags */
-    DMA_ClearFlag(txDmaFlag); //simp
-    DMA_ClearFlag(rxDmaFlag); //simp
-   
-    /* Disable the DMA channels */
-    DMA_Cmd(txDma, DISABLE); //simp
-    DMA_Cmd(rxDma, DISABLE); //simp
-    
-    /* Disable the SPI peripheral */
-    SPI_Cmd(spi, DISABLE); //simp
-   
-    /* Disable the SPI Rx and Tx DMA requests */
-    SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Tx, DISABLE); //simp
-    SPI_I2S_DMACmd(spi, SPI_I2S_DMAReq_Rx, DISABLE); //simp
+    //disable SPI
+    SPI_Cmd(spi, DISABLE);
 }
 
 int spi_transfer_blocking(SPI_TypeDef* spi, const uint8_t* txBuff, uint8_t* rxBuff, int len)

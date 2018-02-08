@@ -18,13 +18,13 @@ typedef struct quaternion_buffer {
 }  __attribute__((__packed__)) quaternion_buffer_t;
 
 typedef struct quaternion_record {
-    vector_record_t vector;
 	volatile float w;
+	volatile vector_record_t vector;
 }  __attribute__((__packed__)) quaternion_record_t;
 
 extern volatile quaternionUpdateState_t quatState;
-extern quaternion_buffer_t quatBufferA;
-extern quaternion_buffer_t quatBufferB;
+extern volatile quaternion_buffer_t quatBufferA;
+extern volatile quaternion_buffer_t quatBufferB;
 
 extern void MultiplyQuaternionByQuaternion(volatile quaternion_record_t *qOut, volatile quaternion_record_t *q1, volatile quaternion_record_t *q2);
 extern void QuaternionNormalize (volatile quaternion_record_t *out);

@@ -63,4 +63,4 @@ extern volatile quaternion_record_t attitudeFrameQuat;
 extern volatile float requestedDegrees[3];
 
 extern void init_imu(void);
-extern void update_imu(vector_record_t *gyroVector, vector_record_t *accBodyVector);
+extern void update_imu(volatile vector_record_t *gyroVector, volatile vector_record_t *accBodyVector);

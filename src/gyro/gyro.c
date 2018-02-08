@@ -66,8 +66,8 @@ static void gyro_int_to_float(gyroFrame_t* gyroRxFrame)
 
 void gyro_read_done(gyroFrame_t* gyroRxFrame) {
 
-    uint32_t accTracker = 8; //start at 7, so 8 is run first
-    volatile quaternion_buffer_t *quatBuffer = &(quatBufferA); //start working on this buffer
+    static uint32_t accTracker = 8; //start at 7, so 8 is run first
+    static volatile quaternion_buffer_t *quatBuffer = &(quatBufferA); //start working on this buffer
     //default rateDatafilteredData
     uint8_t* memptr = (uint8_t*)&filteredData.rateData;
 
@@ -79,12 +79,13 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
         memptr = (uint8_t*)&(gyroRxFrame->accAddress);
     }
 
-    if (boardCommState.commMode == GTBCM_GYRO_ACC_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ONLY_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F){
+    if (boardCommState.commMode == GTBCM_SETUP || boardCommState.commMode == GTBCM_GYRO_ACC_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ONLY_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F){
         gyro_int_to_float(gyroRxFrame);
         filter_data(&rawRateData, &rawAccData, gyroTempData, &filteredData); //profile: this takes 2.45us to run with O3 optimization, before adding biquad at least
     }
     
-    if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F){
+    if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F || boardCommState.commMode == GTBCM_SETUP)
+    {
         //set flags and do quats in main loop
         //we have to fill the gyro data here though
         //add rate data for later usage in quats. This is reset in imu.c
@@ -127,19 +128,36 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
                 break;
         }
     }
-    if (boardCommState.commMode != GTBCM_GYRO_ACC_QUAT_FILTER_F)
+
+    if (boardCommState.commMode != GTBCM_SETUP)
     {
-        //send the filtered data to the device
-        if ( bcRx.command == 0x63636363)
+        static int everyOther = 1;
+
+        spiDoneFlag = 1;
+        if (everyOther-- == 0 && spiDoneFlag)
         {
-            calibratingGyro = 1;
+            if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F)
+            {
+                everyOther = 1;
+            }
+            else
+            {
+                everyOther = 1;
+            }
+
+            //send the filtered data to the device
+            if ( bcRx.command == 0x63636363)
+            {
+                calibratingGyro = 1;
+            }
+            bcRx.command = BC_NONE; //no command
+            spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 
+            //this takes 1.19us to run
+            cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA_FLAG_GL, BOARD_COMM_RX_DMA_FLAG_GL, BOARD_COMM_SPI_RST_MSK);
+            spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), memptr, bcRxPtr);
+            gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //a quick spike for EXTI
+            gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0); //a quick spike for EXTI
         }
-        bcRx.command = BC_NONE; //no command
-        spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 
-        //this takes 1.19us to run
-        spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), memptr, bcRxPtr);
-        gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //a quick spike for EXTI
-        gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0); //a quick spike for EXTI
     }
 }
 

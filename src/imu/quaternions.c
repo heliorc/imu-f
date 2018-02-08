@@ -3,10 +3,11 @@
 #include "imu.h"
 
 volatile quaternionUpdateState_t quatState;
-quaternion_buffer_t quatBufferA;
-quaternion_buffer_t quatBufferB;
+volatile quaternion_buffer_t quatBufferA;
+volatile quaternion_buffer_t quatBufferB;
+volatile quaternion_buffer_t quatBufferC;
 
-void buffer_init(quaternion_buffer_t *buffer) {
+void buffer_init(volatile quaternion_buffer_t *buffer) {
    buffer->vector.x = 0.0f;
    buffer->vector.y = 0.0f;
    buffer->vector.z = 0.0f;
@@ -21,7 +22,7 @@ void init_quaternions(void){
    buffer_init(&quatBufferB);
 }
 
-void process(quaternion_buffer_t *quatBuffer) {
+void process(volatile quaternion_buffer_t *quatBuffer) {
     if (isnan(quatBuffer->vector.x) || 
         isnan(quatBuffer->vector.y) || 
         isnan(quatBuffer->vector.z) || 
@@ -31,9 +32,6 @@ void process(quaternion_buffer_t *quatBuffer) {
 		return;
 	}
     update_imu(&(quatBuffer->vector), &(quatBuffer->accVector));
-    quatBuffer->vector.x = 0.0f;
-    quatBuffer->vector.y = 0.0f;
-    quatBuffer->vector.z = 0.0f;
 }
 
 void update_quaternions(void)

@@ -7,7 +7,8 @@ fastKalman_t fastKalmanFilterStateRate[3];
 filterTypedef_t filterType;
 filter_config_t filterConfig;
 
-void initFilter(fastKalman_t *filter, float q, float r, float p, float intialValue) {
+void init_kalman(fastKalman_t *filter, float q, float r, float p, float intialValue)
+{
     filter->q     = q * 0.001f; //add multiplier to make tuning easier
 	filter->r     = r;    //add multiplier to make tuning easier
 	filter->p     = p;    //add multiplier to make tuning easier
@@ -19,10 +20,21 @@ void initFilter(fastKalman_t *filter, float q, float r, float p, float intialVal
 
 void fast_kalman_init(filterTypedef_t type)
 {
+	static volatile int firstRun = 1;
+	if(firstRun)
+	{
+		filterConfig.pitch_q  = 88.0f;
+		filterConfig.pitch_r  = 3000.0f;
+		filterConfig.roll_q   = 88.0f;
+		filterConfig.roll_r   = 3000.0f;
+		filterConfig.yaw_q    = 1500.0f;
+		filterConfig.yaw_r    = 88.0f;
+	}
+
     filterType = type;
-	initFilter(&fastKalmanFilterStateRate[0], filterConfig.pitch_q, filterConfig.pitch_r, filterConfig.pitch_q, 0.0f);
-	initFilter(&fastKalmanFilterStateRate[1], filterConfig.roll_q, filterConfig.roll_r, filterConfig.roll_q, 0.0f);
-	initFilter(&fastKalmanFilterStateRate[2], (filterConfig.yaw_q * 0.5f), (filterConfig.yaw_r), (filterConfig.yaw_q * 0.5f), 0.0f);
+	init_kalman(&fastKalmanFilterStateRate[0], filterConfig.pitch_q, filterConfig.pitch_r, filterConfig.pitch_q, 0.0f);
+	init_kalman(&fastKalmanFilterStateRate[1], filterConfig.roll_q,  filterConfig.roll_r,  filterConfig.roll_q,  0.0f);
+	init_kalman(&fastKalmanFilterStateRate[2], filterConfig.yaw_q,   filterConfig.yaw_r,   filterConfig.yaw_q,   0.0f);
 }
 
 float noiseEstimate(float data[], uint32_t size)

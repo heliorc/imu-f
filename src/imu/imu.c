@@ -119,7 +119,7 @@ static void MultiplyQuatAndVector(volatile quaternion_record_t *quatOut, volatil
     quatOut->vector.z =  quatIn->vector.y * vectorIn->x - quatIn->vector.x * vectorIn->y + quatIn->w * vectorIn->z;
 }
 
-void update_imu(vector_record_t *gyroVector, vector_record_t *accBodyVector)
+void update_imu(volatile vector_record_t *gyroVector, volatile vector_record_t *accBodyVector)
 {
 	volatile float accTrust = 1000.0f;
 	float norm;

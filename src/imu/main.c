@@ -3,6 +3,7 @@
 #include "quaternions.h"
 #include "imu.h"
 #include "gyro.h"
+#include "filter.h"
 
 int main(void)
 {
@@ -10,6 +11,10 @@ int main(void)
     board_init();
     //fill version info (should be static instead)
     set_version(); 
+    //init filter
+    filter_init();
+    //init imu
+    init_imu();
     //this makes the status light go red
     single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
     //init gyro
