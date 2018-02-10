@@ -142,12 +142,14 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
             //if it's not done for RESYNC_COUNTER counts in a row we reset the sync
             if(!spiDoneFlag)
             {
-                if( !(oopsCounter++ > RESYNC_COUNTER) )
-                {
+                if( oopsCounter++ < RESYNC_COUNTER )
+                {  
+                    //give time for spi transfer to happen
                     return;
                 }
                 else
                 {
+                    //reset spi and dma for spi since we've not had a reply in a while now
                     cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA_FLAG_GL, BOARD_COMM_RX_DMA_FLAG_GL, BOARD_COMM_SPI_RST_MSK); //reset sync
                 }
             }
