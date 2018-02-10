@@ -133,26 +133,26 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
     {
         static int everyOther = 1;
         static int oopsCounter = 0;
+        #define RESYNC_COUNTER 100
 
-        if(!spiDoneFlag)
+        //everyother is 16KHz
+        if (everyOther-- <= 0)
         {
-            if(oopsCounter++ > 100)
+            //check if spi is done if not, return
+            //if it's not done for RESYNC_COUNTER counts in a row we reset the sync
+            if(!spiDoneFlag)
             {
-                spiDoneFlag = 1;
+                if( !(oopsCounter++ > RESYNC_COUNTER) )
+                {
+                    return;
+                }
+                else
+                {
+                    cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA_FLAG_GL, BOARD_COMM_RX_DMA_FLAG_GL, BOARD_COMM_SPI_RST_MSK); //reset sync
+                }
             }
-        }
-        //spiDoneFlag = 1;
-        if (everyOther-- == 0 && spiDoneFlag)
-        {
-            oopsCounter = 0;
-            if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F)
-            {
-                everyOther = 1;
-            }
-            else
-            {
-                everyOther = 1;
-            }
+            oopsCounter = 0; //reset sync count
+            everyOther = 1; //reset khz counter
 
             //send the filtered data to the device
             if ( bcRx.command == 0x63636363)
@@ -161,8 +161,6 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
             }
             bcRx.command = BC_NONE; //no command
             spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 
-            //this takes 1.19us to run
-            cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA_FLAG_GL, BOARD_COMM_RX_DMA_FLAG_GL, BOARD_COMM_SPI_RST_MSK);
             spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), memptr, bcRxPtr);
             gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //a quick spike for EXTI
             gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0); //a quick spike for EXTI
