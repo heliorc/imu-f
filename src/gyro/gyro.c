@@ -144,6 +144,7 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
         //spiDoneFlag = 1;
         if (everyOther-- == 0 && spiDoneFlag)
         {
+            oopsCounter = 0;
             if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F)
             {
                 everyOther = 1;
