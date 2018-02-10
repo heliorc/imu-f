@@ -12,15 +12,15 @@ static void run_command(volatile imufCommand_t *command, volatile imufCommand_t 
     {
         case BL_ERASE_ALL:
             erase_flash(APP_ADDRESS, FLASH_END);
-            reply->command = reply->crc = BL_ERASE_ALL;
+            reply->command = BL_ERASE_ALL;
         break;
         case BL_ERASE_ADDRESS_RANGE:
             erase_range(command->param1, command->param2);
-            reply->command = reply->crc = BL_ERASE_ADDRESS_RANGE;
+            reply->command = BL_ERASE_ADDRESS_RANGE;
         break;
         case BL_REPORT_INFO:
             memcpy((uint8_t*)&(reply->param1), (uint8_t*)&flightVerson, sizeof(flightVerson));
-            reply->command = reply->crc = BL_REPORT_INFO;
+            reply->command = BL_REPORT_INFO;
         break;
         case BL_BOOT_TO_APP:
             boot_to_address(THIS_ADDRESS);    //can't reply of course
@@ -34,7 +34,7 @@ static void run_command(volatile imufCommand_t *command, volatile imufCommand_t 
         break;
         case BL_WRITE_FIRMWARE:
             flash_program_word(command->param1, command->param2);
-            reply->command = reply->crc = BL_WRITE_FIRMWARE;
+            reply->command = BL_WRITE_FIRMWARE;
         break;
         case BL_WRITE_FIRMWARES:
             //write 8 words in one spi transaction
@@ -46,19 +46,19 @@ static void run_command(volatile imufCommand_t *command, volatile imufCommand_t 
             flash_program_word(command->param1+20, command->param7);
             flash_program_word(command->param1+24, command->param8);
             flash_program_word(command->param1+28, command->param9);
-            reply->command = reply->crc = BL_WRITE_FIRMWARES;
+            reply->command = BL_WRITE_FIRMWARES;
         break;
         case BL_PREPARE_PROGRAM:
             prepare_flash_for_program();
-            reply->command = reply->crc = BL_PREPARE_PROGRAM;
+            reply->command = BL_PREPARE_PROGRAM;
         break;
         case BL_END_PROGRAM:
             end_flash_for_program();
-            reply->command = reply->crc = BL_END_PROGRAM;
+            reply->command = BL_END_PROGRAM;
         break;
         default:
             //invalid command, just listen now
-            bcTx.command = bcTx.crc = BL_LISTENING;
+            bcTx.command = BL_LISTENING;
         break;
     }
 }
@@ -104,7 +104,7 @@ void bootloader_start(void)
         clear_imuf_command(&bcRx);
         clear_imuf_command(&bcTx);
         //set first command, which is to listen
-        bcTx.command = bcTx.crc = BL_LISTENING;
+        bcTx.command = BL_LISTENING;
         //start the process
         if(this_is_sparta())
         {
@@ -141,7 +141,7 @@ void bootloader_spi_callback_function(void)
         //bad command, listen for another
         clear_imuf_command(&bcRx);
         clear_imuf_command(&bcTx);
-        bcTx.command = bcTx.crc = BL_LISTENING;
+        bcTx.command = BL_LISTENING;
     }
     //start the process again, bootloader always does this, no need to jump into runtime for gyro stuff
     start_listening();
