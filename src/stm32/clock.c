@@ -90,6 +90,9 @@ void clock_config(void)
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE);
 
+    //enable crc clock
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_CRC, ENABLE);
+
     sys_tick_config();
 }
 

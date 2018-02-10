@@ -37,6 +37,7 @@
         "isr_priority.h": "c",
         "reset.h": "c",
         "filter.h": "c",
-        "gyro_device.h": "c"
+        "gyro_device.h": "c",
+        "crc.h": "c"
     }
 }

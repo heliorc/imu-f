@@ -3,6 +3,7 @@
 #include "gyro.h"
 #include "fast_kalman.h"
 #include "filter.h"
+#include "crc.h"
 
 //board_comm spi stuff lives here, actually, it all should probably go under boardCommState_t
 SPI_InitTypeDef boardCommSpiInitStruct;
@@ -54,7 +55,7 @@ void board_comm_init(void)
 
 int parse_imuf_command(volatile imufCommand_t* command)
 {
-    if (command->command && command->command == command->crc)
+    if ( command->command && command->crc == get_crc( (uint32_t*)command, 11) )
     {
         return 1;
     }
@@ -67,6 +68,7 @@ int parse_imuf_command(volatile imufCommand_t* command)
 void start_listening(void)
 {
     spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 
+    append_crc_to_data((uint32_t *)bcTxPtr, 11); //11 will put the crc at the location it needs to be which is imufCommand.crc
     //this takes 1.19us to run
     spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), bcTxPtr, bcRxPtr);
     gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
@@ -76,17 +78,19 @@ void board_comm_spi_complete(void)
 {
     spiDoneFlag = 1;
 
-    //if (boardCommState.commMode == GTBCM_SETUP)
-    //{
-        gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
-        //this takes 0.78us to run
-        cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA_FLAG_GL, BOARD_COMM_RX_DMA_FLAG_GL, BOARD_COMM_SPI_RST_MSK);
-    //}
-
+    gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
+    //this takes 0.78us to run
+    cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA_FLAG_GL, BOARD_COMM_RX_DMA_FLAG_GL, BOARD_COMM_SPI_RST_MSK);
 }
 
 void board_comm_spi_callback_function(void)
 {
+
+    if ( bcRx.command == 0x63636363 )
+    {
+        calibratingGyro = 1;
+        bcRx.command = BC_NONE; //no command
+    }
 
     board_comm_spi_complete(); //this needs to be called when the transaction is complete
 
@@ -111,7 +115,7 @@ void board_comm_spi_callback_function(void)
         //bad command, listen for another
         clear_imuf_command(&bcRx);
         clear_imuf_command(&bcTx);
-        bcTx.command = bcTx.crc = BC_IMUF_LISTENING;
+        bcTx.command = BC_IMUF_LISTENING;
     }
 
     //start the process again, if still in setup mode
@@ -132,7 +136,7 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
             if(boardCommState.commMode == GTBCM_SETUP)
             {
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
-                reply->command = reply->crc = BC_IMUF_CALIBRATE;
+                reply->command = BC_IMUF_CALIBRATE;
             }
             calibratingGyro=1;
         break;
@@ -140,7 +144,7 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime
             {
                 memcpy((uint8_t*)&(reply->param1), (uint8_t*)&flightVerson, sizeof(flightVerson));
-                reply->command = reply->crc = BC_IMUF_REPORT_INFO;
+                reply->command = BC_IMUF_REPORT_INFO;
             }
         break;
         case BC_IMUF_SETUP:
@@ -157,7 +161,7 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
                 filterConfig.yaw_r    = ((float)(command->param5 >> 16));
 
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
-                reply->command = reply->crc = BC_IMUF_SETUP;
+                reply->command = BC_IMUF_SETUP;
                 //gyro handles sync
                 //NVIC_DisableIRQ(BOARD_COMM_EXTI_IRQn);
             }

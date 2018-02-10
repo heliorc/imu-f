@@ -14,6 +14,7 @@ typedef struct filteredData
     axisData_t accData;
     float tempC;
     float quaternion[4];
+    uint32_t crc;
 } __attribute__((__packed__)) filteredData_t;
 
 extern volatile int calibratingGyro;

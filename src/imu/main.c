@@ -4,6 +4,7 @@
 #include "imu.h"
 #include "gyro.h"
 #include "filter.h"
+#include "crc.h"
 
 int main(void)
 {
@@ -11,6 +12,8 @@ int main(void)
     board_init();
     //fill version info (should be static instead)
     set_version(); 
+    //start the crc hardware
+    crc_config();
     //init filter
     filter_init();
     //init imu

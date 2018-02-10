@@ -6,6 +6,7 @@
 #include "board_comm.h"
 #include "quaternions.h"
 #include "filter.h"
+#include "crc.h"
 
 volatile int calibratingGyro;
 volatile axisData_t gyroSum;
@@ -156,12 +157,9 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
             oopsCounter = 0; //reset sync count
             everyOther = 1; //reset khz counter
 
+            append_crc_to_data( (uint32_t *)memptr, (boardCommState.commMode >> 2));
+
             //send the filtered data to the device
-            if ( bcRx.command == 0x63636363)
-            {
-                calibratingGyro = 1;
-            }
-            bcRx.command = BC_NONE; //no command
             spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 
             spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), memptr, bcRxPtr);
             gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //a quick spike for EXTI

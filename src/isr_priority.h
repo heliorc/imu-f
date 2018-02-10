@@ -13,8 +13,8 @@
 //#define BOARD_COMM_SPI_DMA_TX_SUB_PRI 4
 
 //exti to handle board comm cleanup
-#define BOARD_COMM_EXTI_ISR_PRE_PRI 6
-#define BOARD_COMM_EXTI_ISR_SUB_PRI 6
+#define BOARD_COMM_EXTI_ISR_PRE_PRI 1
+#define BOARD_COMM_EXTI_ISR_SUB_PRI 1
 
 //#define GYRO_SPI_ISR_PRE_PRI 3
 //#define GYRO_SPI_ISR_SUB_PRI 3
