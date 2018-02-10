@@ -21,6 +21,8 @@ inline void append_crc_to_data(uint32_t* data, uint32_t size)
     data[size] = get_crc(data, size);;
 }
 
+#pragma GCC push_options
+#pragma GCC optimize ("O3")
 inline uint32_t get_crc(uint32_t* data, uint32_t size)
 {
     CRC_ResetDR(); //reset data register
@@ -30,3 +32,4 @@ inline uint32_t get_crc(uint32_t* data, uint32_t size)
     }
     return CRC_GetCRC();
 }
+#pragma GCC pop_options

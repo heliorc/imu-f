@@ -75,6 +75,8 @@ void biquad_init(float filterCutFreq, biquad_axis_state_t *newState, float refre
 
 }
 
+#pragma GCC push_options
+#pragma GCC optimize ("O3")
 float biquad_update(float sample, biquad_axis_state_t *state)
 {
     float result;
@@ -93,3 +95,4 @@ float biquad_update(float sample, biquad_axis_state_t *state)
     return result;
 
 }
+#pragma GCC pop_options

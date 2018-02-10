@@ -139,6 +139,9 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
         //everyother is 16KHz
         if (everyOther-- <= 0)
         {
+            append_crc_to_data( (uint32_t *)memptr, (boardCommState.commMode >> 2));
+            everyOther = 1; //reset khz counter
+
             //check if spi is done if not, return
             //if it's not done for RESYNC_COUNTER counts in a row we reset the sync
             if(!spiDoneFlag)
@@ -155,9 +158,6 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
                 }
             }
             oopsCounter = 0; //reset sync count
-            everyOther = 1; //reset khz counter
-
-            append_crc_to_data( (uint32_t *)memptr, (boardCommState.commMode >> 2));
 
             //send the filtered data to the device
             spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 

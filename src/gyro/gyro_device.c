@@ -127,7 +127,7 @@ static void gyro_spi_init(void)
     spiInitStruct.SPI_CPOL = SPI_CPOL_High;
     spiInitStruct.SPI_CPHA = SPI_CPHA_2Edge;
     spiInitStruct.SPI_NSS = SPI_NSS_Soft;
-    spiInitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
+    spiInitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
     spiInitStruct.SPI_FirstBit = SPI_FirstBit_MSB;
     spiInitStruct.SPI_CRCPolynomial = 7;
     SPI_Init(GYRO_SPI, &spiInitStruct);

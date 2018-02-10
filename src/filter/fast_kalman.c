@@ -37,6 +37,8 @@ void fast_kalman_init(filterTypedef_t type)
 	init_kalman(&fastKalmanFilterStateRate[2], filterConfig.yaw_q,   filterConfig.yaw_r,   filterConfig.yaw_q,   0.0f);
 }
 
+#pragma GCC push_options
+#pragma GCC optimize ("O3")
 float noiseEstimate(float data[], uint32_t size)
 {
     uint32_t i;
@@ -105,3 +107,4 @@ float fast_kalman_pdate(filterAxisTypedef_t axis, float input)
     }
     return fastKalmanFilterStateRate[axis].x;
 }
+#pragma GCC pop_options
