@@ -107,20 +107,20 @@ def configure_target(TARGET):
     if TARGET == "F3":
         PROJECT = "C3PU"
         TARGET_DEVICE = "STM32F302x8"
-        TARGET_SCRIPT = "stm32_flash_f30x_0x08001800_26k.ld"
+        TARGET_SCRIPT = "stm32_flash_f30x_0x08002000_24k.ld"
         OPTIMIZE_FLAGS = "-O2"
         HSE_SPEED = str(16000000)
-        THIS_ADDRESS = str(0x08001800)
-        APP_ADDRESS  = str(0x08001800) #6k bl
+        THIS_ADDRESS = str(0x08002000)
+        APP_ADDRESS  = str(0x08002000) #6k bl
 
     elif TARGET == "F3BL":
         PROJECT = "C3PUBL"
         TARGET_DEVICE = "STM32F302x8"
-        TARGET_SCRIPT = "stm32_flash_f30x_0x08000000_6k.ld"
+        TARGET_SCRIPT = "stm32_flash_f30x_0x08000000_8k.ld"
         OPTIMIZE_FLAGS = "-Os"
         HSE_SPEED = str(16000000)
         THIS_ADDRESS = str(0x08000000)
-        APP_ADDRESS  = str(0x08001800) #6k bl
+        APP_ADDRESS  = str(0x08002000) #6k bl
 
     elif TARGET == "F3SING":
         PROJECT = "C3PU"
