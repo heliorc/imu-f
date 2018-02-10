@@ -132,8 +132,16 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
     if (boardCommState.commMode != GTBCM_SETUP)
     {
         static int everyOther = 1;
+        static int oopsCounter = 0;
 
-        spiDoneFlag = 1;
+        if(!spiDoneFlag)
+        {
+            if(oopsCounter++ > 100)
+            {
+                spiDoneFlag = 1;
+            }
+        }
+        //spiDoneFlag = 1;
         if (everyOther-- == 0 && spiDoneFlag)
         {
             if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F)
