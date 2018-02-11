@@ -15,7 +15,7 @@ int main(void)
     //start the crc hardware
     crc_config();
     //init filter
-    filter_init();
+    filter_init_defaults();
     //init imu
     init_imu();
     //this makes the status light go red

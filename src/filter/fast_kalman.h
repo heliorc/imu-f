@@ -20,12 +20,12 @@ typedef struct fastKalman {
     float gyroDfkfData[32];
 } fastKalman_t;
 
-typedef enum filterTypedef
+typedef enum filter_type
 {
     NO_ESTIMATION = 0,
     STD_DEV_ESTIMATION = 1,
     DISTANCE_ESTIMATION = 2
-} filterTypedef_t;
+} filter_type_t;
 
 typedef struct filter_config {
     float pitch_q;
@@ -40,5 +40,5 @@ extern filter_config_t filterConfig;
 
 extern fastKalman_t fastKalmanFilterStateRate[];
 
-extern void fast_kalman_init(filterTypedef_t type);
+extern void fast_kalman_init(filter_type_t type);
 extern float fast_kalman_pdate(filterAxisTypedef_t axis, float input);
