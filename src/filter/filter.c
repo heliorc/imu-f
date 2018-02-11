@@ -4,6 +4,13 @@
 
 biquad_state_t lpfFilterStateRate;
 
+volatile int allowFilterInit = 1;
+
+void allow_filter_init(void)
+{
+	allowFilterInit = 1;
+}
+
 void filter_init(filter_type_t type)
 {
 	fast_kalman_init(type);
@@ -19,17 +26,37 @@ void filter_init(filter_type_t type)
 
 void filter_init_defaults(void)
 {
-	filterConfig.pitch_q  = 3000.0f;
-	filterConfig.pitch_r  = 88.0f;
-	filterConfig.roll_q   = 3000.0f;
-	filterConfig.roll_r   = 88.0f;
-	filterConfig.yaw_q    = 1500.0f;
-	filterConfig.yaw_r    = 88.0f;
+	allowFilterInit = 0;
+	filterConfig.i_pitch_q = 3000;
+	filterConfig.i_pitch_r = 88;
+	filterConfig.i_roll_q  = 3000;
+	filterConfig.i_roll_r  = 88;
+	filterConfig.i_yaw_q   = 1500;
+	filterConfig.i_yaw_r   = 88;
+	filterConfig.pitch_q   = 3000.0f;
+	filterConfig.pitch_r   = 88.0f;
+	filterConfig.roll_q    = 3000.0f;
+	filterConfig.roll_r    = 88.0f;
+	filterConfig.yaw_q     = 1500.0f;
+	filterConfig.yaw_r     = 88.0f;
 	filter_init(NO_ESTIMATION);
 }
 
 void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAccData, float gyroTempData, filteredData_t* filteredData)
 {
+
+	if(allowFilterInit)
+	{
+		allowFilterInit = 0;
+		//convert the ints to floats
+		filterConfig.pitch_q = (float)filterConfig.i_pitch_q;
+		filterConfig.pitch_r = (float)filterConfig.i_pitch_r;
+		filterConfig.roll_q  = (float)filterConfig.i_roll_q;
+		filterConfig.roll_r  = (float)filterConfig.i_roll_r;
+		filterConfig.yaw_q   = (float)filterConfig.i_yaw_q;
+		filterConfig.yaw_r   = (float)filterConfig.i_yaw_r;
+		filter_init(STD_DEV_ESTIMATION);
+	}
 
 	filteredData->rateData.x = fast_kalman_pdate(0, gyroRateData->x);
 	filteredData->rateData.y = fast_kalman_pdate(1, gyroRateData->y);

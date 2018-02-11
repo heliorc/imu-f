@@ -108,7 +108,7 @@ void board_comm_spi_callback_function(void)
         //set flight mode now
         boardCommState.bufferSize = filterMode;
         boardCommState.commMode   = filterMode;
-        filter_init(NO_ESTIMATION);
+        allow_filter_init();
     }
     else 
     {
@@ -150,18 +150,17 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
         case BC_IMUF_SETUP:
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime
             {
-                filterMode            = command->param1;
-                gyroOrientation       = command->param2;
-                filterConfig.pitch_q  = ((float)(command->param3 & 0xFFFF));
-                filterConfig.pitch_r  = ((float)(command->param3 >> 16));
-                filterConfig.roll_q   = ((float)(command->param4 & 0xFFFF));
-                filterConfig.roll_r   = ((float)(command->param4 >> 16));
-                filterConfig.yaw_q    = ((float)(command->param5 & 0xFFFF));
-                filterConfig.yaw_r    = ((float)(command->param5 >> 16));
+                filterMode             = command->param1;
+                gyroOrientation        = command->param2;
+                filterConfig.i_pitch_q = (command->param3 >> 16);
+                filterConfig.i_pitch_r = (command->param3 & 0xFFFF);
+                filterConfig.i_roll_q  = (command->param4 >> 16);
+                filterConfig.i_roll_r  = (command->param4 & 0xFFFF);
+                filterConfig.i_yaw_q   = (command->param5 >> 16);
+                filterConfig.i_yaw_r   = (command->param5 & 0xFFFF);
 
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
                 reply->command = BC_IMUF_SETUP;
-                filter_init(NO_ESTIMATION);
             }
         break;
         default:

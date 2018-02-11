@@ -28,6 +28,12 @@ typedef enum filter_type
 } filter_type_t;
 
 typedef struct filter_config {
+    uint16_t i_pitch_q;
+    uint16_t i_pitch_r;
+    uint16_t i_roll_q;
+    uint16_t i_roll_r;
+    uint16_t i_yaw_q;
+    uint16_t i_yaw_r;
     float pitch_q;
     float pitch_r;
     float roll_q;
