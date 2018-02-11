@@ -4,9 +4,9 @@
 
 biquad_state_t lpfFilterStateRate;
 
-void filter_init(void)
+void filter_init(filter_type_t type)
 {
-	fast_kalman_init(DISTANCE_ESTIMATION);
+	fast_kalman_init(type);
 	memset(&(lpfFilterStateRate.x), 0, sizeof(biquad_axis_state_t));
 	memset(&(lpfFilterStateRate.y), 0, sizeof(biquad_axis_state_t));
 	memset(&(lpfFilterStateRate.z), 0, sizeof(biquad_axis_state_t));
@@ -15,6 +15,17 @@ void filter_init(void)
 	biquad_init(150.0f, &(lpfFilterStateRate.y), 0.00003125f, FILTER_TYPE_LOWPASS, &(lpfFilterStateRate.y), BIQUAD_BANDWIDTH);
 	biquad_init(150.0f, &(lpfFilterStateRate.z), 0.00003125f, FILTER_TYPE_LOWPASS, &(lpfFilterStateRate.z), BIQUAD_BANDWIDTH);
 	#endif
+}
+
+void filter_init_defaults(void)
+{
+	filterConfig.pitch_q  = 3000.0f;
+	filterConfig.pitch_r  = 88.0f;
+	filterConfig.roll_q   = 3000.0f;
+	filterConfig.roll_r   = 88.0f;
+	filterConfig.yaw_q    = 1500.0f;
+	filterConfig.yaw_r    = 88.0f;
+	filter_init(NO_ESTIMATION);
 }
 
 void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAccData, float gyroTempData, filteredData_t* filteredData)

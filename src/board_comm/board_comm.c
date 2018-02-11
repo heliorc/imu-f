@@ -108,7 +108,7 @@ void board_comm_spi_callback_function(void)
         //set flight mode now
         boardCommState.bufferSize = filterMode;
         boardCommState.commMode   = filterMode;
-        filter_init();
+        filter_init(NO_ESTIMATION);
     }
     else 
     {
@@ -150,7 +150,6 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
         case BC_IMUF_SETUP:
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime
             {
-
                 filterMode            = command->param1;
                 gyroOrientation       = command->param2;
                 filterConfig.pitch_q  = ((float)(command->param3 & 0xFFFF));
@@ -162,8 +161,7 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
 
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
                 reply->command = BC_IMUF_SETUP;
-                //gyro handles sync
-                //NVIC_DisableIRQ(BOARD_COMM_EXTI_IRQn);
+                filter_init(NO_ESTIMATION);
             }
         break;
         default:

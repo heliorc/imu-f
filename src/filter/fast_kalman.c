@@ -1,10 +1,10 @@
-#include "fast_kalman.h"
-#include "gyro.h"
 #include "includes.h"
+#include "gyro.h"
+#include "fast_kalman.h"
 
 
 fastKalman_t fastKalmanFilterStateRate[3];
-filterTypedef_t filterType;
+filter_type_t filterType;
 filter_config_t filterConfig;
 
 void init_kalman(fastKalman_t *filter, float q, float r, float p, float intialValue)
@@ -18,19 +18,8 @@ void init_kalman(fastKalman_t *filter, float q, float r, float p, float intialVa
     filter->gyroDfkfDataPtr = 0;  
 }
 
-void fast_kalman_init(filterTypedef_t type)
+void fast_kalman_init(filter_type_t type)
 {
-	static volatile int firstRun = 1;
-	if(firstRun)
-	{
-		filterConfig.pitch_q  = 88.0f;
-		filterConfig.pitch_r  = 3000.0f;
-		filterConfig.roll_q   = 88.0f;
-		filterConfig.roll_r   = 3000.0f;
-		filterConfig.yaw_q    = 1500.0f;
-		filterConfig.yaw_r    = 88.0f;
-	}
-
     filterType = type;
 	init_kalman(&fastKalmanFilterStateRate[0], filterConfig.pitch_q, filterConfig.pitch_r, filterConfig.pitch_q, 0.0f);
 	init_kalman(&fastKalmanFilterStateRate[1], filterConfig.roll_q,  filterConfig.roll_r,  filterConfig.roll_q,  0.0f);
