@@ -55,7 +55,7 @@ void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAcc
 		filterConfig.roll_r  = (float)filterConfig.i_roll_r;
 		filterConfig.yaw_q   = (float)filterConfig.i_yaw_q;
 		filterConfig.yaw_r   = (float)filterConfig.i_yaw_r;
-		filter_init(STD_DEV_ESTIMATION);
+		filter_init(NO_ESTIMATION);
 	}
 
 	filteredData->rateData.x = fast_kalman_pdate(0, gyroRateData->x);
