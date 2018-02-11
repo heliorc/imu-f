@@ -33,19 +33,19 @@ static void run_command(volatile imufCommand_t *command, volatile imufCommand_t 
             boot_to_address(THIS_ADDRESS);    //can't reply of course
         break;
         case BL_WRITE_FIRMWARE:
-            flash_program_word(command->param1, command->param2);
+            flash_program_word(command->param1, caesar32(command->param2));
             reply->command = BL_WRITE_FIRMWARE;
         break;
         case BL_WRITE_FIRMWARES:
             //write 8 words in one spi transaction
-            flash_program_word(command->param1, command->param2);
-            flash_program_word(command->param1+4, command->param3);
-            flash_program_word(command->param1+8, command->param4);
-            flash_program_word(command->param1+12, command->param5);
-            flash_program_word(command->param1+16, command->param6);
-            flash_program_word(command->param1+20, command->param7);
-            flash_program_word(command->param1+24, command->param8);
-            flash_program_word(command->param1+28, command->param9);
+            flash_program_word(command->param1,    caesar32(command->param2));
+            flash_program_word(command->param1+4,  caesar32(command->param3));
+            flash_program_word(command->param1+8,  caesar32(command->param4));
+            flash_program_word(command->param1+12, caesar32(command->param5));
+            flash_program_word(command->param1+16, caesar32(command->param6));
+            flash_program_word(command->param1+20, caesar32(command->param7));
+            flash_program_word(command->param1+24, caesar32(command->param8));
+            flash_program_word(command->param1+28, caesar32(command->param9));
             reply->command = BL_WRITE_FIRMWARES;
         break;
         case BL_PREPARE_PROGRAM:

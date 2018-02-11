@@ -13,3 +13,4 @@ extern volatile uint32_t map8;
 extern volatile uint32_t map9;
 
 extern int this_is_sparta(void);
+extern uint32_t caesar32(uint32_t thing);
