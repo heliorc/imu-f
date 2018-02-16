@@ -34,12 +34,18 @@ typedef struct filter_config {
     uint16_t i_roll_r;
     uint16_t i_yaw_q;
     uint16_t i_yaw_r;
+    uint16_t i_pitch_lpf_hz;
+    uint16_t i_roll_lpf_hz;
+    uint16_t i_yaw_lpf_hz;
     float pitch_q;
     float pitch_r;
     float roll_q;
     float roll_r;
     float yaw_q;
     float yaw_r;
+    float pitch_lpf_hz;
+    float roll_lpf_hz;
+    float yaw_lpf_hz;
 } filter_config_t;
 
 extern filter_config_t filterConfig;

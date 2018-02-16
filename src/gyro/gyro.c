@@ -1,12 +1,12 @@
 #include "includes.h"
 #include "gyro.h"
 #include "gyro_device.h"
-#include "imuf_device.h"
 #include "imu.h"
 #include "board_comm.h"
 #include "quaternions.h"
 #include "filter.h"
 #include "crc.h"
+#include "fft.h"
 
 volatile int calibratingGyro;
 volatile axisData_t gyroSum;
@@ -154,7 +154,7 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
                 else
                 {
                     //reset spi and dma for spi since we've not had a reply in a while now
-                    cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA_FLAG_GL, BOARD_COMM_RX_DMA_FLAG_GL, BOARD_COMM_SPI_RST_MSK); //reset sync
+                    cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_SPI_RST_MSK); //reset sync
                 }
             }
             oopsCounter = 0; //reset sync count

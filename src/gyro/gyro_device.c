@@ -1,6 +1,7 @@
 #include "includes.h"
 #include "invensense_register_map.h"
 #include "gyro_device.h"
+#include "fft.h"
 
 //multiple configs can go here, just need one right now
 const gyro_device_config_t gyroConfig = {1, 0, INVENS_CONST_GYRO_FCB_32_8800, 0, INVENS_CONST_ACC_FCB_ENABLE, 8};
@@ -21,6 +22,8 @@ volatile gyro_read_done_t gyro_read_done_callback;
 
 SPI_InitTypeDef gyroSpiInitStruct;
 DMA_InitTypeDef gyroDmaInitStruct;
+
+extern void arm_bitreversal_32(uint32_t * pSrc, const uint16_t bitRevLen, const uint16_t * pBitRevTable);
 
 static void gyro_read_reg(uint8_t reg, uint8_t data);
 static void gyro_write_reg(uint8_t reg, uint8_t data);
@@ -83,7 +86,7 @@ void GYRO_SPI_RX_DMA_HANDLER(void)
         gyro_cs_hi();
         gyro_cleanup_spi();
         gyro_read_done_callback(&gyroRxFrame);
-        DMA_ClearITPendingBit(GYRO_RX_DMA_FLAG_GL);         
+        DMA_ClearITPendingBit(GYRO_RX_DMA_FLAG_TC);         
     }
 }
 
@@ -193,12 +196,6 @@ static void gyro_spi_transmit_receive(uint8_t* txBuffer, uint8_t* rxBuffer, uint
     SPI_Cmd(GYRO_SPI, ENABLE);
 
 }
-
-
-
-
-
-
 
 void GYRO_EXTI_HANDLER(void)
 {

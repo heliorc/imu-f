@@ -3,7 +3,9 @@
 #include "biquad.h"
 #include "fast_kalman.h"
 
-extern biquad_state_t lpfFilterStateRate;
+#define REFRESH_RATE 0.00003125f
+
+extern biquad_state_t dynNotchStateRate;
 
 extern void allow_filter_init(void);
 extern void filter_init(filter_type_t type);

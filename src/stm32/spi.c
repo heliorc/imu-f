@@ -75,7 +75,7 @@ void spi_fire_dma(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_Type
 }
 
 //after spi transaction is done
-void cleanup_spi(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_TypeDef *rxDma, uint32_t txDmaFlag, uint32_t rxDmaFlag, uint32_t resetMask)
+void cleanup_spi(SPI_TypeDef *spi, DMA_Channel_TypeDef *txDma, DMA_Channel_TypeDef *rxDma, uint32_t resetMask)
 {
     //clear DMA flags
     DMA_ClearFlag(BOARD_COMM_ALL_DMA_FLAGS);

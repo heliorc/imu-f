@@ -21,8 +21,6 @@
 #define GYRO_SPI_RST_MSK                RCC_APB1RSTR_SPI3RST
 #define GYRO_RX_DMA                     DMA1_Channel2
 #define GYRO_TX_DMA                     DMA1_Channel3
-#define GYRO_RX_DMA_FLAG_GL             DMA1_FLAG_GL2
-#define GYRO_TX_DMA_FLAG_GL             DMA1_FLAG_GL3
 #define GYRO_RX_DMA_FLAG_TC             DMA1_FLAG_TC2
 #define GYRO_TX_DMA_FLAG_TC             DMA1_FLAG_TC3
 #define GYRO_ALL_DMA_FLAGS              DMA1_FLAG_GL2 | DMA1_FLAG_HT2 | DMA1_FLAG_TC2 | DMA1_FLAG_GL3 | DMA1_FLAG_HT3 | DMA1_FLAG_TC3
@@ -70,8 +68,6 @@
 #define BOARD_COMM_SPI_RST_MSK          RCC_APB1RSTR_SPI2RST
 #define BOARD_COMM_RX_DMA               DMA1_Channel4
 #define BOARD_COMM_TX_DMA               DMA1_Channel5
-#define BOARD_COMM_RX_DMA_FLAG_GL       DMA1_FLAG_GL4
-#define BOARD_COMM_TX_DMA_FLAG_GL       DMA1_FLAG_GL5
 #define BOARD_COMM_RX_DMA_FLAG_TC       DMA1_FLAG_TC4
 #define BOARD_COMM_TX_DMA_FLAG_TC       DMA1_FLAG_TC5
 #define BOARD_COMM_ALL_DMA_FLAGS        DMA1_FLAG_GL4 | DMA1_FLAG_HT4 | DMA1_FLAG_TC4 | DMA1_FLAG_GL5 | DMA1_FLAG_HT5 | DMA1_FLAG_TC5

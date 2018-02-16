@@ -38,6 +38,9 @@
         "reset.h": "c",
         "filter.h": "c",
         "gyro_device.h": "c",
-        "crc.h": "c"
+        "crc.h": "c",
+        "type_traits": "c",
+        "fft.h": "c",
+        "biquad.h": "c"
     }
 }

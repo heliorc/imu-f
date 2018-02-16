@@ -5,6 +5,7 @@
 #include "gyro.h"
 #include "filter.h"
 #include "crc.h"
+#include "fft.h"
 
 int main(void)
 {
@@ -40,5 +41,6 @@ int main(void)
     while(1)
     {
         update_quaternions();
+        update_fft();
     }
 }

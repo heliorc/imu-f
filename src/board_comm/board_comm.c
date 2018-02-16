@@ -80,7 +80,7 @@ void board_comm_spi_complete(void)
 
     gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
     //this takes 0.78us to run
-    cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_TX_DMA_FLAG_GL, BOARD_COMM_RX_DMA_FLAG_GL, BOARD_COMM_SPI_RST_MSK);
+    cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_SPI_RST_MSK);
 }
 
 void board_comm_spi_callback_function(void)
@@ -150,14 +150,17 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
         case BC_IMUF_SETUP:
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime
             {
-                filterMode             = command->param1;
-                gyroOrientation        = command->param2;
-                filterConfig.i_pitch_q = (command->param3 >> 16);
-                filterConfig.i_pitch_r = (command->param3 & 0xFFFF);
-                filterConfig.i_roll_q  = (command->param4 >> 16);
-                filterConfig.i_roll_r  = (command->param4 & 0xFFFF);
-                filterConfig.i_yaw_q   = (command->param5 >> 16);
-                filterConfig.i_yaw_r   = (command->param5 & 0xFFFF);
+                filterMode                   = command->param1;
+                gyroOrientation              = command->param2;
+                filterConfig.i_pitch_q       = (command->param3 >> 16);
+                filterConfig.i_pitch_r       = (command->param3 & 0xFFFF);
+                filterConfig.i_roll_q        = (command->param4 >> 16);
+                filterConfig.i_roll_r        = (command->param4 & 0xFFFF);
+                filterConfig.i_yaw_q         = (command->param5 >> 16);
+                filterConfig.i_yaw_r         = (command->param5 & 0xFFFF);
+                filterConfig.i_pitch_lpf_hz  = (command->param6 >> 16);
+                filterConfig.i_roll_lpf_hz   = (command->param6 & 0xFFFF);
+                filterConfig.i_yaw_lpf_hz    = (command->param7 >> 16);
 
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
                 reply->command = BC_IMUF_SETUP;

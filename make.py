@@ -213,6 +213,13 @@ def configure_target(TARGET):
         SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/CommonTables/arm_common_tables.c")
         SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/FastMathFunctions/arm_cos_f32.c")
         SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/FastMathFunctions/arm_sin_f32.c")
+        SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/BasicMathFunctions/arm_mult_f32.c")
+        SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/TransformFunctions/arm_rfft_fast_f32.c")
+        SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/TransformFunctions/arm_cfft_f32.c")
+        SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/TransformFunctions/arm_cfft_q31.c")
+        SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/TransformFunctions/arm_rfft_fast_init_f32.c")
+        SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/TransformFunctions/arm_cfft_radix8_f32.c")
+        SOURCE_FILES.append(LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/ComplexMathFunctions/arm_cmplx_mag_f32.c")
     else:
         print("ERROR - Unknown Project")
         exit(1)
