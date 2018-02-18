@@ -98,6 +98,7 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
         switch(accTracker)
         {
             case 9:
+            case 25:
                 //update quaternions, these were calculated in imu.c
                 filteredData.quaternion[0] = attitudeFrameQuat.w;
                 filteredData.quaternion[1] = attitudeFrameQuat.vector.x;
@@ -113,9 +114,11 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
                 break;
             case 10:
                 increment_fft_state();
-            case 17:
+                break;
+            case 33:
                 //reset acc tracker
-                accTracker = 1;
+                accTracker = 1; //fallthru for 33, not done on 17
+            case 17:
                 //update quaternions, these were calculated in imu.c
                 filteredData.quaternion[0] = attitudeFrameQuat.w;
                 filteredData.quaternion[1] = attitudeFrameQuat.vector.x;
