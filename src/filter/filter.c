@@ -5,7 +5,7 @@
 #include "fast_kalman.h"
 
 biquad_state_t lpfFilterStateRate;
-biquad_state_t dynNotchStateRate;
+biquad_state_t dynNotchStateRate[2];
 
 volatile int allowFilterInit = 1;
 
@@ -52,6 +52,7 @@ void filter_init_defaults(void)
 
 void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAccData, float gyroTempData, filteredData_t* filteredData)
 {
+	static uint32_t dynFiltToUse = 0;
 
 	if(allowFilterInit)
 	{
@@ -87,9 +88,10 @@ void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAcc
 	filteredData->rateData.x = biquad_update(filteredData->rateData.x, &(lpfFilterStateRate.x));
 	filteredData->rateData.y = biquad_update(filteredData->rateData.y, &(lpfFilterStateRate.y));
 	filteredData->rateData.z = biquad_update(filteredData->rateData.z, &(lpfFilterStateRate.z));
-	filteredData->rateData.x = biquad_update(filteredData->rateData.x, &(dynNotchStateRate.x));
-	filteredData->rateData.y = biquad_update(filteredData->rateData.y, &(dynNotchStateRate.y));
-	filteredData->rateData.z = biquad_update(filteredData->rateData.z, &(dynNotchStateRate.z));
+
+	filteredData->rateData.x = biquad_update(filteredData->rateData.x, &(dynNotchStateRate[!fftGyroDataInUse].x));
+	filteredData->rateData.y = biquad_update(filteredData->rateData.y, &(dynNotchStateRate[!fftGyroDataInUse].y));
+	filteredData->rateData.z = biquad_update(filteredData->rateData.z, &(dynNotchStateRate[!fftGyroDataInUse].z));
 
 	update_fft(&(filteredData->rateData), &fftStateRate);
 

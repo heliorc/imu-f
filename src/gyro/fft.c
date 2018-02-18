@@ -4,7 +4,7 @@
 #include "filter.h"
 #include "imu.h"
 
-volatile float fftGyroData[FFT_BUFFS][AXIS_AMOUNT][FFT_SIZE+FFT_OF];
+volatile float fftGyroData[FFT_BUFFS][AXIS_AMOUNT][FFT_DATA_COLLECT_SIZE];
 volatile float fftGyroDataPtr;
 volatile float fftGyroDataInUse;
 
@@ -31,6 +31,16 @@ static biquad_axis_state_t fftFreqFilter[3];
 
 static float hwin[FFT_SIZE];
 
+
+
+
+
+/// 32 khz, every 8 is ACC, so do update after every ACC
+
+
+
+
+
 //init fft anytime the filters are init. this happens in filter.c
 void init_fft(void)
 {
@@ -40,7 +50,7 @@ void init_fft(void)
     {
         for(y=0;y<AXIS_AMOUNT;y++)
         {
-            for(z=0;z<FFT_SIZE+FFT_OF;z++)
+            for(z=0;z<FFT_DATA_COLLECT_SIZE;z++)
             {
                 fftGyroData[x][y][z] = 0.0f;
             }
@@ -48,6 +58,14 @@ void init_fft(void)
     }
     fftGyroDataPtr = 0;
     fftGyroDataInUse = 0;
+
+    //first init of notch biquads
+    biquad_init(240, &(dynNotchStateRate[0].x), REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH);
+    biquad_init(240, &(dynNotchStateRate[0].y), REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH);
+    biquad_init(240, &(dynNotchStateRate[0].z), REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH);
+    biquad_init(240, &(dynNotchStateRate[1].x), REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH);
+    biquad_init(240, &(dynNotchStateRate[1].y), REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH);
+    biquad_init(240, &(dynNotchStateRate[1].z), REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH);
 
     arm_rfft_fast_init_f32(&fftInstance, FFT_SIZE);    
     for (int i = 0; i < FFT_SIZE; i++) {
@@ -130,8 +148,22 @@ void calculate_fft(biquad_state_t *state)
 
 }
 
+//runs after quaternions have their chace at running
 void update_fft(void)
 {
+    if(fftGyroDataPtr >= 23) //calc yaw
+    {
+        //calculate_fft(biquad_state_t *state)
+    }
+    else if(fftGyroDataPtr >= 15) //calc pitch
+    {
+
+    }
+    else if(fftGyroDataPtr >= 7) //calc roll
+    {
+
+    }
+
     fftBuffer.x += axisData->x;
     fftBuffer.y += axisData->y;
     fftBuffer.z += axisData->z;
