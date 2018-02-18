@@ -14,12 +14,7 @@
 #define FFT_DATA_COLLECT_SIZE 42 //allow overflow room since FFT calcs aren't realtime
 #define NOTCH_APROX(cen, max) ((float)(max * cen) / ((float)(cen - max) * (float)(cen + max)))
 
-extern void arm_bitreversal_32(uint32_t * pSrc, const uint16_t bitRevLen, const uint16_t * pBitRevTable);
-extern void stage_rfft_f32(arm_rfft_fast_instance_f32 * S, float32_t * p, float32_t * pOut);
-extern void arm_cfft_radix8by2_f32( arm_cfft_instance_f32 * S, float32_t * p1);
-extern void arm_cfft_radix8by4_f32( arm_cfft_instance_f32 * S, float32_t * p1);
-extern void arm_radix8_butterfly_f32(float32_t * pSrc, uint16_t fftLen, const float32_t * pCoef, uint16_t twidCoefModifier);
-extern void arm_cmplx_mag_f32(float32_t * pSrc, float32_t * pDst, uint32_t numSamples);
-
-void init_fft(void);
-void update_fft(void);
+extern void init_fft(void);
+extern void update_fft(void);
+extern void increment_fft_state(void);
+extern void insert_gyro_data_for_fft(filteredData_t* filteredData);

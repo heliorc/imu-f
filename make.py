@@ -175,7 +175,8 @@ def configure_target(TARGET):
 
     #extra source files to include not in the below dirs
     SOURCE_FILES = [
-        this_dir + "/assembly/startup/startup_stm32f303xc.s"
+        this_dir + "/assembly/startup/startup_stm32f303xc.s",
+        LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/TransformFunctions/arm_bitreversal2.s"
     ]
 
     #All include dirs

@@ -5,7 +5,11 @@
 #include "fast_kalman.h"
 
 biquad_state_t lpfFilterStateRate;
-biquad_state_t dynNotchStateRate[2];
+
+//actual dynamic filters live here
+biquad_axis_state_t axisX;
+biquad_axis_state_t axisY;
+biquad_axis_state_t axisZ;
 
 volatile int allowFilterInit = 1;
 
@@ -17,12 +21,23 @@ void allow_filter_init(void)
 void filter_init(filter_type_t type)
 {
 	fast_kalman_init(type);
-	memset(&(lpfFilterStateRate.x), 0, sizeof(biquad_axis_state_t));
-	memset(&(lpfFilterStateRate.y), 0, sizeof(biquad_axis_state_t));
-	memset(&(lpfFilterStateRate.z), 0, sizeof(biquad_axis_state_t));
-	biquad_init(filterConfig.pitch_lpf_hz, &(lpfFilterStateRate.x), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH);
-	biquad_init(filterConfig.roll_lpf_hz, &(lpfFilterStateRate.y), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH);
-	biquad_init(filterConfig.yaw_lpf_hz, &(lpfFilterStateRate.z), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH);
+	memset(&(lpfFilterStateRate.x), 0, sizeof(lpfFilterStateRate.x));
+	memset(&(lpfFilterStateRate.y), 0, sizeof(lpfFilterStateRate.y));
+	memset(&(lpfFilterStateRate.z), 0, sizeof(lpfFilterStateRate.z));
+
+	biquad_init(filterConfig.pitch_lpf_hz, &(lpfFilterStateRate.x), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH, NULL);
+	biquad_init(filterConfig.roll_lpf_hz, &(lpfFilterStateRate.y), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH, NULL);
+	biquad_init(filterConfig.yaw_lpf_hz, &(lpfFilterStateRate.z), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH, NULL);
+
+	memset((biquad_axis_state_t *)&axisX, 0, sizeof(axisX));
+	memset((biquad_axis_state_t *)&axisY, 0, sizeof(axisY));
+	memset((biquad_axis_state_t *)&axisZ, 0, sizeof(axisZ));
+
+    //init all of the notch biquads
+    biquad_init(NOTCH_MAX, &axisX, REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH, NULL);
+    biquad_init(NOTCH_MAX, &axisY, REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH, NULL);
+    biquad_init(NOTCH_MAX, &axisZ, REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH, NULL);
+
 	init_fft();
 }
 
@@ -75,25 +90,15 @@ void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAcc
 	filteredData->rateData.z = fast_kalman_pdate(2, gyroRateData->z);
 
 	//collect data for the FFT straight from the Kalman
-	fftGyroData[fftGyroDataInUse][0][fftGyroDataPtr]   = filteredData->rateData.x;
-	fftGyroData[fftGyroDataInUse][1][fftGyroDataPtr]   = filteredData->rateData.y;
-	fftGyroData[fftGyroDataInUse][2][fftGyroDataPtr++] = filteredData->rateData.z;
-	if(fftGyroDataPtr==FFT_DATA_COLLECT_SIZE)
-	{
-		//don't allow overflow if main loops stops responding
-
-		fftGyroDataPtr = 0;
-	}
+	insert_gyro_data_for_fft(filteredData);
 
 	filteredData->rateData.x = biquad_update(filteredData->rateData.x, &(lpfFilterStateRate.x));
 	filteredData->rateData.y = biquad_update(filteredData->rateData.y, &(lpfFilterStateRate.y));
 	filteredData->rateData.z = biquad_update(filteredData->rateData.z, &(lpfFilterStateRate.z));
 
-	filteredData->rateData.x = biquad_update(filteredData->rateData.x, &(dynNotchStateRate[!fftGyroDataInUse].x));
-	filteredData->rateData.y = biquad_update(filteredData->rateData.y, &(dynNotchStateRate[!fftGyroDataInUse].y));
-	filteredData->rateData.z = biquad_update(filteredData->rateData.z, &(dynNotchStateRate[!fftGyroDataInUse].z));
-
-	update_fft(&(filteredData->rateData), &fftStateRate);
+	filteredData->rateData.x = biquad_update(filteredData->rateData.x, &axisX);
+	filteredData->rateData.y = biquad_update(filteredData->rateData.y, &axisY);
+	filteredData->rateData.z = biquad_update(filteredData->rateData.z, &axisZ);
 
 	//no need to filter ACC is used in quaternions
 	filteredData->accData.x  = gyroAccData->x;

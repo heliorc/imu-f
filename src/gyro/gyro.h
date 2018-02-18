@@ -1,6 +1,13 @@
 #pragma once
 #include "includes.h"
 
+typedef struct axisDataInt
+{
+    int x;
+    int y;
+    int z;
+} __attribute__((__packed__)) axisDataInt_t;
+
 typedef struct axisData
 {
     float x;
