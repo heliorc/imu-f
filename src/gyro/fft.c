@@ -8,7 +8,8 @@
 #include "arm_common_tables.h"
 
 #define FFT_DATA_SET_SIZE 96
-#define BQQ 0.7071067811865475f //butterworth 1/sqrt(2)
+//#define BQQ 0.7071067811865475f //butterworth 1/sqrt(2)
+#define BQQ 1.0f //butterworth 1/sqrt(2)
 
 typedef enum fftUpdateState
 {
