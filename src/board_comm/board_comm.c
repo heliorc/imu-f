@@ -167,10 +167,10 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
                 filterConfig.i_pitch_lpf_hz    = (command->param6 >> 16);
                 filterConfig.i_roll_lpf_hz     = (command->param6 & 0xFFFF);
                 filterConfig.i_yaw_lpf_hz      = (command->param7 >> 16);
-                gyroSettingsConfig.orientation = (command->param8 & 0xFFFF);
-                gyroSettingsConfig.smallX      = (command->param8 >> 16);
-                gyroSettingsConfig.smallY      = (command->param9 & 0xFFFF);
-                gyroSettingsConfig.smallZ      = (command->param9 >> 16);
+                gyroSettingsConfig.orientation = (uint32_t)((uint16_t)(command->param8 & 0xFFFF));
+                gyroSettingsConfig.smallX      = (int32_t)((int16_t)(command->param8 >> 16));
+                gyroSettingsConfig.smallY      = (int32_t)((int16_t)(command->param9 & 0xFFFF));
+                gyroSettingsConfig.smallZ      = (int32_t)((int16_t)(command->param9 >> 16));
 
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
                 reply->command = BC_IMUF_SETUP;
