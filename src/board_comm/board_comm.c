@@ -114,6 +114,7 @@ void board_comm_spi_callback_function(void)
         boardCommState.commMode   = filterMode;
         allow_filter_init(); //reset filters in case they've been changed
         reset_matrix(); //reset oreintation matrix in case it's been changes
+        reset_loop(); //set loop speed
     }
     else 
     {
@@ -157,7 +158,7 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime
             {
                 filterMode                     = command->param1;
-                gyroSettingsConfig.loopSpeed   = (command->param2 & 0xFF);
+                gyroSettingsConfig.loopSpeed   = (command->param2 & 0xFFFF);
                 filterConfig.i_pitch_q         = (command->param3 >> 16);
                 filterConfig.i_pitch_r         = (command->param3 & 0xFFFF);
                 filterConfig.i_roll_q          = (command->param4 >> 16);

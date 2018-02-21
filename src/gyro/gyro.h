@@ -39,3 +39,4 @@ extern volatile int calibratingGyro;
 //called when new settings are sent
 extern void reset_matrix(void);
 extern void gyro_init(void);
+extern void reset_loop(void);

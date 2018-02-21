@@ -16,6 +16,7 @@ volatile axisData_t rawAccData;
 volatile axisData_t rawRateData;
 volatile gyro_settings_config_t gyroSettingsConfig;
 
+volatile int loopDivider;
 
 float gyroTempData;
 filteredData_t filteredData;
@@ -86,6 +87,54 @@ static void build_rotation_matrix(int x, int y, int z)
 void reset_matrix(void)
 {
 	matrixFormed =-1;
+}
+
+void reset_loop(void)
+{
+    switch(gyroSettingsConfig.loopSpeed)
+    {
+        case 0:
+        case 1: //32
+            if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F)
+            {
+                loopDivider = 1; //16
+            }
+            else
+            {
+                loopDivider = 0; //32
+            }
+        break;
+        case 2: //16
+            loopDivider = 1; //16
+        break;
+        case 3: //8
+            loopDivider = 3; //8
+        break;
+        case 4: //4
+            loopDivider = 7; //4
+        break;
+        case 5: //2
+            loopDivider = 15; //2
+        break;
+        case 6: //1
+            loopDivider = 31; //1
+        break;
+        case 7: //.5
+            loopDivider = 63; //.5
+        break;
+        case 8: //.25
+            loopDivider = 127; //.25
+        break;
+        case 9: //.125
+            loopDivider = 255; //.125
+        break;
+        case 10: //.0625
+            loopDivider = 511; //.0625
+        break;
+        default:
+            loopDivider = 1; //16
+        break;
+    }
 }
 
 //int defaults for oreintation
@@ -381,7 +430,7 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
         if (everyOther-- <= 0)
         {
             append_crc_to_data( (uint32_t *)memptr, (boardCommState.commMode >> 2));
-            everyOther = 1; //reset khz counter
+            everyOther = loopDivider; //reset khz counter
 
             //check if spi is done if not, return
             //if it's not done for RESYNC_COUNTER counts in a row we reset the sync
@@ -411,6 +460,7 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
 
 void gyro_init(void) 
 {
+    loopDivider = 1; //1 is 16Khz
     init_orientation();
     gyroTempData = 0;
     calibratingGyro = 0;   
