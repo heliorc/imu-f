@@ -88,8 +88,12 @@ void board_comm_spi_callback_function(void)
 
     if ( bcRx.command == 0x63636363 )
     {
-        calibratingGyro = 1;
+        calibratingGyro = 1; //set to calibration state
         bcRx.command = BC_NONE; //no command
+    }
+    else
+    {
+        calibratingGyro = 0; //set to default state
     }
 
     board_comm_spi_complete(); //this needs to be called when the transaction is complete
@@ -108,7 +112,8 @@ void board_comm_spi_callback_function(void)
         //set flight mode now
         boardCommState.bufferSize = filterMode;
         boardCommState.commMode   = filterMode;
-        allow_filter_init();
+        allow_filter_init(); //reset filters in case they've been changed
+        reset_matrix(); //reset oreintation matrix in case it's been changes
     }
     else 
     {
@@ -128,6 +133,7 @@ void board_comm_spi_callback_function(void)
 
 static void run_command(volatile imufCommand_t* command, volatile imufCommand_t* reply)
 {
+    calibratingGyro=0; //set to default state
     switch (command->command)
     {
         case BC_IMUF_CALIBRATE:
@@ -138,7 +144,7 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
                 reply->command = BC_IMUF_CALIBRATE;
             }
-            calibratingGyro=1;
+            calibratingGyro=1; //set to calibration state
         break;
         case BC_IMUF_REPORT_INFO:
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime
@@ -150,17 +156,21 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
         case BC_IMUF_SETUP:
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime
             {
-                filterMode                   = command->param1;
-                gyroOrientation              = command->param2;
-                filterConfig.i_pitch_q       = (command->param3 >> 16);
-                filterConfig.i_pitch_r       = (command->param3 & 0xFFFF);
-                filterConfig.i_roll_q        = (command->param4 >> 16);
-                filterConfig.i_roll_r        = (command->param4 & 0xFFFF);
-                filterConfig.i_yaw_q         = (command->param5 >> 16);
-                filterConfig.i_yaw_r         = (command->param5 & 0xFFFF);
-                filterConfig.i_pitch_lpf_hz  = (command->param6 >> 16);
-                filterConfig.i_roll_lpf_hz   = (command->param6 & 0xFFFF);
-                filterConfig.i_yaw_lpf_hz    = (command->param7 >> 16);
+                filterMode                     = command->param1;
+                gyroSettingsConfig.loopSpeed   = (command->param2 & 0xFF);
+                filterConfig.i_pitch_q         = (command->param3 >> 16);
+                filterConfig.i_pitch_r         = (command->param3 & 0xFFFF);
+                filterConfig.i_roll_q          = (command->param4 >> 16);
+                filterConfig.i_roll_r          = (command->param4 & 0xFFFF);
+                filterConfig.i_yaw_q           = (command->param5 >> 16);
+                filterConfig.i_yaw_r           = (command->param5 & 0xFFFF);
+                filterConfig.i_pitch_lpf_hz    = (command->param6 >> 16);
+                filterConfig.i_roll_lpf_hz     = (command->param6 & 0xFFFF);
+                filterConfig.i_yaw_lpf_hz      = (command->param7 >> 16);
+                gyroSettingsConfig.orientation = (command->param8 & 0xFFFF);
+                gyroSettingsConfig.smallX      = (command->param8 >> 16);
+                gyroSettingsConfig.smallY      = (command->param9 & 0xFFFF);
+                gyroSettingsConfig.smallZ      = (command->param9 >> 16);
 
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
                 reply->command = BC_IMUF_SETUP;

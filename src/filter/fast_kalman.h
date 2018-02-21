@@ -48,7 +48,7 @@ typedef struct filter_config {
     float yaw_lpf_hz;
 } filter_config_t;
 
-extern filter_config_t filterConfig;
+extern volatile filter_config_t filterConfig;
 
 extern fastKalman_t fastKalmanFilterStateRate[];
 
