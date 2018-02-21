@@ -110,6 +110,9 @@ static void apply_gyro_acc_rotation(volatile axisData_t* rawData)
 	//from gyro, x, y, z (0, 1, 2)
 	// x is roll, y is pitch, z is yaw
 
+    float fx = rawData->x;
+    float fy = rawData->y;
+    float fz = rawData->z;
 	int x = 0;
 	int y = 0;
 	int z = 0;
@@ -131,45 +134,45 @@ static void apply_gyro_acc_rotation(volatile axisData_t* rawData)
 	    	}
 	    	else
 	    	{
-				rawData->x = ((float)rawData->x);
-				rawData->y = ((float)rawData->y);
-				rawData->z = ((float)rawData->z);
+				rawData->x = (fx);
+				rawData->y = (fy);
+				rawData->z = (fz);
 	    	}
 			break;
         case CW90:
-        	rawData->x = ((float)rawData->y);
-        	rawData->y = -((float)rawData->x);
-        	rawData->z = ((float)rawData->z);
+        	rawData->x = (fy);
+        	rawData->y = -(fx);
+        	rawData->z = (fz);
             break;
         case CW180:
-        	rawData->x = -((float)rawData->x);
-        	rawData->y = -((float)rawData->y);
-        	rawData->z = ((float)rawData->z);
+        	rawData->x = -(fx);
+        	rawData->y = -(fy);
+        	rawData->z = (fz);
             break;
         case CW270:
-        	rawData->x = -((float)rawData->y);
-        	rawData->y = ((float)rawData->x);
-        	rawData->z = ((float)rawData->z);
+        	rawData->x = -(fy);
+        	rawData->y = (fx);
+        	rawData->z = (fz);
             break;
         case CW0_INV:
-        	rawData->x = -((float)rawData->x);
-        	rawData->y = ((float)rawData->y);
-        	rawData->z = -((float)rawData->z);
+        	rawData->x = -(fx);
+        	rawData->y = (fy);
+        	rawData->z = -(fz);
             break;
         case CW90_INV:
-        	rawData->x = ((float)rawData->y);
-        	rawData->y = ((float)rawData->x);
-        	rawData->z = -((float)rawData->z);
+        	rawData->x = (fy);
+        	rawData->y = (fx);
+        	rawData->z = -(fz);
             break;
         case CW180_INV:
-        	rawData->x = ((float)rawData->x);
-        	rawData->y = -((float)rawData->y);
-        	rawData->z = -((float)rawData->z);
+        	rawData->x = (fx);
+        	rawData->y = -(fy);
+        	rawData->z = -(fz);
             break;
         case CW270_INV:
-        	rawData->x = -((float)rawData->y);
-        	rawData->y = -((float)rawData->x);
-        	rawData->z = -((float)rawData->z);
+        	rawData->x = -(fy);
+        	rawData->y = -(fx);
+        	rawData->z = -(fz);
             break;
     	case CW45:
     		if (matrixFormed != CW45) {
@@ -231,9 +234,9 @@ static void apply_gyro_acc_rotation(volatile axisData_t* rawData)
 
     if (nonNinety)
     {
-		rawData->x = (rotationMatrix[0][0] * (float)rawData->x + rotationMatrix[1][0] * (float)rawData->y + rotationMatrix[2][0] * (float)rawData->z);
-		rawData->y = (rotationMatrix[0][1] * (float)rawData->x + rotationMatrix[1][1] * (float)rawData->y + rotationMatrix[2][1] * (float)rawData->z);
-		rawData->z = (rotationMatrix[0][2] * (float)rawData->x + rotationMatrix[1][2] * (float)rawData->y + rotationMatrix[2][2] * (float)rawData->z);
+		rawData->x = (rotationMatrix[0][0] * fx + rotationMatrix[1][0] * fy + rotationMatrix[2][0] * fz);
+		rawData->y = (rotationMatrix[0][1] * fx + rotationMatrix[1][1] * fy + rotationMatrix[2][1] * fz);
+		rawData->z = (rotationMatrix[0][2] * fx + rotationMatrix[1][2] * fy + rotationMatrix[2][2] * fz);
     }
 
 }
