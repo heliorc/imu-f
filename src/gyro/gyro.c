@@ -80,13 +80,10 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
         memptr = (uint8_t*)&(gyroRxFrame->accAddress);
     }
 
-    if (boardCommState.commMode == GTBCM_SETUP || boardCommState.commMode == GTBCM_GYRO_ACC_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ONLY_FILTER_F || boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F){
+    if (boardCommState.commMode >= GTBCM_GYRO_ACC_FILTER_F){
         gyro_int_to_float(gyroRxFrame);
         filter_data(&rawRateData, &rawAccData, gyroTempData, &filteredData); //profile: this takes 2.45us to run with O3 optimization, before adding biquad at least
-    }
-    
-    if (boardCommState.commMode == GTBCM_GYRO_ACC_QUAT_FILTER_F || boardCommState.commMode == GTBCM_SETUP)
-    {
+
         //set flags and do quats in main loop
         //we have to fill the gyro data here though
         //add rate data for later usage in quats. This is reset in imu.c
