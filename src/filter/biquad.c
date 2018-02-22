@@ -40,13 +40,13 @@ void biquad_init(float filterCutFreq, biquad_axis_state_t *state, float refreshR
 			break;
 	}
 	//don't let these states be used until they're updated
-	__disable_irq();
+	//__disable_irq();
     state->a0 = b0 / a0;
     state->a1 = b1 / a0;
     state->a2 = b2 / a0;
     state->a3 = a1 / a0;
     state->a4 = a2 / a0;
-	__enable_irq();
+	//__enable_irq();
 
 	if (oldState != NULL)
 	{
