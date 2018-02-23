@@ -44,3 +44,4 @@ extern const gyro_device_config_t gyroConfig;
 extern float gyroRateMultiplier;
 extern float gyroAccMultiplier;
 extern void gyro_device_init(gyro_read_done_t doneFn);
+extern void gyro_device_read(gyroFrame_t* gyroRx);

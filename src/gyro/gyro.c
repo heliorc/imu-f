@@ -8,7 +8,6 @@
 #include "crc.h"
 #include "fft.h"
 
-volatile int calibratingGyro;
 volatile axisData_t gyroSum;
 volatile axisData_t gyroCalibrationTrim;
 volatile axisData_t rawAccData;
@@ -239,7 +238,6 @@ static void apply_gyro_acc_rotation(volatile axisData_t* rawData)
 
 static void gyro_int_to_float(gyroFrame_t* gyroRxFrame)
 {
-    static uint32_t gyroCalibrationCycles = 0;
     static int gyroLoopCounter = 0;
 
     if (gyroLoopCounter-- <= 0)
@@ -256,26 +254,6 @@ static void gyro_int_to_float(gyroFrame_t* gyroRxFrame)
         //RoomTemp_Offset = 25ºC
         //gyroTempMultiplier is gyro temp in C
         apply_gyro_acc_rotation(&rawAccData);
-    }
-
-    //doing in real time, might be better to move this to the main loop for processing, but we need to make sure it's done right
-    if (calibratingGyro)
-    {
-        if(gyroCalibrationCycles < CALIBRATION_CYCLES) //limit how many cycles we allow for calibration to minimize float error
-        {
-            gyroCalibrationCycles++;
-            gyroSum.x += rawRateData.x;
-            gyroSum.y += rawRateData.y;
-            gyroSum.z += rawRateData.z;
-        }
-        else
-        {
-            gyroCalibrationTrim.x = -gyroSum.x / (float)gyroCalibrationCycles;
-            gyroCalibrationTrim.y = -gyroSum.y / (float)gyroCalibrationCycles;
-            gyroCalibrationTrim.z = -gyroSum.z / (float)gyroCalibrationCycles;
-            calibratingGyro = 0; //calibration done, set to zero and calibration data will apear in next cycle.
-            gyroCalibrationCycles = 0;
-        }
     }
 
     //f*f+f is one operation on FPU
@@ -390,11 +368,28 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
     }
 }
 
+void gyro_calibrate(void) {
+    static uint32_t gyroCalibrationCycles = 0;    
+    gyroFrame_t rawGyroFrame;
+    while(gyroCalibrationCycles < CALIBRATION_CYCLES) //limit how many cycles we allow for calibration to minimize float error
+    {
+        gyro_device_read(&rawGyroFrame);
+        gyro_int_to_float(&rawGyroFrame);
+        gyroCalibrationCycles++;
+        gyroSum.x += (float)((int16_t)((rawGyroFrame.gyroX_H << 8) | rawGyroFrame.gyroX_L)) * gyroRateMultiplier;
+        gyroSum.y += (float)((int16_t)((rawGyroFrame.gyroY_H << 8) | rawGyroFrame.gyroY_L)) * gyroRateMultiplier;
+        gyroSum.z += (float)((int16_t)((rawGyroFrame.gyroZ_H << 8) | rawGyroFrame.gyroZ_L)) * gyroRateMultiplier;
+    }
+    gyroCalibrationTrim.x = -gyroSum.x / (float)gyroCalibrationCycles;
+    gyroCalibrationTrim.y = -gyroSum.y / (float)gyroCalibrationCycles;
+    gyroCalibrationTrim.z = -gyroSum.z / (float)gyroCalibrationCycles;
+    gyroCalibrationCycles = 0;
+}
+
 void gyro_init(void) 
 {
     init_orientation();
     gyroTempData = 0;
-    calibratingGyro = 0;    
     gyroSum.x = 0.0f;
     gyroSum.y = 0.0f;
     gyroSum.z = 0.0f;
