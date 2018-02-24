@@ -88,7 +88,7 @@ void board_comm_spi_callback_function(void)
 
     if ( bcRx.command == 0x63636363 )
     {
-        calibratingGyro = 1;
+        gyro_calibrate();
         bcRx.command = BC_NONE; //no command
     }
 
@@ -139,7 +139,7 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
                 reply->command = BC_IMUF_CALIBRATE;
             }
-            calibratingGyro=1;
+            gyro_calibrate();
         break;
         case BC_IMUF_REPORT_INFO:
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime

@@ -33,8 +33,7 @@ typedef struct gyro_settings_config {  //unpacked, aligned 4
 
 extern volatile gyro_settings_config_t gyroSettingsConfig;
 
-extern volatile int calibratingGyro;
-	 
 //called when new settings are sent
+extern void gyro_calibrate(void);
 extern void reset_matrix(void);
 extern void gyro_init(void); 	 extern void gyro_init(void);

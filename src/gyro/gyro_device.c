@@ -362,4 +362,6 @@ void gyro_device_init(gyro_read_done_t readFn)
     gpio_exti_init(GYRO_EXTI_PORT, GYRO_EXTI_PORT_SRC, GYRO_EXTI_PIN, GYRO_EXTI_PIN_SRC, GYRO_EXTI_LINE, EXTI_Trigger_Rising, GYRO_EXTI_IRQn, GYRO_EXTI_ISR_PRE_PRI, GYRO_EXTI_ISR_SUB_PRI);
 }
 
-
+void gyro_device_read(gyroFrame_t* gyroRx) {
+    //return curent gyro data inline in gyroRx
+}
