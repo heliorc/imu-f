@@ -22,6 +22,7 @@ typedef struct filteredData
     float tempC;
     float quaternion[4];
     uint32_t crc;
+    uint32_t tail;
 } __attribute__((__packed__)) filteredData_t;
 
 typedef struct gyro_settings_config {  //unpacked, aligned 4
