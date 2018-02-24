@@ -12,8 +12,8 @@
 
 typedef struct biquad_axis_state
 {
-    float a0, a1, a2, a3, a4;
-    float x1, x2, y1, y2;
+    volatile float a0, a1, a2, a3, a4;
+    volatile float x1, x2, y1, y2;
 } biquad_axis_state_t;
 
 typedef struct biquad_state
@@ -23,5 +23,5 @@ typedef struct biquad_state
     biquad_axis_state_t z;
 } biquad_state_t;
 
-extern void  biquad_init(float filterCutFreq, biquad_axis_state_t *newState, float refreshRateSeconds, uint32_t filterType, float bandwidth);
+extern void  biquad_init(float filterCutFreq, biquad_axis_state_t *newState, float refreshRateSeconds, uint32_t filterType, float bandwidth, biquad_axis_state_t *oldState);
 extern float biquad_update(float sample, biquad_axis_state_t *state);

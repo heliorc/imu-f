@@ -171,11 +171,12 @@ def configure_target(TARGET):
     FLASH_END    = str(0x08008000)
 
     #extra D flags
-    EXTRA_DEF_FLAGS = " -D__FPU_USED=1 -D__FPU_PRESENT=1 -DUSE_STDPERIPH_DRIVER"
+    EXTRA_DEF_FLAGS = " -std=c99 -D__FPU_USED=1 -D__FPU_PRESENT=1 -DUSE_STDPERIPH_DRIVER"
 
     #extra source files to include not in the below dirs
     SOURCE_FILES = [
-        this_dir + "/assembly/startup/startup_stm32f303xc.s"
+        this_dir + "/assembly/startup/startup_stm32f303xc.s",
+        LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/TransformFunctions/arm_bitreversal2.s"
     ]
 
     #All include dirs
