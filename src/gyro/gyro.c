@@ -361,7 +361,7 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
         //everyother is 16KHz
         if (everyOther-- <= 0)
         {
-            append_crc_to_data( (uint32_t *)memptr, (boardCommState.commMode >> 2));
+            append_crc_to_data( (uint32_t *)memptr, (boardCommState.commMode >> 2)-1);
             everyOther = 1; //reset khz counter
 
             //check if spi is done if not, return
