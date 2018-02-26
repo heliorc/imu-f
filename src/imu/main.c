@@ -41,6 +41,8 @@ int main(void)
     while(1)
     {
         update_quaternions();
+        #ifndef DEBUG
         update_fft();
+        #endif
     }
 }

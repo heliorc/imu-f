@@ -213,5 +213,6 @@ static void calculate_fft(float *fftData, float *rfftData, uint16_t fftLen, fft_
         fftResult->cen = CONSTRAIN( biquad_update( (fftWeightedSum / fftSum) - 1 , centerFrqFilt), NOTCH_MIN + 11, FFT_MAX_HZ);
 
     fftResult->cutoffFreq = CONSTRAIN(fftResult->cen - NOTCH_WIDTH, NOTCH_MIN, NOTCH_MAX);
-    fftResult->notchQ = NOTCH_APROX(fftResult->cen, fftResult->cutoffFreq);
+    fftResult->notchQ = NOTCH_APROX(fftResult->cen, fftResult->cutoffFreq) * filterConfig.dyn_gain;
+    
 }

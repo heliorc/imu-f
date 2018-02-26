@@ -17,12 +17,12 @@ typedef struct axisData
 
 typedef struct filteredData
 {
-    axisData_t rateData;
-    axisData_t accData;
-    float tempC;
-    float quaternion[4];
-    uint32_t crc;
-    uint32_t tail;
+    axisData_t rateData; //3
+    axisData_t accData;  //3
+    float tempC;         //1
+    float quaternion[4]; //4
+    uint32_t crc;        //1
+    uint32_t tail;       //1
 } __attribute__((__packed__)) filteredData_t;
 
 typedef struct gyro_settings_config {  //unpacked, aligned 4

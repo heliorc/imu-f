@@ -37,6 +37,7 @@ typedef struct filter_config {
     uint16_t i_pitch_lpf_hz;
     uint16_t i_roll_lpf_hz;
     uint16_t i_yaw_lpf_hz;
+    uint16_t i_dyn_gain;
     float pitch_q;
     float pitch_r;
     float roll_q;
@@ -46,6 +47,7 @@ typedef struct filter_config {
     float pitch_lpf_hz;
     float roll_lpf_hz;
     float yaw_lpf_hz;
+    float dyn_gain;
 } filter_config_t;
 
 extern filter_config_t filterConfig;

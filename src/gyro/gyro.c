@@ -290,14 +290,17 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
     static uint32_t accTracker = 8; //start at 7, so 8 is run first
     static volatile quaternion_buffer_t *quatBuffer = &(quatBufferA); //start working on this buffer
     //default rateDatafilteredData
-    uint8_t* memptr = (uint8_t*)&filteredData.rateData;
+    volatile uint8_t*  memptr8  = (uint8_t*)&filteredData.rateData;
+    volatile uint32_t* memptr32 = (uint32_t*)&filteredData.rateData;
 
     if (boardCommState.commMode == GTBCM_GYRO_ONLY_PASSTHRU) 
     {
-        memptr = (uint8_t*)&(gyroRxFrame->gyroX_H);
+        memptr8 = (uint8_t*)&(gyroRxFrame->gyroX_H);
+        memptr32 = (uint32_t*)&(gyroRxFrame->gyroX_H);
     } else if (boardCommState.commMode == GTBCM_GYRO_ACC_PASSTHRU) 
     {
-        memptr = (uint8_t*)&(gyroRxFrame->accAddress);
+        memptr8 = (uint8_t*)&(gyroRxFrame->accAddress);
+        memptr32 = (uint32_t*)&(gyroRxFrame->accAddress);
     }
 
     if (boardCommState.commMode >= GTBCM_GYRO_ACC_FILTER_F){
@@ -361,7 +364,7 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
         //everyother is 16KHz
         if (everyOther-- <= 0)
         {
-            append_crc_to_data( (uint32_t *)memptr, (boardCommState.commMode >> 2)-1);
+            append_crc_to_data_v( memptr32, (boardCommState.commMode >> 2)-1);
             everyOther = 1; //reset khz counter
 
             //check if spi is done if not, return
@@ -383,7 +386,7 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
 
             //send the filtered data to the device
             spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 
-            spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), memptr, bcRxPtr);
+            spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), memptr8, bcRxPtr);
             gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //a quick spike for EXTI
             gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0); //a quick spike for EXTI
         }

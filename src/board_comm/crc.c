@@ -16,14 +16,14 @@ void crc_config(void)
   CRC_SetPolynomial(0x04C11DB7);
 }
 
-inline void append_crc_to_data(uint32_t* data, uint32_t size)
+inline void append_crc_to_data_v(volatile uint32_t* data, uint32_t size)
 {
     data[size] = get_crc(data, size);;
 }
 
 #pragma GCC push_options
 #pragma GCC optimize ("O3")
-inline uint32_t get_crc(uint32_t* data, uint32_t size)
+inline uint32_t get_crc(volatile uint32_t* data, uint32_t size)
 {
     CRC_ResetDR(); //reset data register
     for(uint32_t x=0; x<size; x++ )

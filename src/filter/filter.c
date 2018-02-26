@@ -29,6 +29,7 @@ void filter_init(filter_type_t type)
 	biquad_init(filterConfig.roll_lpf_hz, &(lpfFilterStateRate.y), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH, NULL);
 	biquad_init(filterConfig.yaw_lpf_hz, &(lpfFilterStateRate.z), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH, NULL);
 
+	#ifndef DEBUG
 	memset((biquad_axis_state_t *)&axisX, 0, sizeof(axisX));
 	memset((biquad_axis_state_t *)&axisY, 0, sizeof(axisY));
 	memset((biquad_axis_state_t *)&axisZ, 0, sizeof(axisZ));
@@ -39,6 +40,7 @@ void filter_init(filter_type_t type)
     biquad_init(NOTCH_MAX, &axisZ, REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH, NULL);
 
 	init_fft();
+	#endif
 }
 
 void filter_init_defaults(void)
@@ -53,6 +55,7 @@ void filter_init_defaults(void)
 	filterConfig.i_pitch_lpf_hz  = 120;
 	filterConfig.i_roll_lpf_hz   = 120;
 	filterConfig.i_yaw_lpf_hz    = 120;
+	filterConfig.i_dyn_gain      = 20;
 	filterConfig.pitch_q         = 3000.0f;
 	filterConfig.pitch_r         = 88.0f;
 	filterConfig.roll_q          = 3000.0f;
@@ -62,6 +65,7 @@ void filter_init_defaults(void)
 	filterConfig.pitch_lpf_hz    = 120.0f;
 	filterConfig.roll_lpf_hz     = 120.0f;
 	filterConfig.yaw_lpf_hz      = 120.0f;
+	filterConfig.dyn_gain        = 10.00f;
 	filter_init(NO_ESTIMATION);
 }
 
@@ -82,6 +86,9 @@ void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAcc
 		filterConfig.pitch_lpf_hz   = (float)filterConfig.i_pitch_lpf_hz;
 		filterConfig.roll_lpf_hz    = (float)filterConfig.i_roll_lpf_hz;
 		filterConfig.yaw_lpf_hz     = (float)filterConfig.i_yaw_lpf_hz;
+		//filterConfig.dyn_gain       = powf(0.93649f, -(100.0f - (float)filterConfig.i_dyn_gain);
+		//filterConfig.dyn_gain       = powf(0.93325f, -(100.0f - (float)filterConfig.i_dyn_gain));
+		filterConfig.dyn_gain       = (float)(1001 - filterConfig.i_dyn_gain);
 		filter_init(NO_ESTIMATION);
 	}
 
@@ -89,16 +96,23 @@ void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAcc
 	filteredData->rateData.y = fast_kalman_pdate(1, gyroRateData->y);
 	filteredData->rateData.z = fast_kalman_pdate(2, gyroRateData->z);
 
+	#ifndef DEBUG
 	//collect data for the FFT straight from the Kalman
 	insert_gyro_data_for_fft(filteredData);
+	#endif
 
 	filteredData->rateData.x = biquad_update(filteredData->rateData.x, &(lpfFilterStateRate.x));
 	filteredData->rateData.y = biquad_update(filteredData->rateData.y, &(lpfFilterStateRate.y));
 	filteredData->rateData.z = biquad_update(filteredData->rateData.z, &(lpfFilterStateRate.z));
 
-	filteredData->rateData.x = biquad_update(filteredData->rateData.x, &axisX);
-	filteredData->rateData.y = biquad_update(filteredData->rateData.y, &axisY);
-	filteredData->rateData.z = biquad_update(filteredData->rateData.z, &axisZ);
+	#ifndef DEBUG
+	if(filterConfig.i_dyn_gain)
+	{
+		filteredData->rateData.x = biquad_update(filteredData->rateData.x, &axisX);
+		filteredData->rateData.y = biquad_update(filteredData->rateData.y, &axisY);
+		filteredData->rateData.z = biquad_update(filteredData->rateData.z, &axisZ);
+	}
+	#endif
 
 	//no need to filter ACC is used in quaternions
 	filteredData->accData.x  = gyroAccData->x;
