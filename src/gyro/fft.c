@@ -7,27 +7,6 @@
 #include "arm_math.h"
 #include "arm_common_tables.h"
 
-#define FFT_DATA_SET_SIZE 96
-//#define BQQ 0.7071067811865475f //butterworth 1/sqrt(2)
-#define BQQ 1.0f //butterworth 1/sqrt(2)
-
-typedef enum fftUpdateState
-{
-    FFT_STATE_CALCULATE_X = 0,
-    FFT_STATE_CALCULATE_X_DONE = 1,
-    FFT_STATE_CALCULATE_Y = 2,
-    FFT_STATE_CALCULATE_Y_DONE = 3,
-    FFT_STATE_CALCULATE_Z = 4,
-    FFT_STATE_CALCULATE_Z_DONE = 5,
-} fftUpdateState_t;
-
-typedef struct fft_data {
-    float max;
-    float cen;
-    float cutoffFreq;
-    float notchQ;
-} fft_data_t;
-
 volatile fftUpdateState_t fftUpdateState;
 
 static biquad_axis_state_t centerFrqFiltX;
@@ -161,7 +140,7 @@ void init_fft(void)
     //set pointer
     fftGyroDataPtr = 0;
 
-    //60 hz lowpass on center frequency changes, samples update at 333 Hz, BQQ makes this butterworth
+    //60 hz lowpass on center frequency changes, samples update at 333 Hz, BQQ makes this butterworth    
     memset(&centerFrqFiltX, 0, sizeof(centerFrqFiltX));
     memset(&centerFrqFiltY, 0, sizeof(centerFrqFiltY));
     memset(&centerFrqFiltZ, 0, sizeof(centerFrqFiltZ));

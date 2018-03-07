@@ -65,7 +65,7 @@ void filter_init_defaults(void)
 	filterConfig.pitch_lpf_hz    = 120.0f;
 	filterConfig.roll_lpf_hz     = 120.0f;
 	filterConfig.yaw_lpf_hz      = 120.0f;
-	filterConfig.dyn_gain        = 10.00f;
+	filterConfig.dyn_gain        = 20.0f;
 	filter_init(NO_ESTIMATION);
 }
 
@@ -88,7 +88,7 @@ void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAcc
 		filterConfig.yaw_lpf_hz     = (float)filterConfig.i_yaw_lpf_hz;
 		//filterConfig.dyn_gain       = powf(0.93649f, -(100.0f - (float)filterConfig.i_dyn_gain);
 		//filterConfig.dyn_gain       = powf(0.93325f, -(100.0f - (float)filterConfig.i_dyn_gain));
-		filterConfig.dyn_gain       = (float)(1001.0f - (float)filterConfig.i_dyn_gain);
+		filterConfig.dyn_gain       = (float)(100.0f - (float)filterConfig.i_dyn_gain);
 		filter_init(NO_ESTIMATION);
 	}
 
