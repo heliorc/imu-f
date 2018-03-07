@@ -6,9 +6,9 @@
 #define FFT_SIZE              32
 #define FFT_MIN_HZ            100 
 #define FFT_MAX_HZ            500 
-#define NOTCH_WIDTH           30 
-#define NOTCH_MIN             120 
-#define NOTCH_MAX             300 
+#define NOTCH_WIDTH           40 
+#define NOTCH_MIN             100 
+#define NOTCH_MAX             460 
 #define AXIS_AMOUNT           3
 #define FFT_BUFFS             2
 #define FFT_DATA_COLLECT_SIZE 42 //allow overflow room since FFT calcs aren't realtime

@@ -149,7 +149,9 @@ void insert_gyro_data_for_fft(filteredData_t* filteredData)
 
     //prevent overflow and circularize the buffer
 	if(fftGyroDataPtr==FFT_DATA_SET_SIZE)
+    {
 		fftGyroDataPtr = 0;
+    }
 
 }
 
@@ -165,7 +167,7 @@ void init_fft(void)
     memset(&centerFrqFiltZ, 0, sizeof(centerFrqFiltZ));
     biquad_init(60.0f, &centerFrqFiltX, 0.003003003f, FILTER_TYPE_LOWPASS, BQQ, NULL);
     biquad_init(60.0f, &centerFrqFiltY, 0.003003003f, FILTER_TYPE_LOWPASS, BQQ, NULL);
-    biquad_init(60.0f, &centerFrqFiltY, 0.003003003f, FILTER_TYPE_LOWPASS, BQQ, NULL);
+    biquad_init(60.0f, &centerFrqFiltZ, 0.003003003f, FILTER_TYPE_LOWPASS, BQQ, NULL);
 
     //set default  state for fft:
     fftUpdateState = FFT_STATE_CALCULATE_Z_DONE; // this will start caclulations going on axis X basically
@@ -175,10 +177,10 @@ void init_fft(void)
 
 static void calculate_fft(float *fftData, float *rfftData, uint16_t fftLen, fft_data_t* fftResult, biquad_axis_state_t* centerFrqFilt )
 {
-    unsigned int x;
-    float fftSum = 0;
-    float fftWeightedSum = 0;
-    float squaredData;
+    unsigned int x = 0;
+    float fftSum = 0.0f;
+    float fftWeightedSum = 0.0f;
+    float squaredData = 0.0f;
 
     //pointer to Sint for using in bitreversal
     arm_cfft_instance_f32 * Sint = &(fftInstance.Sint);
