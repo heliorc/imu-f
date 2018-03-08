@@ -48,6 +48,7 @@ typedef struct filter_config {
     float roll_lpf_hz;
     float yaw_lpf_hz;
     float dyn_gain;
+    filter_type_t filterType;
 } filter_config_t;
 
 extern filter_config_t filterConfig;
