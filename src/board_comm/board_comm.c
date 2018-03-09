@@ -154,11 +154,8 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
                 filterMode                     = command->param1;
                 gyroOrientation                = command->param2; //does nothing
                 filterConfig.i_pitch_q         = (command->param3 >> 16);
-                filterConfig.i_pitch_r         = (command->param3 & 0xFFFF);
                 filterConfig.i_roll_q          = (command->param4 >> 16);
-                filterConfig.i_roll_r          = (command->param4 & 0xFFFF);
                 filterConfig.i_yaw_q           = (command->param5 >> 16);
-                filterConfig.i_yaw_r           = (command->param5 & 0xFFFF);
                 filterConfig.i_pitch_lpf_hz    = (command->param6 >> 16);
                 filterConfig.i_roll_lpf_hz     = (command->param6 & 0xFFFF);
                 filterConfig.i_yaw_lpf_hz      = (command->param7 >> 16);
