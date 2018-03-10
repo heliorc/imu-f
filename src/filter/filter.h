@@ -13,6 +13,6 @@ extern biquad_axis_state_t axisY;
 extern biquad_axis_state_t axisZ;
 
 extern void allow_filter_init(void);
-extern void filter_init(filter_type_t type);
+extern void filter_init(void);
 extern void filter_init_defaults(void);
 extern void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAccData, float gyroTempData, filteredData_t* filteredData);
