@@ -34,10 +34,10 @@ void filter_init(filter_type_t type)
 	memset((biquad_axis_state_t *)&axisY, 0, sizeof(axisY));
 	memset((biquad_axis_state_t *)&axisZ, 0, sizeof(axisZ));
 
-    //init all of the notch biquads
-    biquad_init(NOTCH_MAX, &axisX, REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH, NULL);
-    biquad_init(NOTCH_MAX, &axisY, REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH, NULL);
-    biquad_init(NOTCH_MAX, &axisZ, REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH, NULL);
+	//init all of the notch biquads
+	biquad_init(NOTCH_MAX, &axisX, REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH, NULL);
+	biquad_init(NOTCH_MAX, &axisY, REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH, NULL);
+	biquad_init(NOTCH_MAX, &axisZ, REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH, NULL);
 
 	init_fft();
 	#endif
@@ -97,22 +97,19 @@ void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAcc
 	filteredData->rateData.z = fast_kalman_pdate(2, gyroRateData->z);
 
 	#ifndef DEBUG
-	//collect data for the FFT straight from the Kalman
-	insert_gyro_data_for_fft(filteredData);
-	#endif
-
-	filteredData->rateData.x = biquad_update(filteredData->rateData.x, &(lpfFilterStateRate.x));
-	filteredData->rateData.y = biquad_update(filteredData->rateData.y, &(lpfFilterStateRate.y));
-	filteredData->rateData.z = biquad_update(filteredData->rateData.z, &(lpfFilterStateRate.z));
-
-	#ifndef DEBUG
 	if(filterConfig.i_dyn_gain)
 	{
+		//collect data for the FFT straight from the Kalman
+		insert_gyro_data_for_fft(filteredData);
 		filteredData->rateData.x = biquad_update(filteredData->rateData.x, &axisX);
 		filteredData->rateData.y = biquad_update(filteredData->rateData.y, &axisY);
 		filteredData->rateData.z = biquad_update(filteredData->rateData.z, &axisZ);
 	}
 	#endif
+
+	filteredData->rateData.x = biquad_update(filteredData->rateData.x, &(lpfFilterStateRate.x));
+	filteredData->rateData.y = biquad_update(filteredData->rateData.y, &(lpfFilterStateRate.y));
+	filteredData->rateData.z = biquad_update(filteredData->rateData.z, &(lpfFilterStateRate.z));
 
 	//no need to filter ACC is used in quaternions
 	filteredData->accData.x  = gyroAccData->x;

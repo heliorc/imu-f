@@ -5,7 +5,7 @@
 
 fastKalman_t fastKalmanFilterStateRate[3];
 filter_type_t filterType;
-filter_config_t filterConfig;
+volatile filter_config_t filterConfig;
 
 void init_kalman(fastKalman_t *filter, float q, float r, float p, float intialValue)
 {

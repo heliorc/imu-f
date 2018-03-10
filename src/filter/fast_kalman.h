@@ -51,7 +51,7 @@ typedef struct filter_config {
     filter_type_t filterType;
 } filter_config_t;
 
-extern filter_config_t filterConfig;
+extern volatile filter_config_t filterConfig;
 
 extern fastKalman_t fastKalmanFilterStateRate[];
 
