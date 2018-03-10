@@ -50,7 +50,7 @@ typedef struct filter_config {
     float dyn_gain;
 } filter_config_t;
 
-extern filter_config_t filterConfig;
+extern volatile filter_config_t filterConfig;
 
 extern fastKalman_t fastKalmanFilterStateRate[];
 
