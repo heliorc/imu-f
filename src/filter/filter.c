@@ -46,7 +46,8 @@ void filter_init(void)
 
 void filter_init_defaults(void)
 {
-	allowFilterInit = 0;
+	//first run needs to init filters
+	allowFilterInit               = 1;
 	filterConfig.i_pitch_q        = 500;
 	filterConfig.i_roll_q         = 500;
 	filterConfig.i_yaw_q          = 350;

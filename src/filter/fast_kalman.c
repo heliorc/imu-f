@@ -29,7 +29,7 @@ void fast_kalman_init(void)
 float noiseEstimate(float data[], uint32_t size)
 {
     uint32_t i;
-    float sum = 0.0, sumOfSquares = 0.0, stdDev;
+    float sum = 0.0, sumOfSquares = 0.0f, stdDev;
     for (int i = size+1; i >= 0; i--)
     {
         sum += data[i];
