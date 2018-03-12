@@ -360,7 +360,7 @@ void fire_spi_send_ready()
         if (everyOther-- <= 0)
         {
             append_crc_to_data_v( memptr32, (boardCommState.commMode >> 2)-1);
-            everyOther = 1; //reset khz counter
+            everyOther = 0; //reset khz counter
 
             //check if spi is done if not, return
             //if it's not done for RESYNC_COUNTER counts in a row we reset the sync
