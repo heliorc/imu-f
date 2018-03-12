@@ -12,7 +12,7 @@ gyroFrame_t gyroTxFrame;
 uint8_t *gyroRxFramePtr;
 uint8_t *gyroTxFramePtr;
 
-volatile int gyroReadDone = 0;
+volatile int gyroSetupReadDone = 0;
 #define GYRO_READ_TIMEOUT 20
 
 float gyroRateMultiplier = GYRO_DPS_SCALE_2000;
@@ -36,21 +36,6 @@ static void gyro_cs_lo(void);
 static void gyro_cs_hi(void);
 static void gyro_spi_init(void);
 static void gyro_setup_exti_fn(gyroFrame_t* gyroRxFrame);
-
-static void super_error(uint32_t time)
-{
-    volatile int cat = 1;
-    single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
-    gpio_write_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, 0);
-    while(1)
-    {
-        cat++;
-        gpio_write_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, 1);
-        delay_ms(time);
-        gpio_write_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, 0);
-        delay_ms(time);
-    }
-}
 
 inline static void gyro_cs_lo(void)
 {
@@ -224,10 +209,11 @@ static int gyro_write_reg_setup(uint8_t reg, uint8_t data, uint8_t* returnedData
     gyroTxFrame.accAddress = reg;
     gyroTxFrame.accelX_H = data;
     //set read done check to 0
-    gyroReadDone = 0;
+    gyroSetupReadDone = 0;
     //start the dma transfer
     gyro_spi_transmit_receive(gyroTxFramePtr, gyroRxFramePtr, 2);
-    while(!gyroReadDone)
+
+    while(!gyroSetupReadDone)
     {
         if(millis() - timeoutCheck > GYRO_READ_TIMEOUT)
         {
@@ -336,7 +322,7 @@ static void gyro_configure(void)
 static void gyro_setup_exti_fn(gyroFrame_t* gyroRxFrame)
 {
     (void)(gyroRxFrame);
-    gyroReadDone = 1; //used for blocking reads
+    gyroSetupReadDone = 1; //used for blocking reads
 }
 
 void gyro_device_init(gyro_read_done_t readFn) 

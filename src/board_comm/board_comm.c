@@ -76,27 +76,17 @@ void start_listening(void)
     gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
 }
 
-void board_comm_spi_complete(void)
+inline void board_comm_spi_complete(void)
 {
     spiDoneFlag = 1;
-
     gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
-    //this takes 0.78us to run
-    //cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_SPI_RST_MSK);
 }
 
 void board_comm_spi_callback_function(void)
 {
 
-    if ( bcRx.command == 0x63636363 )
-    {
-        calibratingGyro = 1;
-        bcRx.command = BC_NONE; //no command
-    }
-
     board_comm_spi_complete(); //this needs to be called when the transaction is complete
 
-    //calibration won't work this way
     if ( (bcTx.command == BC_IMUF_LISTENING) && parse_imuf_command(&bcRx) )//we  were waiting for a command //we have a valid command
     {
         //command checks out
@@ -116,8 +106,6 @@ void board_comm_spi_callback_function(void)
     else 
     {
         //bad command, listen for another
-        //clear_imuf_command(&bcRx);
-        //clear_imuf_command(&bcTx);
         bcTx.command = BC_IMUF_LISTENING;
     }
 
