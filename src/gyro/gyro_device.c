@@ -130,7 +130,7 @@ static void gyro_spi_init(void)
     spiInitStruct.SPI_CPOL = SPI_CPOL_High;
     spiInitStruct.SPI_CPHA = SPI_CPHA_2Edge;
     spiInitStruct.SPI_NSS = SPI_NSS_Soft;
-    spiInitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
+    spiInitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
     spiInitStruct.SPI_FirstBit = SPI_FirstBit_MSB;
     spiInitStruct.SPI_CRCPolynomial = 7;
     SPI_Init(GYRO_SPI, &spiInitStruct);
@@ -142,7 +142,7 @@ static void gyro_spi_init(void)
 
     dmaInitStruct.DMA_M2M = DMA_M2M_Disable;
     dmaInitStruct.DMA_Mode = DMA_Mode_Normal;
-    dmaInitStruct.DMA_Priority = DMA_Priority_Medium;
+    dmaInitStruct.DMA_Priority = DMA_Priority_VeryHigh;
     dmaInitStruct.DMA_DIR = DMA_DIR_PeripheralDST;
 
     dmaInitStruct.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -157,6 +157,7 @@ static void gyro_spi_init(void)
 
     DMA_Init(GYRO_TX_DMA, &dmaInitStruct);
 
+    dmaInitStruct.DMA_Priority = DMA_Priority_High;
     dmaInitStruct.DMA_DIR = DMA_DIR_PeripheralSRC;
 
     DMA_Init(GYRO_RX_DMA, &dmaInitStruct);
@@ -204,8 +205,6 @@ void GYRO_EXTI_HANDLER(void)
     {
         //what reg do we want to read from? for ICM gyros, add 0x80 to read instead of write
         gyroTxFrame.accAddress = INVENS_RM_ACCEL_XOUT_H | 0x80;
-        //set cs pin
-        gyro_cs_lo();
         //start the dma transfer
         gyro_spi_transmit_receive(gyroTxFramePtr, gyroRxFramePtr, 15);
         //clear interrupt bit
@@ -226,8 +225,6 @@ static int gyro_write_reg_setup(uint8_t reg, uint8_t data, uint8_t* returnedData
     gyroTxFrame.accelX_H = data;
     //set read done check to 0
     gyroReadDone = 0;
-    //drive cs low to enable chip
-    gyro_cs_lo();
     //start the dma transfer
     gyro_spi_transmit_receive(gyroTxFramePtr, gyroRxFramePtr, 2);
     while(!gyroReadDone)

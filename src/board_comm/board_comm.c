@@ -69,6 +69,8 @@ void start_listening(void)
 {
     spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 
     append_crc_to_data_v((volatile uint32_t *)bcTxPtr, 11); //11 will put the crc at the location it needs to be which is imufCommand.crc
+    //this takes 0.78us to run
+    cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_SPI_RST_MSK);
     //this takes 1.19us to run
     spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), bcTxPtr, bcRxPtr);
     gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1);
@@ -80,7 +82,7 @@ void board_comm_spi_complete(void)
 
     gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0);
     //this takes 0.78us to run
-    cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_SPI_RST_MSK);
+    //cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_SPI_RST_MSK);
 }
 
 void board_comm_spi_callback_function(void)
@@ -114,8 +116,8 @@ void board_comm_spi_callback_function(void)
     else 
     {
         //bad command, listen for another
-        clear_imuf_command(&bcRx);
-        clear_imuf_command(&bcTx);
+        //clear_imuf_command(&bcRx);
+        //clear_imuf_command(&bcTx);
         bcTx.command = BC_IMUF_LISTENING;
     }
 

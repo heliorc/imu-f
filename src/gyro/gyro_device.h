@@ -40,6 +40,8 @@ typedef struct gyro_data {
 
 typedef void (*gyro_read_done_t)(gyroFrame_t* gyroRxFrame);
 
+extern gyroFrame_t gyroRxFrame;
+
 extern const gyro_device_config_t gyroConfig;
 extern float gyroRateMultiplier;
 extern float gyroAccMultiplier;

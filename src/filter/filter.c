@@ -28,19 +28,6 @@ void filter_init(filter_type_t type)
 	biquad_init(filterConfig.pitch_lpf_hz, &(lpfFilterStateRate.x), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH, NULL);
 	biquad_init(filterConfig.roll_lpf_hz, &(lpfFilterStateRate.y), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH, NULL);
 	biquad_init(filterConfig.yaw_lpf_hz, &(lpfFilterStateRate.z), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH, NULL);
-
-	#ifndef DEBUG
-	memset((biquad_axis_state_t *)&axisX, 0, sizeof(axisX));
-	memset((biquad_axis_state_t *)&axisY, 0, sizeof(axisY));
-	memset((biquad_axis_state_t *)&axisZ, 0, sizeof(axisZ));
-
-	//init all of the notch biquads
-	biquad_init(NOTCH_MAX, &axisX, REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH, NULL);
-	biquad_init(NOTCH_MAX, &axisY, REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH, NULL);
-	biquad_init(NOTCH_MAX, &axisZ, REFRESH_RATE, FILTER_TYPE_NOTCH, BIQUAD_BANDWIDTH, NULL);
-
-	init_fft();
-	#endif
 }
 
 void filter_init_defaults(void)
@@ -121,17 +108,6 @@ void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAcc
 	filteredData->rateData.x = fast_kalman_pdate(0, gyroRateData->x);
 	filteredData->rateData.y = fast_kalman_pdate(1, gyroRateData->y);
 	filteredData->rateData.z = fast_kalman_pdate(2, gyroRateData->z);
-
-	#ifndef DEBUG
-	if(filterConfig.i_dyn_gain)
-	{
-		//collect data for the FFT straight from the Kalman
-		insert_gyro_data_for_fft(filteredData);
-		filteredData->rateData.x = biquad_update(filteredData->rateData.x, &axisX);
-		filteredData->rateData.y = biquad_update(filteredData->rateData.y, &axisY);
-		filteredData->rateData.z = biquad_update(filteredData->rateData.z, &axisZ);
-	}
-	#endif
 
 	filteredData->rateData.x = biquad_update(filteredData->rateData.x, &(lpfFilterStateRate.x));
 	filteredData->rateData.y = biquad_update(filteredData->rateData.y, &(lpfFilterStateRate.y));
