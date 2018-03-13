@@ -4,7 +4,6 @@
 
 
 fastKalman_t fastKalmanFilterStateRate[3];
-filter_type_t filterType;
 volatile filter_config_t filterConfig;
 
 void init_kalman(fastKalman_t *filter, float q, float r, float p, float intialValue)
@@ -18,12 +17,11 @@ void init_kalman(fastKalman_t *filter, float q, float r, float p, float intialVa
     filter->gyroDfkfDataPtr = 0;  
 }
 
-void fast_kalman_init(filter_type_t type)
+void fast_kalman_init(void)
 {
-    filterType = type;
-	init_kalman(&fastKalmanFilterStateRate[0], filterConfig.pitch_q, filterConfig.pitch_r, filterConfig.pitch_q, 0.0f);
-	init_kalman(&fastKalmanFilterStateRate[1], filterConfig.roll_q,  filterConfig.roll_r,  filterConfig.roll_q,  0.0f);
-	init_kalman(&fastKalmanFilterStateRate[2], filterConfig.yaw_q,   filterConfig.yaw_r,   filterConfig.yaw_q,   0.0f);
+	init_kalman(&fastKalmanFilterStateRate[0], filterConfig.pitch_q, 88.0f, filterConfig.pitch_q, 0.0f);
+	init_kalman(&fastKalmanFilterStateRate[1], filterConfig.roll_q,  88.0f, filterConfig.roll_q,  0.0f);
+	init_kalman(&fastKalmanFilterStateRate[2], filterConfig.yaw_q,   88.0f, filterConfig.yaw_q,   0.0f);
 }
 
 #pragma GCC push_options
@@ -31,7 +29,7 @@ void fast_kalman_init(filter_type_t type)
 float noiseEstimate(float data[], uint32_t size)
 {
     uint32_t i;
-    float sum = 0.0, sumOfSquares = 0.0, stdDev;
+    float sum = 0.0, sumOfSquares = 0.0f, stdDev;
     for (int i = size+1; i >= 0; i--)
     {
         sum += data[i];
@@ -63,7 +61,7 @@ float distanceEstimate(float data[], uint32_t size)
 	return (range * 0.001f);
 }
 
-static void _fast_kalman_pdate(fastKalman_t *axisFilter, float input)
+static void _fast_kalman_update(fastKalman_t *axisFilter, float input)
 {
     //project the state ahead using acceleration
     axisFilter->x += (axisFilter->x - axisFilter->lastX);
@@ -80,15 +78,15 @@ static void _fast_kalman_pdate(fastKalman_t *axisFilter, float input)
 	axisFilter->p = (1.0f - axisFilter->k) * axisFilter->p;
 }
 
-float fast_kalman_pdate(filterAxisTypedef_t axis, float input)
+float fast_kalman_update(filterAxisTypedef_t axis, float input, filter_type_t filterType)
 {
     if (filterType == STD_DEV_ESTIMATION) {
-        fastKalmanFilterStateRate[axis].r = noiseEstimate(fastKalmanFilterStateRate[axis].gyroDfkfData, 6);
+        fastKalmanFilterStateRate[axis].r = noiseEstimate(fastKalmanFilterStateRate[axis].gyroDfkfData, filterConfig.filterWindow[axis]);
     } else if (filterType == DISTANCE_ESTIMATION) {
-        fastKalmanFilterStateRate[axis].r = distanceEstimate(fastKalmanFilterStateRate[axis].gyroDfkfData, 6);
-    } 
+        fastKalmanFilterStateRate[axis].r = distanceEstimate(fastKalmanFilterStateRate[axis].gyroDfkfData, filterConfig.filterWindow[axis]);
+    }
     fastKalmanFilterStateRate[axis].gyroDfkfData[fastKalmanFilterStateRate[axis].gyroDfkfDataPtr] = input;
-    _fast_kalman_pdate(&fastKalmanFilterStateRate[axis], input);
+    _fast_kalman_update(&fastKalmanFilterStateRate[axis], input);
     fastKalmanFilterStateRate[axis].gyroDfkfDataPtr++;
 	if (fastKalmanFilterStateRate[axis].gyroDfkfDataPtr > 5)
     {

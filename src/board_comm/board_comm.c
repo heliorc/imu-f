@@ -151,18 +151,18 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
         case BC_IMUF_SETUP:
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime
             {
-                filterMode                     = command->param1;
-                gyroOrientation                = command->param2; //does nothing
-                filterConfig.i_pitch_q         = (command->param3 >> 16);
-                filterConfig.i_roll_q          = (command->param4 >> 16);
-                filterConfig.i_yaw_q           = (command->param5 >> 16);
-                filterConfig.i_pitch_r         = 88;
-                filterConfig.i_roll_r          = 88;
-                filterConfig.i_yaw_r           = 88;
-                filterConfig.i_pitch_lpf_hz    = (command->param6 >> 16);
-                filterConfig.i_roll_lpf_hz     = (command->param6 & 0xFFFF);
-                filterConfig.i_yaw_lpf_hz      = (command->param7 >> 16);
-                filterConfig.i_dyn_gain        = (command->param7 & 0xFFFF);
+                filterMode                       = command->param1;
+                gyroOrientation                  = command->param2; //does nothing
+                filterConfig.i_pitch_q           = (command->param3 >> 16);
+                filterConfig.i_roll_q            = (command->param4 >> 16);
+                filterConfig.i_yaw_q             = (command->param5 >> 16);
+                filterConfig.filterWindow[PITCH] = (command->param3 & 0xFFFF);
+                filterConfig.filterWindow[ROLL]  = (command->param4 & 0xFFFF);
+                filterConfig.filterWindow[YAW]   = (command->param5 & 0xFFFF);
+                filterConfig.i_pitch_lpf_hz      = (command->param6 >> 16);
+                filterConfig.i_roll_lpf_hz       = (command->param6 & 0xFFFF);
+                filterConfig.i_yaw_lpf_hz        = (command->param7 >> 16);
+                filterConfig.i_dyn_gain          = (command->param7 & 0xFFFF);
                 
                 gyroSettingsConfig.orientation = (uint32_t)((uint16_t)(command->param8 & 0xFFFF));
                 gyroSettingsConfig.smallX      = (int32_t)((int16_t)(command->param8 >> 16));
