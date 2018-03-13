@@ -6,20 +6,36 @@
 #define FFT_SIZE              32
 #define FFT_MIN_HZ            100 
 #define FFT_MAX_HZ            500 
-#define NOTCH_WIDTH           100 
-#define NOTCH_MIN             120 
-#define NOTCH_MAX             200 
+#define NOTCH_WIDTH           40 
+#define NOTCH_MIN             100 
+#define NOTCH_MAX             460 
 #define AXIS_AMOUNT           3
 #define FFT_BUFFS             2
 #define FFT_DATA_COLLECT_SIZE 42 //allow overflow room since FFT calcs aren't realtime
 #define NOTCH_APROX(cen, max) ((float)(max * cen) / ((float)(cen - max) * (float)(cen + max)))
 
-extern void arm_bitreversal_32(uint32_t * pSrc, const uint16_t bitRevLen, const uint16_t * pBitRevTable);
-extern void stage_rfft_f32(arm_rfft_fast_instance_f32 * S, float32_t * p, float32_t * pOut);
-extern void arm_cfft_radix8by2_f32( arm_cfft_instance_f32 * S, float32_t * p1);
-extern void arm_cfft_radix8by4_f32( arm_cfft_instance_f32 * S, float32_t * p1);
-extern void arm_radix8_butterfly_f32(float32_t * pSrc, uint16_t fftLen, const float32_t * pCoef, uint16_t twidCoefModifier);
-extern void arm_cmplx_mag_f32(float32_t * pSrc, float32_t * pDst, uint32_t numSamples);
+#define FFT_DATA_SET_SIZE 96
+//#define BQQ 0.7071067811865475f //butterworth 1/sqrt(2)
+#define BQQ 1.0f //butterworth 1/sqrt(2)
 
-void init_fft(void);
-void update_fft(void);
+typedef enum fftUpdateState
+{
+    FFT_STATE_CALCULATE_X = 0,
+    FFT_STATE_CALCULATE_X_DONE = 1,
+    FFT_STATE_CALCULATE_Y = 2,
+    FFT_STATE_CALCULATE_Y_DONE = 3,
+    FFT_STATE_CALCULATE_Z = 4,
+    FFT_STATE_CALCULATE_Z_DONE = 5,
+} fftUpdateState_t;
+
+typedef struct fft_data {
+    float max;
+    float cen;
+    float cutoffFreq;
+    float notchQ;
+} fft_data_t;
+
+extern void init_fft(void);
+extern void update_fft(void);
+extern void increment_fft_state(void);
+extern void insert_gyro_data_for_fft(filteredData_t* filteredData);
