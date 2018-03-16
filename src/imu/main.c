@@ -5,7 +5,6 @@
 #include "gyro.h"
 #include "filter.h"
 #include "crc.h"
-#include "fft.h"
 
 #include "scheduler.h"
 

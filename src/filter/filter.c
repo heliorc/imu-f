@@ -1,8 +1,9 @@
 #include "includes.h"
 #include "biquad.h"
-#include "fft.h"
 #include "filter.h"
 #include "fast_kalman.h"
+#include "imu.h" //for CONSTRAIN, doesn't really belong there, but oh well
+//We should move constrain to utils.h and include it in includes
 
 biquad_state_t lpfFilterStateRate;
 
@@ -18,9 +19,9 @@ void allow_filter_init(void)
 	allowFilterInit = 1;
 }
 
-void filter_init(filter_type_t type)
+void filter_init(void)
 {
-	fast_kalman_init(type);
+	fast_kalman_init();
 	memset(&(lpfFilterStateRate.x), 0, sizeof(lpfFilterStateRate.x));
 	memset(&(lpfFilterStateRate.y), 0, sizeof(lpfFilterStateRate.y));
 	memset(&(lpfFilterStateRate.z), 0, sizeof(lpfFilterStateRate.z));
@@ -32,41 +33,25 @@ void filter_init(filter_type_t type)
 
 void filter_init_defaults(void)
 {
-	allowFilterInit = 0;
-	filterConfig.i_pitch_q       = 3000;
-	filterConfig.i_pitch_r       = 88;
-	filterConfig.i_roll_q        = 3000;
-	filterConfig.i_roll_r        = 88;
-	filterConfig.i_yaw_q         = 1500;
-	filterConfig.i_yaw_r         = 88;
-	filterConfig.i_pitch_lpf_hz  = 120;
-	filterConfig.i_roll_lpf_hz   = 120;
-	filterConfig.i_yaw_lpf_hz    = 120;
-	filterConfig.i_dyn_gain      = 20;
-	filterConfig.pitch_q         = 3000.0f;
-	filterConfig.pitch_r         = 88.0f;
-	filterConfig.roll_q          = 3000.0f;
-	filterConfig.roll_r          = 88.0f;
-	filterConfig.yaw_q           = 1500.0f;
-	filterConfig.yaw_r           = 88.0f;
-	filterConfig.pitch_lpf_hz    = 120.0f;
-	filterConfig.roll_lpf_hz     = 120.0f;
-	filterConfig.yaw_lpf_hz      = 120.0f;
-	filterConfig.dyn_gain        = 20.0f;
-
-	//test filter types
-	if(filterConfig.i_pitch_q & 0x01)
-	{
-		filter_init(STD_DEV_ESTIMATION);
-	}
-	else if(filterConfig.i_pitch_q & 0x02)
-	{
-		filter_init(DISTANCE_ESTIMATION);
-	}
-	else
-	{
-		filter_init(NO_ESTIMATION);
-	}
+	allowFilterInit                  = 1;
+	filterConfig.i_pitch_q           = 500;
+	filterConfig.i_pitch_w           = 6;
+	filterConfig.i_roll_q            = 500;
+	filterConfig.i_roll_w            = 6;
+	filterConfig.i_yaw_q             = 350;
+	filterConfig.i_yaw_w             = 6;
+	filterConfig.i_pitch_lpf_hz      = 150;
+	filterConfig.i_roll_lpf_hz       = 150;
+	filterConfig.i_yaw_lpf_hz        = 150;
+	filterConfig.pitch_q             = 500.0f;
+	filterConfig.roll_q              = 500.0f;
+	filterConfig.yaw_q               = 350.0f;
+	filterConfig.pitch_lpf_hz        = 120.0f;
+	filterConfig.roll_lpf_hz         = 120.0f;
+	filterConfig.yaw_lpf_hz          = 120.0f;
+	filterConfig.filterWindow[PITCH] = 6;
+	filterConfig.filterWindow[ROLL]  = 6;
+	filterConfig.filterWindow[YAW]   = 6;
 		
 }
 
@@ -79,35 +64,39 @@ void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAcc
 		allowFilterInit = 0;
 		//convert the ints to floats
 		filterConfig.pitch_q        = (float)filterConfig.i_pitch_q;
-		filterConfig.pitch_r        = (float)filterConfig.i_pitch_r;
 		filterConfig.roll_q         = (float)filterConfig.i_roll_q;
-		filterConfig.roll_r         = (float)filterConfig.i_roll_r;
 		filterConfig.yaw_q          = (float)filterConfig.i_yaw_q;
-		filterConfig.yaw_r          = (float)filterConfig.i_yaw_r;
 		filterConfig.pitch_lpf_hz   = (float)filterConfig.i_pitch_lpf_hz;
 		filterConfig.roll_lpf_hz    = (float)filterConfig.i_roll_lpf_hz;
 		filterConfig.yaw_lpf_hz     = (float)filterConfig.i_yaw_lpf_hz;
-		//filterConfig.dyn_gain       = powf(0.93649f, -(100.0f - (float)filterConfig.i_dyn_gain);
-		//filterConfig.dyn_gain       = powf(0.93325f, -(100.0f - (float)filterConfig.i_dyn_gain));
-		filterConfig.dyn_gain       = (float)(100.0f - (float)filterConfig.i_dyn_gain);
-		//test filter types
-		if(filterConfig.i_pitch_q & 0x01)
+
+		for (int x=0; x<3; x++)
 		{
-			filter_init(STD_DEV_ESTIMATION);
+			//check window size for each axis
+			if (filterConfig.filterWindow[x])
+			{
+				if(filterConfig.filterWindow[x] > 100)
+				{
+					filterConfig.filterWindow[x] = CONSTRAIN(filterConfig.filterWindow[x] - 100, 6, 100);
+					filterConfig.filterType[x] = DISTANCE_ESTIMATION;
+				}
+				else
+				{
+					filterConfig.filterWindow[x] = CONSTRAIN(filterConfig.filterWindow[x], 6, 100);
+					filterConfig.filterType[x] = STD_DEV_ESTIMATION;
+				}
+			}
+			else
+			{
+				filterConfig.filterType[x] = NO_ESTIMATION;
+			}
 		}
-		else if(filterConfig.i_pitch_q & 0x02)
-		{
-			filter_init(DISTANCE_ESTIMATION);
-		}
-		else
-		{
-			filter_init(NO_ESTIMATION);
-		}
+		filter_init();
 	}
 
-	filteredData->rateData.x = fast_kalman_pdate(0, gyroRateData->x);
-	filteredData->rateData.y = fast_kalman_pdate(1, gyroRateData->y);
-	filteredData->rateData.z = fast_kalman_pdate(2, gyroRateData->z);
+	filteredData->rateData.x = fast_kalman_update(ROLL, gyroRateData->x, filterConfig.filterType[ROLL]);
+	filteredData->rateData.y = fast_kalman_update(PITCH, gyroRateData->y, filterConfig.filterType[PITCH]);
+	filteredData->rateData.z = fast_kalman_update(YAW, gyroRateData->z, filterConfig.filterType[YAW]);
 
 	filteredData->rateData.x = biquad_update(filteredData->rateData.x, &(lpfFilterStateRate.x));
 	filteredData->rateData.y = biquad_update(filteredData->rateData.y, &(lpfFilterStateRate.y));

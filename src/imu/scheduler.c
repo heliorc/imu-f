@@ -15,6 +15,10 @@ inline void scheduler_run(void)
     gyroDataReadDone = 0; //reset read flag to prepare for next read
     run_gyro_filters();
     fire_spi_send_ready();
-    increment_acc_tracker();
-    update_quaternions();
+    if(loopDivider)
+    {
+        //0 is 32 KHz which disabled quaternions
+        increment_acc_tracker();
+        update_quaternions();
+    }
 }

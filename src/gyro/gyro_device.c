@@ -1,7 +1,6 @@
 #include "includes.h"
 #include "invensense_register_map.h"
 #include "gyro_device.h"
-#include "fft.h"
 
 //multiple configs can go here, just need one right now
 const gyro_device_config_t gyroConfig = {1, 0, INVENS_CONST_GYRO_FCB_32_8800, 0, INVENS_CONST_ACC_FCB_ENABLE, 8};
