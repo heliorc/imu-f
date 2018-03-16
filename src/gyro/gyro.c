@@ -489,7 +489,7 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame)
                 quatBuffer = &quatBufferB;
                 break;
             case 10:
-                increment_fft_state();
+                //increment_fft_state();
                 break;
             case 33:
                 //reset acc tracker

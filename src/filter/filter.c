@@ -52,7 +52,6 @@ void filter_init_defaults(void)
 	filterConfig.filterWindow[PITCH] = 6;
 	filterConfig.filterWindow[ROLL]  = 6;
 	filterConfig.filterWindow[YAW]   = 6;
-		
 }
 
 void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAccData, float gyroTempData, filteredData_t* filteredData)
