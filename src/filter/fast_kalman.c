@@ -9,13 +9,12 @@ volatile filter_config_t filterConfig;
 
 void init_kalman(fastKalman_t *filter, float q, float r, float p, float intialValue)
 {
+	memset(filter, 0, sizeof(fastKalman_t));
     filter->q     = q * 0.001f; //add multiplier to make tuning easier
 	filter->r     = r;    //add multiplier to make tuning easier
 	filter->p     = p;    //add multiplier to make tuning easier
 	filter->x     = intialValue;   //set intial value, can be zero if unknown
 	filter->lastX = intialValue;   //set intial value, can be zero if unknown
-	filter->k     = 0.0f;          //kalman gain,
-    filter->gyroDfkfDataPtr = 0;  
 }
 
 void fast_kalman_init(void)
@@ -27,18 +26,34 @@ void fast_kalman_init(void)
 
 #pragma GCC push_options
 #pragma GCC optimize ("O3")
-float noiseEstimate(float data[], uint32_t size)
+float variance(float data[], int size)
 {
-    uint32_t i;
-   	float sum = 0.0f, sumOfSquares = 0.0f, stdDev;
-    for (int i = size+1; i >= 0; i--)
+    float inverseN = 1.0f / (float)size;
+    float sum = 0.0f, sum1 = 0.0f;
+    float average, variance;
+    int i;
+
+    // sum of all elephants
+    for (i = size-1; i >= 0; i--)
     {
         sum += data[i];
-        sumOfSquares += powf(data[i], 2);
     }
+    average = sum * inverseN;
 
-    arm_sqrt_f32((sumOfSquares-powf(sum, 2))/(float)size, &stdDev);
-    return (stdDev * 0.003f);
+    // find very ants
+    for (i = size-1; i >= 0; i--)
+    {
+        sum1 += ((data[i] - average) * (data[i] - average));
+    }
+    variance = sum1 * inverseN;
+
+    return variance;
+    
+}
+
+float std_deviation(float data[], uint32_t size)
+{
+    return sqrt( variance(data, size) );
 }
 
 float distanceEstimate(float data[], uint32_t size)
@@ -81,18 +96,32 @@ static void _fast_kalman_update(fastKalman_t *axisFilter, float input)
 
 float fast_kalman_update(filterAxisTypedef_t axis, float input, filter_type_t filterType)
 {
-    if (filterType == STD_DEV_ESTIMATION) {
-        fastKalmanFilterStateRate[axis].r = noiseEstimate(fastKalmanFilterStateRate[axis].gyroDfkfData, filterConfig.filterWindow[axis]);
-    } else if (filterType == DISTANCE_ESTIMATION) {
-        fastKalmanFilterStateRate[axis].r = distanceEstimate(fastKalmanFilterStateRate[axis].gyroDfkfData, filterConfig.filterWindow[axis]);
-    } 
-    fastKalmanFilterStateRate[axis].gyroDfkfData[fastKalmanFilterStateRate[axis].gyroDfkfDataPtr] = input;
-    _fast_kalman_update(&fastKalmanFilterStateRate[axis], input);
-    fastKalmanFilterStateRate[axis].gyroDfkfDataPtr++;
-	if (fastKalmanFilterStateRate[axis].gyroDfkfDataPtr > filterConfig.filterWindow[axis]-1)
-    {
-		fastKalmanFilterStateRate[axis].gyroDfkfDataPtr=0;
+	switch (filterType)
+	{
+		case STD_DEV_ESTIMATION:
+			fastKalmanFilterStateRate[axis].r = std_deviation(fastKalmanFilterStateRate[axis].gyroDfkfData, filterConfig.filterWindow[axis]) * 0.001f;
+			break;
+		case VARIANCE_ESTIMATION:
+			fastKalmanFilterStateRate[axis].r = variance(fastKalmanFilterStateRate[axis].gyroDfkfData, filterConfig.filterWindow[axis]) * 0.001f;
+			break;
+		case DISTANCE_ESTIMATION:
+			fastKalmanFilterStateRate[axis].r = distanceEstimate(fastKalmanFilterStateRate[axis].gyroDfkfData, filterConfig.filterWindow[axis]);
+			break;
+		default:
+		break;
+	}
+
+    if (filterType != NO_ESTIMATION)
+	{
+		fastKalmanFilterStateRate[axis].gyroDfkfData[fastKalmanFilterStateRate[axis].gyroDfkfDataPtr++] = input;
+		if (fastKalmanFilterStateRate[axis].gyroDfkfDataPtr > filterConfig.filterWindow[axis]-1)
+		{
+			fastKalmanFilterStateRate[axis].gyroDfkfDataPtr=0;
+		}
     }
+
+    _fast_kalman_update(&fastKalmanFilterStateRate[axis], input);
+
     return fastKalmanFilterStateRate[axis].x;
 }
 #pragma GCC pop_options

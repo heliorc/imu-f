@@ -24,7 +24,8 @@ typedef enum filter_type
 {
     NO_ESTIMATION = 0,
     STD_DEV_ESTIMATION = 1,
-    DISTANCE_ESTIMATION = 2
+    DISTANCE_ESTIMATION = 2,
+    VARIANCE_ESTIMATION = 3
 } filter_type_t;
 
 typedef struct filter_config {

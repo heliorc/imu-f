@@ -74,14 +74,19 @@ void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAcc
 			//check window size for each axis
 			if (filterConfig.filterWindow[x])
 			{
-				if(filterConfig.filterWindow[x] > 100)
+				if(filterConfig.filterWindow[x] > 200)
 				{
-					filterConfig.filterWindow[x] = CONSTRAIN(filterConfig.filterWindow[x] - 100, 6, 100);
+					filterConfig.filterWindow[x] = CONSTRAIN(filterConfig.filterWindow[x] - 200, 6, 30);
+					filterConfig.filterType[x] = VARIANCE_ESTIMATION;
+				}
+				else if(filterConfig.filterWindow[x] > 100)
+				{
+					filterConfig.filterWindow[x] = CONSTRAIN(filterConfig.filterWindow[x] - 100, 6, 30);
 					filterConfig.filterType[x] = DISTANCE_ESTIMATION;
 				}
 				else
 				{
-					filterConfig.filterWindow[x] = CONSTRAIN(filterConfig.filterWindow[x], 6, 100);
+					filterConfig.filterWindow[x] = CONSTRAIN(filterConfig.filterWindow[x], 6, 30);
 					filterConfig.filterType[x] = STD_DEV_ESTIMATION;
 				}
 			}
