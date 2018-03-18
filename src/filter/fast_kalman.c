@@ -53,7 +53,9 @@ float variance(float data[], int size)
 
 float std_deviation(float data[], uint32_t size)
 {
-    return sqrt( variance(data, size) );
+	float stdDev;
+    arm_sqrt_f32( variance(data, size) , &stdDev);
+    return stdDev;
 }
 
 float distanceEstimate(float data[], uint32_t size)
