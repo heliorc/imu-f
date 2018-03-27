@@ -22,7 +22,7 @@ void init_quaternions(void){
    buffer_init(&quatBufferB);
 }
 
-void process(volatile quaternion_buffer_t *quatBuffer) {
+void process(volatile quaternion_buffer_t *quatBuffer, uint32_t step) {
     if (isnan(quatBuffer->vector.x) || 
         isnan(quatBuffer->vector.y) || 
         isnan(quatBuffer->vector.z) || 
@@ -31,21 +31,61 @@ void process(volatile quaternion_buffer_t *quatBuffer) {
         isnan(quatBuffer->accVector.z)) {
 		return;
 	}
-    update_imu(&(quatBuffer->vector), &(quatBuffer->accVector));
+    update_imu(&(quatBuffer->vector), &(quatBuffer->accVector), step);
 }
 
 void update_quaternions(void)
 {
     switch (quatState)
     {
-        case QUAT_PROCESS_BUFFER_0:
-            process(&quatBufferA);
+        case QUAT_PROCESS_BUFFER_0_0:
+            process(&quatBufferA, 0);
+            quatState++;      
+        break;
+        case QUAT_PROCESS_BUFFER_0_1:
+            process(&quatBufferA, 1);
+            quatState++;      
+        break;
+        case QUAT_PROCESS_BUFFER_0_2:
+            process(&quatBufferA, 2);
+            quatState++;      
+        break;
+        case QUAT_PROCESS_BUFFER_0_3:
+            process(&quatBufferA, 3);
+            quatState++;      
+        break;
+        case QUAT_PROCESS_BUFFER_0_4:
+            process(&quatBufferA, 4);
+            quatState++;      
+        break;
+        case QUAT_PROCESS_BUFFER_0_5:
+            process(&quatBufferA, 5);
             quatState = QUAT_DONE_BUFFER_0;
             break;
-        case QUAT_PROCESS_BUFFER_1:        
-            process(&quatBufferB);
+        case QUAT_PROCESS_BUFFER_1_0:        
+            process(&quatBufferB, 0);
+            quatState++;      
+        break;
+        case QUAT_PROCESS_BUFFER_1_1:        
+            process(&quatBufferB, 1);
+            quatState++;      
+        break;
+        case QUAT_PROCESS_BUFFER_1_2:        
+            process(&quatBufferB, 2);
+            quatState++;      
+        break;
+        case QUAT_PROCESS_BUFFER_1_3:        
+            process(&quatBufferB, 3);
+            quatState++;      
+        break;
+        case QUAT_PROCESS_BUFFER_1_4:        
+            process(&quatBufferB, 4);
+            quatState++;      
+        break;
+        case QUAT_PROCESS_BUFFER_1_5:        
+            process(&quatBufferB, 5);
             quatState = QUAT_DONE_BUFFER_1;      
-            break;
+        break;
         case QUAT_NO_DATA:
         case QUAT_DONE_BUFFER_0:
         case QUAT_DONE_BUFFER_1:

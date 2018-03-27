@@ -5,7 +5,8 @@
 #include "gyro.h"
 #include "filter.h"
 #include "crc.h"
-#include "fft.h"
+
+#include "scheduler.h"
 
 int main(void)
 {
@@ -40,9 +41,6 @@ int main(void)
     //quaternions stuff happens in the main loop here
     while(1)
     {
-        update_quaternions();
-        //#ifndef DEBUG
-        //update_fft();
-        //#endif
+        scheduler_run();
     }
 }
