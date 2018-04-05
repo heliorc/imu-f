@@ -15,6 +15,15 @@ inline void scheduler_run(void)
     gyroDataReadDone = 0; //reset read flag to prepare for next read
     run_gyro_filters();
     fire_spi_send_ready();
+    if (bcRx.command == BC_IMUF_CALIBRATE)
+    {
+        //check CRC!
+        //if (parse_imuf_command(&bcRx))
+        //{
+            calibratingGyro=1;
+        //}
+        bcRx.command = 0;
+    }
     if(loopDivider)
     {
         //0 is 32 KHz which disabled quaternions

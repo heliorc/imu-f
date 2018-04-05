@@ -86,7 +86,7 @@ void board_comm_spi_callback_function(void)
 
     board_comm_spi_complete(); //this needs to be called when the transaction is complete
 
-    if ( (bcTx.command == BC_IMUF_LISTENING) && parse_imuf_command(&bcRx) )//we  were waiting for a command //we have a valid command
+    if ( ( (boardCommState.commMode != GTBCM_SETUP) || (bcTx.command == BC_IMUF_LISTENING) ) && parse_imuf_command(&bcRx) )//we  were waiting for a command //we have a valid command
     {
         //command checks out
         //run the command and generate the reply
