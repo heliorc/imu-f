@@ -282,8 +282,9 @@ void gyro_int_to_float(gyroFrame_t* gyroRxFrame)
 
     //f*f+f is one operation on FPU
     rawRateData.x = (float)((int16_t)((gyroRxFrame->gyroX_H << 8) | gyroRxFrame->gyroX_L)) * gyroRateMultiplier + gyroCalibrationTrim.x;
-	rawRateData.y = (float)((int16_t)((gyroRxFrame->gyroY_H << 8) | gyroRxFrame->gyroY_L)) * gyroRateMultiplier + gyroCalibrationTrim.y;
-	rawRateData.z = (float)((int16_t)((gyroRxFrame->gyroZ_H << 8) | gyroRxFrame->gyroZ_L)) * gyroRateMultiplier + gyroCalibrationTrim.z;
+    rawRateData.y = (float)((int16_t)((gyroRxFrame->gyroY_H << 8) | gyroRxFrame->gyroY_L)) * gyroRateMultiplier + gyroCalibrationTrim.y;
+    rawRateData.z = (float)((int16_t)((gyroRxFrame->gyroZ_H << 8) | gyroRxFrame->gyroZ_L)) * gyroRateMultiplier + gyroCalibrationTrim.z;
+
     apply_gyro_acc_rotation(&rawRateData);
 }
 
