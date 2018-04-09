@@ -86,10 +86,12 @@ static void build_rotation_matrix(int x, int y, int z)
 
 void lookupAndBuildRotationMatrix(uint16_t orientation, int x, int y, int z) {
     if (orientation != CUSTOM) {
+        int multiplier = orientation - 8;            
+        
         if (orientation > CW315){
             x = 180;
+            multiplier -=4;
         if (!z) {
-            int multiplier = orientation - 8;            
             z = (90 * multiplier) + 45;
         }
     }
