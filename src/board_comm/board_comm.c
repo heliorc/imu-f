@@ -100,7 +100,7 @@ void board_comm_spi_callback_function(void)
         boardCommState.bufferSize = filterMode;
         boardCommState.commMode   = filterMode;
         allow_filter_init();
-        reset_matrix(); //reset oreintation matrix in case it's been changes
+        reset_matrix(); //reset orientation matrix in case it's been changes
         reset_loop(); //set loop speed
     }
     else 

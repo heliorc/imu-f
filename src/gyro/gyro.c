@@ -104,7 +104,7 @@ void reset_matrix(void)
 	matrixFormed =-1;
 }
 
-//int defaults for oreintation
+//int defaults for orientation
 static void init_orientation(void)
 {
     //set defaults
@@ -131,7 +131,7 @@ static void apply_gyro_acc_rotation(volatile axisData_t* rawData)
         rawData->x = (rotationMatrix[0][0] * fx + rotationMatrix[1][0] * fy + rotationMatrix[2][0] * fz);
 		rawData->y = (rotationMatrix[0][1] * fx + rotationMatrix[1][1] * fy + rotationMatrix[2][1] * fz);
 		rawData->z = (rotationMatrix[0][2] * fx + rotationMatrix[1][2] * fy + rotationMatrix[2][2] * fz);
-    } else if (gyroSettingsConfig.oreintation > CW270_INV) {
+    } else if (gyroSettingsConfig.orientation > CW270_INV) {
         lookupAndBuildRotationMatrix(gyroSettingsConfig.orientation, gyroSettingsConfig.smallX, gyroSettingsConfig.smallY, gyroSettingsConfig.smallZ);
         matrixFormed = gyroSettingsConfig.orientation;        
     } else {
