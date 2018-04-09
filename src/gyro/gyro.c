@@ -91,6 +91,7 @@ void lookupAndBuildRotationMatrix(uint16_t orientation, int x, int y, int z) {
         if (orientation > CW315){
             x = 180;
             multiplier -=4;
+        }
         if (!z) {
             z = (90 * multiplier) + 45;
         }
