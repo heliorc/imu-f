@@ -43,9 +43,11 @@ enum
     CW135_INV = 13,
     CW225_INV = 14,
     CW315_INV = 15,
+    CUSTOM    = 16,
 };
 
 float rotationMatrix[3][3];
+
 int   matrixFormed = -1;
 
 //build the rotational matrix for allowing different board angles other than 90 degrees
@@ -82,6 +84,17 @@ static void build_rotation_matrix(int x, int y, int z)
     rotationMatrix[2][2] = cosy * cosx;
 }
 
+void lookupAndBuildRotationMatrix(uint16_t orientation, int x, int y, int z) {
+    if (orientation != CUSTOM) {
+        if (orientation > CW315){
+            x = 180;
+        if (!z) {
+            int multiplier = orientation - 8;            
+            z = (90 * multiplier) + 45;
+        }
+    }
+    build_rotation_matrix(x,y,z); //x, y, z, pitch, roll, yaw   
+}
 //force rebuilding of rotational matrix
 void reset_matrix(void)
 {
@@ -105,135 +118,63 @@ static void init_orientation(void)
 //set board orientation
 static void apply_gyro_acc_rotation(volatile axisData_t* rawData)
 {
-
-	uint32_t nonNinety;
 	//from gyro, x, y, z (0, 1, 2)
 	// x is roll, y is pitch, z is yaw
 
     float fx = rawData->x;
     float fy = rawData->y;
     float fz = rawData->z;
-	int32_t x = -(gyroSettingsConfig.smallX); //do we invert here?
-	int32_t y = (gyroSettingsConfig.smallY);
-	int32_t z = (gyroSettingsConfig.smallZ);
-	nonNinety = 0;
-    switch (gyroSettingsConfig.orientation)
-    {
-
-		case CW0:
-	    	if (x || y || z)
-	    	{
-				if (matrixFormed != CW0) {
-					matrixFormed = CW0;
-					build_rotation_matrix(x,y,z); //x, y, z, pitch, roll, yaw
-				}
-				nonNinety = 1;
-	    	}
-	    	else
-	    	{
-				rawData->x = (fx);
-				rawData->y = (fy);
-				rawData->z = (fz);
-	    	}
-			break;
-        case CW90:
-        	rawData->x = (fy);
-        	rawData->y = -(fx);
-        	rawData->z = (fz);
-            break;
-        case CW180:
-        	rawData->x = -(fx);
-        	rawData->y = -(fy);
-        	rawData->z = (fz);
-            break;
-        case CW270:
-        	rawData->x = -(fy);
-        	rawData->y = (fx);
-        	rawData->z = (fz);
-            break;
-        case CW0_INV:
-        	rawData->x = -(fx);
-        	rawData->y = (fy);
-        	rawData->z = -(fz);
-            break;
-        case CW90_INV:
-        	rawData->x = (fy);
-        	rawData->y = (fx);
-        	rawData->z = -(fz);
-            break;
-        case CW180_INV:
-        	rawData->x = (fx);
-        	rawData->y = -(fy);
-        	rawData->z = -(fz);
-            break;
-        case CW270_INV:
-        	rawData->x = -(fy);
-        	rawData->y = -(fx);
-        	rawData->z = -(fz);
-            break;
-    	case CW45:
-    		if (matrixFormed != CW45) {
-    			matrixFormed = CW45;
-    			build_rotation_matrix(0,0,45); //x, y, z, pitch, roll, yaw
-    		}
-    		nonNinety = 1;
-       		break;
-    	case CW135:
-    		if (matrixFormed != CW135) {
-				matrixFormed = CW135;
-				build_rotation_matrix(0,0,135); //x, y, z, pitch, roll, yaw
-			}
-    		nonNinety = 1;
-    	    break;
-    	case CW225:
-    		if (matrixFormed != CW225) {
-				matrixFormed = CW225;
-				build_rotation_matrix(0,0,225); //x, y, z, pitch, roll, yaw
-			}
-    		nonNinety = 1;
-    	    break;
-    	case CW315:
-    		if (matrixFormed != CW315) {
-				matrixFormed = CW315;
-				build_rotation_matrix(0,0,315); //x, y, z, pitch, roll, yaw
-			}
-    		nonNinety = 1;
-    	    break;
-    	case CW45_INV:
-    		if (matrixFormed != CW45_INV) {
-				matrixFormed = CW45_INV;
-				build_rotation_matrix(180,0,45); //x, y, z, pitch, roll, yaw
-			}
-    		nonNinety = 1;
-    	    break;
-    	case CW135_INV:
-    		if (matrixFormed != CW135_INV) {
-				matrixFormed = CW135_INV;
-				build_rotation_matrix(180,0,135); //x, y, z, pitch, roll, yaw
-			}
-    		nonNinety = 1;
-    	    break;
-    	case CW225_INV:
-    		if (matrixFormed != CW225_INV) {
-				matrixFormed = CW225_INV;
-				build_rotation_matrix(180,0,225); //x, y, z, pitch, roll, yaw
-			}
-    		nonNinety = 1;
-    	    break;
-    	case CW315_INV:
-    		if (matrixFormed != CW315_INV) {
-				matrixFormed = CW315_INV;
-				build_rotation_matrix(180,0,315); //x, y, z, pitch, roll, yaw
-			}
-    		nonNinety = 1;
-    	    break;
-    }
-
-    if (nonNinety)
-    {
-		rawData->x = (rotationMatrix[0][0] * fx + rotationMatrix[1][0] * fy + rotationMatrix[2][0] * fz);
+    if (matrixFormed) {
+        rawData->x = (rotationMatrix[0][0] * fx + rotationMatrix[1][0] * fy + rotationMatrix[2][0] * fz);
 		rawData->y = (rotationMatrix[0][1] * fx + rotationMatrix[1][1] * fy + rotationMatrix[2][1] * fz);
 		rawData->z = (rotationMatrix[0][2] * fx + rotationMatrix[1][2] * fy + rotationMatrix[2][2] * fz);
+    } else if (gyroSettingsConfig.oreintation > CW270_INV) {
+        lookupAndBuildRotationMatrix(gyroSettingsConfig.orientation, gyroSettingsConfig.smallX, gyroSettingsConfig.smallY, gyroSettingsConfig.smallZ);
+        matrixFormed = gyroSettingsConfig.orientation;        
+    } else {
+        switch (gyroSettingsConfig.orientation)
+        {
+            default:
+                rawData->x = (fx);
+                rawData->y = (fy);
+                rawData->z = (fz);
+                break;
+            case CW90:
+                rawData->x = (fy);
+                rawData->y = -(fx);
+                rawData->z = (fz);
+                break;
+            case CW180:
+                rawData->x = -(fx);
+                rawData->y = -(fy);
+                rawData->z = (fz);
+                break;
+            case CW270:
+                rawData->x = -(fy);
+                rawData->y = (fx);
+                rawData->z = (fz);
+                break;
+            case CW0_INV:
+                rawData->x = -(fx);
+                rawData->y = (fy);
+                rawData->z = -(fz);
+                break;
+            case CW90_INV:
+                rawData->x = (fy);
+                rawData->y = (fx);
+                rawData->z = -(fz);
+                break;
+            case CW180_INV:
+                rawData->x = (fx);
+                rawData->y = -(fy);
+                rawData->z = -(fz);
+                break;
+            case CW270_INV:
+                rawData->x = -(fy);
+                rawData->y = -(fx);
+                rawData->z = -(fz);
+                break;
+        }
     }
 
 }
