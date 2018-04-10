@@ -98,6 +98,12 @@ static void init_orientation(void)
     gyroSettingsConfig.smallY      = 0;
     gyroSettingsConfig.smallZ      = 0;
 }
+static void reset_calibration(void){
+    calibratingGyro = 0;  
+    gyroSum.x = 0.0f;
+    gyroSum.y = 0.0f;
+    gyroSum.z = 0.0f;
+}
 #pragma GCC pop_options
 
 #pragma GCC push_options
@@ -280,10 +286,7 @@ void gyro_int_to_float(gyroFrame_t* gyroRxFrame)
             gyroCalibrationTrim.x = -gyroSum.x / (float)gyroCalibrationCycles;
             gyroCalibrationTrim.y = -gyroSum.y / (float)gyroCalibrationCycles;
             gyroCalibrationTrim.z = -gyroSum.z / (float)gyroCalibrationCycles;
-            calibratingGyro = 0; //calibration done, set to zero and calibration data will apear in next cycle.
-            gyroSum.x = 0.0f;
-            gyroSum.y = 0.0f;
-            gyroSum.z = 0.0f;
+            reset_calibration();
             gyroCalibrationCycles = 0;
         }
     }
@@ -557,12 +560,9 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame)
 void gyro_init(void) 
 {
     init_orientation();
-    gyroDataReadDone = 0;
+    reset_calibration(); 
     gyroTempData = 0;
-    calibratingGyro = 0;    
-    gyroSum.x = 0.0f;
-    gyroSum.y = 0.0f;
-    gyroSum.z = 0.0f;
+    gyroDataReadDone = 0;
     gyroCalibrationTrim.x = 0.0f;
     gyroCalibrationTrim.y = 0.0f;
     gyroCalibrationTrim.z = 0.0f;
