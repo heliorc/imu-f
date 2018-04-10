@@ -2,7 +2,7 @@
 #include "quaternions.h"
 #include "vectors.h"
 
-#define FIRMWARE_VERSION 105
+#define FIRMWARE_VERSION 106
 
 //	+X to the right
 //	+Y straight up
