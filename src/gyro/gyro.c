@@ -260,6 +260,11 @@ void gyro_int_to_float(gyroFrame_t* gyroRxFrame)
         apply_gyro_acc_rotation(&rawAccData);
     }
 
+    //f*f+f is one operation on FPU
+    rawRateData.x = (float)((int16_t)((gyroRxFrame->gyroX_H << 8) | gyroRxFrame->gyroX_L)) * gyroRateMultiplier + gyroCalibrationTrim.x;
+	rawRateData.y = (float)((int16_t)((gyroRxFrame->gyroY_H << 8) | gyroRxFrame->gyroY_L)) * gyroRateMultiplier + gyroCalibrationTrim.y;
+	rawRateData.z = (float)((int16_t)((gyroRxFrame->gyroZ_H << 8) | gyroRxFrame->gyroZ_L)) * gyroRateMultiplier + gyroCalibrationTrim.z;
+ 
     //doing in real time, might be better to move this to the main loop for processing, but we need to make sure it's done right
     if (calibratingGyro)
     {
@@ -276,14 +281,13 @@ void gyro_int_to_float(gyroFrame_t* gyroRxFrame)
             gyroCalibrationTrim.y = -gyroSum.y / (float)gyroCalibrationCycles;
             gyroCalibrationTrim.z = -gyroSum.z / (float)gyroCalibrationCycles;
             calibratingGyro = 0; //calibration done, set to zero and calibration data will apear in next cycle.
+            gyroSum.x = 0.0f;
+            gyroSum.y = 0.0f;
+            gyroSum.z = 0.0f;
             gyroCalibrationCycles = 0;
         }
     }
 
-    //f*f+f is one operation on FPU
-    rawRateData.x = (float)((int16_t)((gyroRxFrame->gyroX_H << 8) | gyroRxFrame->gyroX_L)) * gyroRateMultiplier + gyroCalibrationTrim.x;
-	rawRateData.y = (float)((int16_t)((gyroRxFrame->gyroY_H << 8) | gyroRxFrame->gyroY_L)) * gyroRateMultiplier + gyroCalibrationTrim.y;
-	rawRateData.z = (float)((int16_t)((gyroRxFrame->gyroZ_H << 8) | gyroRxFrame->gyroZ_L)) * gyroRateMultiplier + gyroCalibrationTrim.z;
     apply_gyro_acc_rotation(&rawRateData);
 }
 
@@ -559,5 +563,8 @@ void gyro_init(void)
     gyroSum.x = 0.0f;
     gyroSum.y = 0.0f;
     gyroSum.z = 0.0f;
+    gyroCalibrationTrim.x = 0.0f;
+    gyroCalibrationTrim.y = 0.0f;
+    gyroCalibrationTrim.z = 0.0f;
     gyro_device_init(&gyro_read_done);
 }
