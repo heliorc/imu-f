@@ -123,12 +123,13 @@ float get_acc_trust(volatile vector_record_t *gyroVector)
     //trust ACC a LOT for first 7 seconds
     if(millis() < 7000) //7000 is 7 seconds
     {
-        return 10000.0f;
+        return 1000.0f;
     }
     else
     {
         //vary trust from 2 to 0 based on spin rate (should also look at noise)
-        return CHANGERANGE( CONSTRAIN(currentSpinRate, 0.0f, 500.0f), 500.0f, 0.0f, 0.0f, 50.0f);
+        return 10.0f;
+        //return CHANGERANGE( CONSTRAIN(currentSpinRate, 0.0f, 500.0f), 500.0f, 0.0f, 0.0f, 50.0f);
     }
 }
 
