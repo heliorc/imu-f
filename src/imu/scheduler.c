@@ -20,7 +20,7 @@ inline void scheduler_run(void)
         //check CRC!
         //if (parse_imuf_command(&bcRx))
         //{
-            calibratingGyro=1;
+            start_calibration();
         //}
         bcRx.command = 0;
     }
