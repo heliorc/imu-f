@@ -1,7 +1,7 @@
 #include "includes.h"
 #include "board_comm.h"
 #include "gyro.h"
-#include "fast_kalman.h"
+#include "kalman.h"
 #include "filter.h"
 #include "crc.h"
 
@@ -146,12 +146,6 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
                 filterConfig.i_pitch_q           = (command->param3 >> 16);
                 filterConfig.i_roll_q            = (command->param4 >> 16);
                 filterConfig.i_yaw_q             = (command->param5 >> 16);
-                filterConfig.filterWindow[PITCH] = (command->param3 & 0xFFFF);
-                filterConfig.filterWindow[ROLL]  = (command->param4 & 0xFFFF);
-                filterConfig.filterWindow[YAW]   = (command->param5 & 0xFFFF);
-                filterConfig.i_pitch_lpf_hz      = (command->param6 >> 16);
-                filterConfig.i_roll_lpf_hz       = (command->param6 & 0xFFFF);
-                filterConfig.i_yaw_lpf_hz        = (command->param7 >> 16);
                 gyroSettingsConfig.orientation   = (uint32_t)((uint16_t)(command->param8 & 0xFFFF));
                 gyroSettingsConfig.smallX        = (int32_t)(  (int16_t)(command->param8 >> 16));
                 gyroSettingsConfig.smallY        = (int32_t)(  (int16_t)(command->param9 & 0xFFFF));

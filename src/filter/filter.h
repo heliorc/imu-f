@@ -1,7 +1,7 @@
 #pragma once
 #include "includes.h"
 #include "biquad.h"
-#include "fast_kalman.h"
+#include "kalman.h"
 
 #define REFRESH_RATE 0.00003125f
 
