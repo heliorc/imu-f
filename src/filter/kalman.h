@@ -2,8 +2,8 @@
 #include "includes.h"
 #include "gyro.h"
 
-#define WINDOW_SIZE 100
-#define VARIANCE_SCALE 0.00033333f;
+#define WINDOW_SIZE 28
+#define VARIANCE_SCALE 0.00033333f
 
 typedef enum filterAxisTypedef {
     ROLL = 0,
