@@ -38,9 +38,6 @@ typedef struct variance
     float xVar;
     float yVar;
     float zVar;
-    float xyVar;
-    float xzVar;
-    float yzVar;
     float xyCoVar;
     float xzCoVar;
     float yzCoVar;
@@ -61,9 +58,6 @@ typedef struct variance
     float xSumVar;
     float ySumVar;
     float zSumVar;
-    float xySumVar;
-    float xzSumVar;
-    float yzSumVar;
     float xySumCoVar;
     float xzSumCoVar;
     float yzSumCoVar;
