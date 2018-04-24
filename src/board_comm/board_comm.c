@@ -146,6 +146,7 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
                 filterConfig.i_pitch_q           = (command->param3 >> 16);
                 filterConfig.i_roll_q            = (command->param4 >> 16);
                 filterConfig.i_yaw_q             = (command->param5 >> 16);
+                filterConfig.w                   = CONSTRAIN((command->param3 & 0xFFFF), MIN_WINDOW_SIZE, MAX_WINDOW_SIZE);
                 gyroSettingsConfig.orientation   = (uint32_t)((uint16_t)(command->param8 & 0xFFFF));
                 gyroSettingsConfig.smallX        = (int32_t)(  (int16_t)(command->param8 >> 16));
                 gyroSettingsConfig.smallY        = (int32_t)(  (int16_t)(command->param9 & 0xFFFF));

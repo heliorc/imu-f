@@ -1,8 +1,31 @@
 #include "includes.h"
+#include "gyro.h"
 #include "filter.h"
 #include "kalman.h"
-#include "imu.h" //for CONSTRAIN, doesn't really belong there, but oh well
-//We should move constrain to utils.h and include it in includes
+#include "biquad.h"
+
+volatile filter_config_t filterConfig = {
+	DEFAULT_ROLL_Q,
+	DEFAULT_PITCH_Q,
+	DEFAULT_YAW_Q,
+	DEFAULT_ROLL_LPF_HZ,
+	DEFAULT_PITCH_LPF_HZ,
+	DEFAULT_YAW_LPF_HZ,
+	MIN_WINDOW_SIZE,
+	(float)DEFAULT_ROLL_Q,
+	(float)DEFAULT_PITCH_Q,
+	(float)DEFAULT_YAW_Q,
+	(float)DEFAULT_ROLL_LPF_HZ,
+	(float)DEFAULT_PITCH_LPF_HZ,
+	(float)DEFAULT_YAW_LPF_HZ,
+};
+
+biquad_state_t lpfFilterStateRate;
+
+//actual dynamic filters live here
+biquad_axis_state_t axisX;
+biquad_axis_state_t axisY;
+biquad_axis_state_t axisZ;
 
 volatile int allowFilterInit = 1;
 
@@ -14,17 +37,10 @@ void allow_filter_init(void)
 void filter_init(void)
 {
 	kalman_init();
-}
 
-void filter_init_defaults(void)
-{
-	allowFilterInit                  = 1;
-	filterConfig.i_pitch_q           = 500;
-	filterConfig.i_roll_q            = 500;
-	filterConfig.i_yaw_q             = 350;
-	filterConfig.pitch_q             = 500.0f;
-	filterConfig.roll_q              = 500.0f;
-	filterConfig.yaw_q               = 350.0f;
+	biquad_init(filterConfig.pitch_lpf_hz, &(lpfFilterStateRate.x), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH, NULL);
+	biquad_init(filterConfig.roll_lpf_hz, &(lpfFilterStateRate.y), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH, NULL);
+	biquad_init(filterConfig.yaw_lpf_hz, &(lpfFilterStateRate.z), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH, NULL);
 }
 
 void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAccData, float gyroTempData, filteredData_t* filteredData)
@@ -36,10 +52,17 @@ void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAcc
 		filterConfig.pitch_q        = (float)filterConfig.i_pitch_q;
 		filterConfig.roll_q         = (float)filterConfig.i_roll_q;
 		filterConfig.yaw_q          = (float)filterConfig.i_yaw_q;
+		filterConfig.pitch_lpf_hz   = (float)filterConfig.i_pitch_lpf_hz;
+		filterConfig.roll_lpf_hz    = (float)filterConfig.i_roll_lpf_hz;
+		filterConfig.yaw_lpf_hz     = (float)filterConfig.i_yaw_lpf_hz;
 		filter_init();
 	}
 
 	kalman_update(gyroRateData, filteredData);
+
+	filteredData->rateData.x = biquad_update(filteredData->rateData.x, &(lpfFilterStateRate.x));
+	filteredData->rateData.y = biquad_update(filteredData->rateData.y, &(lpfFilterStateRate.y));
+	filteredData->rateData.z = biquad_update(filteredData->rateData.z, &(lpfFilterStateRate.z));
 
 	//no need to filter ACC is used in quaternions
 	filteredData->accData.x  = gyroAccData->x;

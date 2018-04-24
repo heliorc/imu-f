@@ -19,5 +19,6 @@
 #include "clock.h"
 #include "gpio.h"
 #include "boothandler.h"
-#include <arm_math.h>
+#include "helpers.h"
+#include "version.h"
 #include <arm_math.h>

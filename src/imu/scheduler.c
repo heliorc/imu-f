@@ -2,7 +2,6 @@
 #include "scheduler.h"
 #include "board_comm.h"
 #include "quaternions.h"
-#include "imu.h"
 #include "gyro.h"
 #include "filter.h"
 #include "gyro_device.h" //where gyroRxFrame lives

@@ -1,28 +1,28 @@
 #include "includes.h"
 #include "gyro.h"
 #include "kalman.h"
+#include "filter.h"
 
 variance_t varStruct;
 kalman_t kalmanFilterStateRate[3];
 
-volatile filter_config_t filterConfig;
 
-void init_kalman(kalman_t *filter, float q, float r, float p, float intialValue)
+void init_kalman(kalman_t *filter, float q, float r)
 {
     memset(filter, 0, sizeof(kalman_t));
     filter->q = q * 0.001f;      //add multiplier to make tuning easier
     filter->r = r;               //add multiplier to make tuning easier
-    filter->p = p;               //add multiplier to make tuning easier
-    filter->x = intialValue;     //set intial value, can be zero if unknown
-    filter->lastX = intialValue; //set intial value, can be zero if unknown
+    filter->p = q;               //add multiplier to make tuning easier
+    filter->x = 0.0f;            //set intial value, can be zero if unknown
+    filter->lastX = 0.0f;        //set intial value, can be zero if unknown
 }
 
 void kalman_init(void)
 {
     memset(&varStruct, 0, sizeof(varStruct));
-    init_kalman(&kalmanFilterStateRate[ROLL], filterConfig.pitch_q, 88.0f, filterConfig.pitch_q, 0.0f);
-    init_kalman(&kalmanFilterStateRate[PITCH], filterConfig.roll_q, 88.0f, filterConfig.roll_q, 0.0f);
-    init_kalman(&kalmanFilterStateRate[YAW], filterConfig.yaw_q, 88.0f, filterConfig.yaw_q, 0.0f);
+    init_kalman(&kalmanFilterStateRate[ROLL], filterConfig.pitch_q, 88.0f);
+    init_kalman(&kalmanFilterStateRate[PITCH], filterConfig.roll_q, 88.0f);
+    init_kalman(&kalmanFilterStateRate[YAW], filterConfig.yaw_q, 88.0f);
 }
 
 #pragma GCC push_options
@@ -43,7 +43,7 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
      varStruct.xzSumCoVar =  varStruct.xzSumCoVar + ( varStruct.xWindow[ varStruct.windex] *  varStruct.zWindow[ varStruct.windex]);
      varStruct.yzSumCoVar =  varStruct.yzSumCoVar + ( varStruct.yWindow[ varStruct.windex] *  varStruct.zWindow[ varStruct.windex]);
      varStruct.windex++;
-    if ( varStruct.windex >= WINDOW_SIZE)
+    if ( varStruct.windex >= filterConfig.w)
     {
          varStruct.windex = 0;
     }
@@ -68,19 +68,20 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
      varStruct.xzCoVar =  varStruct.xzSumCoVar *  varStruct.inverseN - ( varStruct.xMean *  varStruct.zMean);
      varStruct.yzCoVar =  varStruct.yzSumCoVar *  varStruct.inverseN - ( varStruct.yMean *  varStruct.zMean);
 
-    kalmanFilterStateRate[0].r = ( varStruct.xVar +  varStruct.xyCoVar +  varStruct.xzCoVar) * VARIANCE_SCALE;
-    kalmanFilterStateRate[1].r = ( varStruct.yVar +  varStruct.xyCoVar +  varStruct.yzCoVar) * VARIANCE_SCALE;
-    kalmanFilterStateRate[2].r = ( varStruct.zVar +  varStruct.yzCoVar +  varStruct.xzCoVar) * VARIANCE_SCALE; 
+    kalmanFilterStateRate[ROLL].r = ( varStruct.xVar +  varStruct.xyCoVar +  varStruct.xzCoVar) * VARIANCE_SCALE;
+    kalmanFilterStateRate[PITCH].r = ( varStruct.yVar +  varStruct.xyCoVar +  varStruct.yzCoVar) * VARIANCE_SCALE;
+    kalmanFilterStateRate[YAW].r = ( varStruct.zVar +  varStruct.yzCoVar +  varStruct.xzCoVar) * VARIANCE_SCALE; 
 }
 
 void kalman_update(volatile axisData_t* input, filteredData_t* output)
 {
+    static float axisValues[3];
     update_kalman_covariance(input);
-    float axisValues[3];
-    axisValues[0] = input->x;
-    axisValues[1] = input->y;
-    axisValues[2] = input->z;
-    for (int axis = 2; 0 <= axis; axis--){
+    
+    axisValues[ROLL]  = input->x;
+    axisValues[PITCH] = input->y;
+    axisValues[YAW]   = input->z;
+    for (int axis = YAW; 0 <= axis; axis--){
         //project the state ahead using acceleration
         kalmanFilterStateRate[axis].x += (kalmanFilterStateRate[axis].x - kalmanFilterStateRate[axis].lastX);
 
@@ -96,8 +97,8 @@ void kalman_update(volatile axisData_t* input, filteredData_t* output)
         kalmanFilterStateRate[axis].p = (1.0f - kalmanFilterStateRate[axis].k) * kalmanFilterStateRate[axis].p;
         axisValues[axis] = kalmanFilterStateRate[axis].x;
     }
-    output->rateData.x = axisValues[0];
-    output->rateData.y = axisValues[1];
-    output->rateData.z = axisValues[2];
+    output->rateData.x = axisValues[ROLL];
+    output->rateData.y = axisValues[PITCH];
+    output->rateData.z = axisValues[YAW];
 }
 #pragma GCC pop_options
