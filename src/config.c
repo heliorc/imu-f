@@ -1,10 +1,8 @@
 #include "includes.h"
-#include "imu.h"
+#include "version.h"
 #include "bootloader.h"
 
 flightVersionInfoTypedef_t flightVerson;
-
-#define HARDWARE_VERSION 101
 
 void set_version(void)
 {

@@ -44,6 +44,7 @@ enum
     CW135_INV = 13,
     CW225_INV = 14,
     CW315_INV = 15,
+    CUSTOM    = 16,
 };
 
 float rotationMatrix[3][3];
@@ -137,7 +138,7 @@ static void apply_gyro_acc_rotation(volatile axisData_t* rawData)
 	nonNinety = 0;
     switch (gyroSettingsConfig.orientation)
     {
-
+        case CUSTOM:
 		case CW0:
 	    	if (x || y || z)
 	    	{
@@ -459,113 +460,6 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame)
 {
     gyroDataReadDone = 1;
 }
-/*
-    
-    static volatile quaternion_buffer_t *quatBuffer = &(quatBufferA); //start working on this buffer
-    //default rateDatafilteredData
-    volatile uint8_t*  memptr8  = (uint8_t*)&filteredData.rateData;
-    volatile uint32_t* memptr32 = (uint32_t*)&filteredData.rateData;
-
-    if (boardCommState.commMode == GTBCM_GYRO_ONLY_PASSTHRU) 
-    {
-        memptr8 = (uint8_t*)&(gyroRxFrame->gyroX_H);
-        memptr32 = (uint32_t*)&(gyroRxFrame->gyroX_H);
-    } else if (boardCommState.commMode == GTBCM_GYRO_ACC_PASSTHRU) 
-    {
-        memptr8 = (uint8_t*)&(gyroRxFrame->accAddress);
-        memptr32 = (uint32_t*)&(gyroRxFrame->accAddress);
-    }
-
-    if (boardCommState.commMode >= GTBCM_GYRO_ACC_FILTER_F){
-        gyro_int_to_float(gyroRxFrame);
-        filter_data(&rawRateData, &rawAccData, gyroTempData, &filteredData); //profile: this takes 2.45us to run with O3 optimization, before adding biquad at least
-
-        //set flags and do quats in main loop
-        //we have to fill the gyro data here though
-        //add rate data for later usage in quats. This is reset in imu.c
-        quatBuffer->vector.x += filteredData.rateData.x;
-        quatBuffer->vector.y += filteredData.rateData.y;
-        quatBuffer->vector.z += filteredData.rateData.z;
-
-        accTracker++;
-        switch(accTracker)
-        {
-            case 9:
-            case 25:
-                //update quaternions, these were calculated in imu.c
-                filteredData.quaternion[0] = attitudeFrameQuat.w;
-                filteredData.quaternion[1] = attitudeFrameQuat.vector.x;
-                filteredData.quaternion[2] = attitudeFrameQuat.vector.y;
-                filteredData.quaternion[3] = attitudeFrameQuat.vector.z;
-                //put acc into quat buffer
-                quatBuffer->accVector.x = filteredData.accData.x;
-                quatBuffer->accVector.y = filteredData.accData.y;
-                quatBuffer->accVector.z = filteredData.accData.z;
-                quatState = QUAT_PROCESS_BUFFER_0;
-                //switch buffers
-                quatBuffer = &quatBufferB;
-                break;
-            case 10:
-                //increment_fft_state();
-                break;
-            case 33:
-                //reset acc tracker
-                accTracker = 1; //fallthru for 33, not done on 17
-            case 17:
-                //update quaternions, these were calculated in imu.c
-                filteredData.quaternion[0] = attitudeFrameQuat.w;
-                filteredData.quaternion[1] = attitudeFrameQuat.vector.x;
-                filteredData.quaternion[2] = attitudeFrameQuat.vector.y;
-                filteredData.quaternion[3] = attitudeFrameQuat.vector.z;
-                //put acc into quat buffer
-                quatBuffer->accVector.x = filteredData.accData.x;
-                quatBuffer->accVector.y = filteredData.accData.y;
-                quatBuffer->accVector.z = filteredData.accData.z;
-                quatState = QUAT_PROCESS_BUFFER_1;
-                //switch buffers
-                quatBuffer = &quatBufferA;
-                break;
-        }
-    }
-
-    if (boardCommState.commMode != GTBCM_SETUP)
-    {
-        static int everyOther = 1;
-        static int oopsCounter = 0;
-        #define RESYNC_COUNTER 100
-
-        //everyother is 16KHz
-        if (everyOther-- <= 0)
-        {
-            append_crc_to_data_v( memptr32, (boardCommState.commMode >> 2)-1);
-            everyOther = 1; //reset khz counter
-
-            //check if spi is done if not, return
-            //if it's not done for RESYNC_COUNTER counts in a row we reset the sync
-            if(!spiDoneFlag)
-            {
-                if( oopsCounter++ < RESYNC_COUNTER )
-                {  
-                    //give time for spi transfer to happen
-                    return;
-                }
-                else
-                {
-                    //reset spi and dma for spi since we've not had a reply in a while now
-                    cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_SPI_RST_MSK); //reset sync
-                }
-            }
-            oopsCounter = 0; //reset sync count
-
-            //send the filtered data to the device
-            spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 
-            spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), memptr8, bcRxPtr);
-            gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //a quick spike for EXTI
-            gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0); //a quick spike for EXTI
-        }
-    }
-}
-*/
 
 void gyro_init(void) 
 {
