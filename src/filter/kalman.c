@@ -23,6 +23,7 @@ void kalman_init(void)
     init_kalman(&kalmanFilterStateRate[ROLL], filterConfig.pitch_q, 88.0f);
     init_kalman(&kalmanFilterStateRate[PITCH], filterConfig.roll_q, 88.0f);
     init_kalman(&kalmanFilterStateRate[YAW], filterConfig.yaw_q, 88.0f);
+    varStruct.inverseN = 1.0f/varStruc.size;
 }
 
 #pragma GCC push_options
