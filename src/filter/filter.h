@@ -3,12 +3,12 @@
 #include "biquad.h"
 
 #define REFRESH_RATE           0.00003125f
-#define DEFAULT_ROLL_Q         3500
-#define DEFAULT_PITCH_Q        3500
-#define DEFAULT_YAW_Q          2500
-#define DEFAULT_ROLL_LPF_HZ    150
-#define DEFAULT_PITCH_LPF_HZ   150
-#define DEFAULT_YAW_LPF_HZ     150
+#define DEFAULT_ROLL_Q         5000
+#define DEFAULT_PITCH_Q        5000
+#define DEFAULT_YAW_Q          3500
+#define DEFAULT_ROLL_LPF_HZ    240
+#define DEFAULT_PITCH_LPF_HZ   240
+#define DEFAULT_YAW_LPF_HZ     240
 
 typedef enum filterAxisTypedef {
     ROLL = 0,
