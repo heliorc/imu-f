@@ -69,9 +69,9 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
      varStruct.xzCoVar =  varStruct.xzSumCoVar *  varStruct.inverseN - ( varStruct.xMean *  varStruct.zMean);
      varStruct.yzCoVar =  varStruct.yzSumCoVar *  varStruct.inverseN - ( varStruct.yMean *  varStruct.zMean);
 
-    kalmanFilterStateRate[ROLL].r = ( varStruct.xVar +  varStruct.xyCoVar +  varStruct.xzCoVar) * VARIANCE_SCALE;
-    kalmanFilterStateRate[PITCH].r = ( varStruct.yVar +  varStruct.xyCoVar +  varStruct.yzCoVar) * VARIANCE_SCALE;
-    kalmanFilterStateRate[YAW].r = ( varStruct.zVar +  varStruct.yzCoVar +  varStruct.xzCoVar) * VARIANCE_SCALE; 
+    kalmanFilterStateRate[ROLL].r = ABS( varStruct.xVar +  varStruct.xyCoVar +  varStruct.xzCoVar) * VARIANCE_SCALE;
+    kalmanFilterStateRate[PITCH].r = ABS( varStruct.yVar +  varStruct.xyCoVar +  varStruct.yzCoVar) * VARIANCE_SCALE;
+    kalmanFilterStateRate[YAW].r = ABS( varStruct.zVar +  varStruct.yzCoVar +  varStruct.xzCoVar) * VARIANCE_SCALE; 
 }
 
 void kalman_update(volatile axisData_t* input, filteredData_t* output)
