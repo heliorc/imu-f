@@ -62,6 +62,7 @@ extern volatile imufCommand_t bcRx;
 extern volatile imufCommand_t bcTx;
 extern volatile uint32_t spiDoneFlag;
 extern volatile boardCommState_t boardCommState;
+static float currentSetpoint[3];
 
 extern void clear_imuf_command(volatile imufCommand_t* command);
 extern void board_comm_init(void);

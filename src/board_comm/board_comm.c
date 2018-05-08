@@ -15,6 +15,7 @@ volatile uint8_t* bcTxPtr;
 volatile uint32_t spiDoneFlag;
 volatile boardCommState_t boardCommState;
 volatile uint32_t filterMode;
+static float currentSetpoint[3];
 
 static void run_command(volatile imufCommand_t* command, volatile imufCommand_t* reply);
 
@@ -88,6 +89,7 @@ void board_comm_spi_callback_function(void)
 
     if ( (bcTx.command == BC_IMUF_LISTENING) && parse_imuf_command(&bcRx) )//we  were waiting for a command //we have a valid command
     {
+        memcpy(&currentSetpoint, (float *)bcRx.param5, sizeof(currentSetpoint));
         //command checks out
         //run the command and generate the reply
         run_command(&bcRx,&bcTx); 
