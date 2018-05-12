@@ -64,19 +64,19 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
 
      float squirt;
 
-     arm_sqrt_f32(varStruct.xSumVar *  varStruct.inverseN - ( varStruct.xMean *  varStruct.xMean), &squirt);
+     arm_sqrt_f32(varStruct.xSumVar * varStruct.inverseN - ( varStruct.xMean * varStruct.xMean), &squirt);
      varStruct.xVar = squirt;
-     arm_sqrt_f32(varStruct.ySumVar *  varStruct.inverseN - ( varStruct.yMean *  varStruct.yMean), &squirt);
+     arm_sqrt_f32(varStruct.ySumVar * varStruct.inverseN - ( varStruct.yMean * varStruct.yMean), &squirt);
      varStruct.yVar = squirt;
-     arm_sqrt_f32(varStruct.zSumVar *  varStruct.inverseN - ( varStruct.zMean *  varStruct.zMean), &squirt);
+     arm_sqrt_f32(varStruct.zSumVar * varStruct.inverseN - ( varStruct.zMean * varStruct.zMean), &squirt);
      varStruct.zVar = squirt;
      
-     arm_sqrt_f32(varStruct.xySumCoVar *  varStruct.inverseN - ( varStruct.xMean *  varStruct.yMean), &squirt);
-     varStruct.xyCoVar =  squirt;
-     arm_sqrt_f32(varStruct.xzSumCoVar *  varStruct.inverseN - ( varStruct.xMean *  varStruct.zMean), &squirt);
-     varStruct.xzCoVar =  squirt;
-     arm_sqrt_f32(varStruct.yzSumCoVar *  varStruct.inverseN - ( varStruct.yMean *  varStruct.zMean), &squirt);
-     varStruct.yzCoVar =  squirt;
+     arm_sqrt_f32(varStruct.xySumCoVar * varStruct.inverseN - ( varStruct.xMean * varStruct.yMean), &squirt);
+     varStruct.xyCoVar = ABS(squirt);
+     arm_sqrt_f32(varStruct.xzSumCoVar * varStruct.inverseN - ( varStruct.xMean * varStruct.zMean), &squirt);
+     varStruct.xzCoVar = ABS(squirt);
+     arm_sqrt_f32(varStruct.yzSumCoVar * varStruct.inverseN - ( varStruct.yMean * varStruct.zMean), &squirt);
+     varStruct.yzCoVar = ABS(squirt);
 
     kalmanFilterStateRate[ROLL].r = (varStruct.xVar +  varStruct.xyCoVar +  varStruct.xzCoVar) * VARIANCE_SCALE;
     kalmanFilterStateRate[PITCH].r = (varStruct.yVar +  varStruct.xyCoVar +  varStruct.yzCoVar) * VARIANCE_SCALE;
