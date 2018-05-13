@@ -37,7 +37,7 @@ typedef struct gyro_settings_config {  //unpacked, aligned 4
 extern volatile gyro_settings_config_t gyroSettingsConfig;
 
 extern volatile int gyroDataReadDone;
-extern volatile int loopDivider;
+extern volatile int looptime;
 	 
 //called when new settings are sent
 extern void start_calibration(void);
@@ -46,5 +46,4 @@ extern void gyro_init(void);
 extern void gyro_int_to_float(gyroFrame_t* gyroRxFrame);
 extern void run_gyro_filters(void);
 extern void increment_acc_tracker(void);
-extern void fire_spi_send_ready();
-extern void reset_loop(void);
+extern void fire_spi_send_ready(void);
