@@ -2,7 +2,7 @@
 #include "biquad.h"
 
 
-void biquad_init(float filterCutFreq, biquad_axis_state_t *state, float refreshRateSeconds, uint32_t filterType, float bandwidth, biquad_axis_state_t *oldState )
+void biquad_init(float filterCutFreq, biquad_axis_state_t *state, float refreshRateSeconds, uint32_t filterType, float bandwidth)
 {
 
 	float samplingRate;
@@ -47,14 +47,6 @@ void biquad_init(float filterCutFreq, biquad_axis_state_t *state, float refreshR
     state->a3 = a1 / a0;
     state->a4 = a2 / a0;
 	__enable_irq();
-
-	if (oldState != NULL)
-	{
-		state->y2 = oldState->y2;
-		state->y1 = oldState->y1;
-		state->x2 = oldState->x2;
-		state->x1 = oldState->x1;
-	}
 }
 
 #pragma GCC push_options

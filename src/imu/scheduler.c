@@ -23,10 +23,7 @@ inline void scheduler_run(void)
         //}
         bcRx.command = 0;
     }
-    if(loopDivider)
-    {
-        //0 is 32 KHz which disabled quaternions
-        increment_acc_tracker();
-        update_quaternions();
-    }
+    //0 is 32 KHz which disabled quaternions
+    increment_acc_tracker();
+    update_quaternions();
 }
