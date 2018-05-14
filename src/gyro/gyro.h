@@ -27,7 +27,6 @@ typedef struct filteredData
 } __attribute__((__packed__)) filteredData_t;
 
 typedef struct gyro_settings_config {  //unpacked, aligned 4
-    uint32_t rate;
     uint32_t orientation;
     int32_t smallX;
     int32_t smallY;
