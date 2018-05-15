@@ -6,7 +6,9 @@
 #define MAX_WINDOW_SIZE 300
 #define DEF_WINDOW_SIZE 32
 #define MIN_WINDOW_SIZE 6
-#define VARIANCE_SCALE 0.00033333f
+
+// #define VARIANCE_SCALE 0.001
+#define VARIANCE_SCALE 0.3333333f
 
 typedef struct kalman
 {
@@ -16,8 +18,6 @@ typedef struct kalman
     float k;     //kalman gain
     float x;     //state
     float lastX; //previous state
-    uint32_t gyroKFDataPtr;
-    float gyroKFData[MAX_WINDOW_SIZE];
 } kalman_t;
 
 typedef struct variance
@@ -50,11 +50,8 @@ typedef struct variance
     float yzSumCoVar;
 
     float inverseN;
-
 } variance_t;
 
 extern volatile filter_config_t filterConfig;
-extern variance_t varStruct;
-
 extern void kalman_init(void);
 extern void kalman_update(volatile axisData_t *input, filteredData_t* output);

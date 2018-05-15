@@ -3,7 +3,7 @@
 
 #define M_LN2_FLOAT	0.69314718055994530942f
 #define M_PI_FLOAT	3.14159265358979323846f
-#define BIQUAD_BANDWIDTH 1.98f
+#define BIQUAD_BANDWIDTH 2.98f
 
 #define FILTER_TYPE_LOWPASS  0
 #define FILTER_TYPE_NOTCH    1
@@ -23,5 +23,5 @@ typedef struct biquad_state
     biquad_axis_state_t z;
 } biquad_state_t;
 
-extern void  biquad_init(float filterCutFreq, biquad_axis_state_t *newState, float refreshRateSeconds, uint32_t filterType, float bandwidth, biquad_axis_state_t *oldState);
+extern void  biquad_init(float filterCutFreq, biquad_axis_state_t *newState, float refreshRateSeconds, uint32_t filterType, float bandwidth);
 extern float biquad_update(float sample, biquad_axis_state_t *state);
