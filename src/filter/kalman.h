@@ -8,7 +8,7 @@
 #define MIN_WINDOW_SIZE 6
 
 // #define VARIANCE_SCALE 0.001
-#define VARIANCE_SCALE 0.3333333f
+#define VARIANCE_SCALE 0.001f
 
 typedef struct kalman
 {
@@ -25,9 +25,6 @@ typedef struct variance
     float xVar;
     float yVar;
     float zVar;
-    float xyCoVar;
-    float xzCoVar;
-    float yzCoVar;
 
     uint32_t windex;
     float xWindow[MAX_WINDOW_SIZE];
@@ -45,9 +42,6 @@ typedef struct variance
     float xSumVar;
     float ySumVar;
     float zSumVar;
-    float xySumCoVar;
-    float xzSumCoVar;
-    float yzSumCoVar;
 
     float inverseN;
 } variance_t;
