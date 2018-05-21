@@ -129,7 +129,7 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
                 reply->command = BC_IMUF_CALIBRATE;
             }
-            calibratingGyro=1;
+            start_calibration();
         break;
         case BC_IMUF_REPORT_INFO:
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime

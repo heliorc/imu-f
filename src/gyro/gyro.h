@@ -11,9 +11,9 @@ typedef struct axisDataInt
 
 typedef struct axisData
 {
-    float x;
-    float y;
-    float z;
+    volatile float x;
+    volatile float y;
+    volatile float z;
 } __attribute__((__packed__)) axisData_t;
 
 typedef struct filteredData
@@ -36,11 +36,11 @@ typedef struct gyro_settings_config {  //unpacked, aligned 4
 
 extern volatile gyro_settings_config_t gyroSettingsConfig;
 
-extern volatile int calibratingGyro;
 extern volatile int gyroDataReadDone;
 extern volatile int loopDivider;
 	 
 //called when new settings are sent
+extern void start_calibration(void);
 extern void reset_matrix(void);
 extern void gyro_init(void);
 extern void gyro_int_to_float(gyroFrame_t* gyroRxFrame);
