@@ -27,6 +27,7 @@ typedef struct filteredData
 } __attribute__((__packed__)) filteredData_t;
 
 typedef struct gyro_settings_config {  //unpacked, aligned 4
+    uint32_t rate;
     uint32_t orientation;
     int32_t smallX;
     int32_t smallY;
@@ -36,7 +37,7 @@ typedef struct gyro_settings_config {  //unpacked, aligned 4
 extern volatile gyro_settings_config_t gyroSettingsConfig;
 
 extern volatile int gyroDataReadDone;
-extern volatile int looptime;
+extern volatile int loopDivider;
 	 
 //called when new settings are sent
 extern void start_calibration(void);

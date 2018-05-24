@@ -16,7 +16,7 @@ volatile axisData_t rawRateData;
 volatile gyro_settings_config_t gyroSettingsConfig;
 volatile uint32_t gyroCalibrationCycles = 0;
 
-volatile int looptime = 1;
+volatile int loopDivider = 1;
 
 float gyroTempData;
 filteredData_t filteredData;
@@ -418,7 +418,7 @@ void fire_spi_send_ready(void)
         if (everyOther-- <= 0)
         {
             append_crc_to_data_v( memptr32, (boardCommState.commMode >> 2)-1);
-            everyOther = looptime; //reset khz counter
+            everyOther = loopDivider; //reset khz counter
 
             //check if spi is done if not, return
             //if it's not done for RESYNC_COUNTER counts in a row we reset the sync
