@@ -310,6 +310,46 @@ void run_gyro_filters(void)
     filter_data(&rawRateData, &rawAccData, gyroTempData, &filteredData); //profile: this takes 2.45us to run with O3 optimization, before adding biquad at least
 }
 
+void reset_loop(void)
+{
+    switch(gyroSettingsConfig.rate)
+    {
+        case 0:
+        case 1: //32
+            loopDivider = 0; //3
+        break;
+        break;
+        case 3: //8
+            loopDivider = 3; //8
+        break;
+        case 4: //4
+            loopDivider = 7; //4
+        break;
+        case 5: //2
+            loopDivider = 15; //2
+        break;
+        case 6: //1
+            loopDivider = 31; //1
+        break;
+        case 7: //.5
+            loopDivider = 63; //.5
+        break;
+        case 8: //.25
+            loopDivider = 127; //.25
+        break;
+        case 9: //.125
+            loopDivider = 255; //.125
+        break;
+        case 10: //.0625
+            loopDivider = 511; //.0625
+        break;
+        default:
+        case 2: //16
+            loopDivider = 1; //16
+        break;
+    }
+}
+
 void increment_acc_tracker(void)
 {
     static uint32_t accTracker = 8; //start at 7, so 8 is run first

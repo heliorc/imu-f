@@ -46,3 +46,4 @@ extern void gyro_int_to_float(gyroFrame_t* gyroRxFrame);
 extern void run_gyro_filters(void);
 extern void increment_acc_tracker(void);
 extern void fire_spi_send_ready(void);
+extern void reset_loop(void);
