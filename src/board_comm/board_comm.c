@@ -142,7 +142,7 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
             if(boardCommState.commMode == GTBCM_SETUP) //can only send reply if we're not in runtime
             {
                 filterMode                       = (gyroToBoardCommMode_t)(command->param1);
-                gyroSettingsConfig.rate          = (uint8_t)(command->param2 >> 8);
+                gyroSettingsConfig.rate          = (int16_t)(command->param2 >> 16);
                 filterConfig.w                   = (int16_t)CONSTRAIN((command->param2 & 0xFFFF), MIN_WINDOW_SIZE, MAX_WINDOW_SIZE);
                 filterConfig.i_roll_q            = (int16_t)(command->param3 >> 16);
                 filterConfig.i_pitch_q           = (int16_t)(command->param3 & 0xFFFF);
@@ -157,6 +157,9 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
 
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
                 reply->command = BC_IMUF_SETUP;
+                allow_filter_init();
+                reset_matrix(); //reset oreintation matrix in case it's been changes
+                reset_loop(); //set loop speed
             }
         break;
         default:

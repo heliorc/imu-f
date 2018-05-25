@@ -314,39 +314,37 @@ void reset_loop(void)
 {
     switch(gyroSettingsConfig.rate)
     {
-        case 0:
-        case 1: //32
-            loopDivider = 0; //3
-        break;
-        break;
-        case 3: //8
-            loopDivider = 3; //8
-        break;
-        case 4: //4
-            loopDivider = 7; //4
-        break;
-        case 5: //2
-            loopDivider = 15; //2
-        break;
-        case 6: //1
-            loopDivider = 31; //1
-        break;
-        case 7: //.5
-            loopDivider = 63; //.5
-        break;
-        case 8: //.25
-            loopDivider = 127; //.25
-        break;
-        case 9: //.125
-            loopDivider = 255; //.125
-        break;
-        case 10: //.0625
-            loopDivider = 511; //.0625
-        break;
+        case 1:
+            loopDivider = 0; //32
+            break;
         default:
         case 2: //16
             loopDivider = 1; //16
-        break;
+            break;
+        case 3: //8
+            loopDivider = 3; //8
+            break;
+        case 4: //4
+            loopDivider = 7; //4
+            break;
+        case 5: //2
+            loopDivider = 15; //2
+            break;
+        case 6: //1
+            loopDivider = 31; //1
+            break;
+        case 7: //.5
+            loopDivider = 63; //.5
+            break;
+        case 8: //.25
+            loopDivider = 127; //.25
+            break;
+        case 9: //.125
+            loopDivider = 255; //.125
+            break;
+        case 10: //.0625
+            loopDivider = 511; //.0625
+            break;
     }
 }
 
