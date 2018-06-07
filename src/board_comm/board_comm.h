@@ -34,6 +34,7 @@ typedef enum
     BC_IMUF_LISTENING       = 108,
     BC_IMUF_REPORT_INFO     = 121,
     BC_IMUF_SETUP           = 122,
+    BC_IMUF_SETPOINT        = 126,
     BC_IMUF_RESTART         = 127,
 } imufCommandsList_t;
 
