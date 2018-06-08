@@ -18,6 +18,7 @@ typedef struct kalman
     float k;     //kalman gain
     float x;     //state
     float lastX; //previous state
+    float e;
 } kalman_t;
 
 typedef struct variance

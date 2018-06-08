@@ -19,6 +19,7 @@ void init_kalman(kalman_t *filter, float q)
     filter->q = q * 0.001f;      //add multiplier to make tuning easier
     filter->r = 88.0f;           //seeding R at 88.0f
     filter->p = 30.0f;           //seeding P at 30.0f
+    filter->e = 1.0f;
 }
 
 void kalman_init(void)
@@ -82,7 +83,7 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
     kalmanFilterStateRate[YAW].r = squirt * VARIANCE_SCALE; 
 }
 
-inline float kalman_process(kalman_t* kalmanState, volatile float input, volatile float setpoint) {
+inline float kalman_process(kalman_t* kalmanState, volatile float input) {
     //project the state ahead using acceleration
     kalmanState->x += (kalmanState->x - kalmanState->lastX);
 
@@ -90,11 +91,7 @@ inline float kalman_process(kalman_t* kalmanState, volatile float input, volatil
     kalmanState->lastX = kalmanState->x;
 
     //prediction update
-    if (setpoint) {
-        kalmanState->p = kalmanState->p + (kalmanState->q * ABS(setpoint/kalmanState->lastX));
-    } else {
-        kalmanState->p = kalmanState->p + kalmanState->q;
-    }
+    kalmanState->p = kalmanState->p + (kalmanState->q * kalmanState->e);
 
     //measurement update
     kalmanState->k = kalmanState->p / (kalmanState->p + kalmanState->r);
@@ -109,10 +106,13 @@ void kalman_update(volatile axisData_t* input, filteredData_t* output)
     {
         setPointNew = 0;
         memcpy((uint32_t *)&setPoint, (uint32_t *)&setPointInt, sizeof(axisData_t));
+        kalmanFilterStateRate[ROLL].e = ABS(1.0f - (setPoint.x/kalmanFilterStateRate[ROLL].lastX));
+        kalmanFilterStateRate[PITCH].e = ABS(1.0f - (setPoint.y/kalmanFilterStateRate[PITCH].lastX));
+        kalmanFilterStateRate[YAW].e = ABS(1.0f - (setPoint.z/kalmanFilterStateRate[YAW].lastX));
     }
     update_kalman_covariance(input);
-    output->rateData.x = kalman_process(&kalmanFilterStateRate[ROLL], input->x, setPoint.x);
-    output->rateData.y = kalman_process(&kalmanFilterStateRate[PITCH], input->y, setPoint.y);
-    output->rateData.z = kalman_process(&kalmanFilterStateRate[YAW], input->z, setPoint.z);
+    output->rateData.x = kalman_process(&kalmanFilterStateRate[ROLL], input->x);
+    output->rateData.y = kalman_process(&kalmanFilterStateRate[PITCH], input->y);
+    output->rateData.z = kalman_process(&kalmanFilterStateRate[YAW], input->z);
 }
 #pragma GCC pop_options
