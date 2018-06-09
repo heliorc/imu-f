@@ -13,13 +13,11 @@ kalman_t kalmanFilterStateRate[3];
 void init_kalman(kalman_t *filter, float q)
 {
     memset(filter, 0, sizeof(kalman_t));
-    memset((uint32_t *)&setPointInt, 0, sizeof(axisDataInt_t));
-    memset((uint32_t *)&setPoint, 0, sizeof(axisData_t));
     setPointNew = 0;
     filter->q = q * 0.001f;      //add multiplier to make tuning easier
     filter->r = 88.0f;           //seeding R at 88.0f
     filter->p = 30.0f;           //seeding P at 30.0f
-    filter->e = 1.0f;
+    filter->e = 0.0001f;
 }
 
 void kalman_init(void)
