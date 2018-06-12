@@ -83,9 +83,13 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
     kalmanFilterStateRate[YAW].r = squirt * VARIANCE_SCALE; 
 }
 
-inline float kalman_process(kalman_t* kalmanState, volatile float input) {
+inline float kalman_process(kalman_t* kalmanState, volatile float input, volatile float target) {
     //project the state ahead using acceleration
     kalmanState->x += (kalmanState->x - kalmanState->lastX);
+    
+    //figure out how much to boost or reduce our error in the estimate based on setpoint target.
+    //this should be close to 0 as we approach the sepoint and really high the futher away we are from the setpoint.
+    kalmanState->e = ABS(1.0f - (target/kalmanState->lastX));
 
     //update last state
     kalmanState->lastX = kalmanState->x;
@@ -106,13 +110,10 @@ void kalman_update(volatile axisData_t* input, filteredData_t* output)
     {
         setPointNew = 0;
         memcpy((uint32_t *)&setPoint, (uint32_t *)&setPointInt, sizeof(axisData_t));
-        kalmanFilterStateRate[ROLL].e = ABS(1.0f - (setPoint.x/kalmanFilterStateRate[ROLL].lastX));
-        kalmanFilterStateRate[PITCH].e = ABS(1.0f - (setPoint.y/kalmanFilterStateRate[PITCH].lastX));
-        kalmanFilterStateRate[YAW].e = ABS(1.0f - (setPoint.z/kalmanFilterStateRate[YAW].lastX));
     }
     update_kalman_covariance(input);
-    output->rateData.x = kalman_process(&kalmanFilterStateRate[ROLL], input->x);
-    output->rateData.y = kalman_process(&kalmanFilterStateRate[PITCH], input->y);
-    output->rateData.z = kalman_process(&kalmanFilterStateRate[YAW], input->z);
+    output->rateData.x = kalman_process(&kalmanFilterStateRate[ROLL], input->x, setPoint.x);
+    output->rateData.y = kalman_process(&kalmanFilterStateRate[PITCH], input->y, setPoint.y);
+    output->rateData.z = kalman_process(&kalmanFilterStateRate[YAW], input->z, setPoint.z);
 }
 #pragma GCC pop_options
