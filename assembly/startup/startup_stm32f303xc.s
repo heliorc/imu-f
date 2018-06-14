@@ -82,6 +82,7 @@ defined in linker script */
     .type	Reset_Handler, %function
 Reset_Handler:
     bl  boot_handler
+    bl  prerun_check
     ldr   sp, =_estack      /* set stack pointer */
 
 /* Copy the data segment initializers from flash to SRAM */  
