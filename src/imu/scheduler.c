@@ -27,8 +27,8 @@ inline void scheduler_run(void)
     update_quaternions();
     gyroDataReadDone = 0; //reset read flag to prepare for next read
     fire_spi_send_ready();
-    //if (!check_me())
-    //{
-        //delay_ms(5);
-    //}
+    if (!check_me())
+    {
+        delay_ms(5);
+    }
 }

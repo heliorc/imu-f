@@ -3,66 +3,64 @@
 
 #define CHECK_ARRAY_SIZE 8
 
-//#pragma GCC push_options
-//#pragma GCC optimize ("O0")
+#define CHECKL1 *(uint32_t *)0x20000050
+#define CHECK1 0xC88A711C
+#define CHECKL2 *(uint32_t *)0x20000054
+#define CHECK2 0xD2889D88
+#define CHECKL3 *(uint32_t *)0x20000058
+#define CHECK3 0x845EB36C
+#define CHECKL4 *(uint32_t *)0x2000005C
+#define CHECK4 0x0DA0C837
+#define CHECKL5 *(uint32_t *)0x20000060
+#define CHECK5 0x0B3CDFA3
+#define CHECKL6 *(uint32_t *)0x20000064
+#define CHECK6 0x05E68DA7
+#define CHECKL7 *(uint32_t *)0x20000068
+#define CHECK7 0x5A45BEC2
+#define CHECKL8 *(uint32_t *)0x2000006C
+#define CHECK8 0xC078A797
 
-
-
-#define CHECK1 1108426010
-#define CHECK2 553648128
-#define CHECK3 536887272
-#define CHECK4 553648128
-#define CHECK5 134233851
-#define CHECK6 553648128
-#define CHECK7 1159026037
-#define CHECK8 134231043
+volatile uint32_t checkArray[CHECK_ARRAY_SIZE];
 
 void prerun_check(void)
 {
 
 #ifdef C3PUBL
-    return;
+    return; //don't do this on bl
 #endif
 
-volatile uint32_t* checkme1 = (uint32_t *)(0x20000000 + 16284);
-volatile uint32_t* checkme2 = (uint32_t *)(0x20000000 + 16180);
-volatile uint32_t* checkme3 = (uint32_t *)(0x20000000 + 16376);
-volatile uint32_t* checkme4 = (uint32_t *)(0x20000000 + 16172);
-volatile uint32_t* checkme5 = (uint32_t *)(0x20000000 + 16068);
-volatile uint32_t* checkme6 = (uint32_t *)(0x20000000 + 16164);
-volatile uint32_t* checkme7 = (uint32_t *)(0x20000000 + 15160);
-volatile uint32_t* checkme8 = (uint32_t *)(0x20000000 + 16156);
-
-    if(checkme1[0] != CHECK1)
+    checkArray[0] = CHECKL1;
+    checkArray[1] = CHECKL2;
+    checkArray[2] = CHECKL3;
+    checkArray[3] = CHECKL4;
+    checkArray[4] = CHECKL5;
+    checkArray[5] = CHECKL6;
+    checkArray[6] = CHECKL7;
+    checkArray[7] = CHECKL8;
+    /*
+    if(CHECKL1 != CHECK1)
         while(1);
-
-    if(checkme2[0] != CHECK2)
+    if(CHECKL2 != CHECK2)
         while(1);
-
-    if(checkme3[0] != CHECK3)
+    if(CHECKL3 != CHECK3)
         while(1);
-
-    if(checkme4[0] != CHECK4)
+    if(CHECKL4 != CHECK4)
         while(1);
-
-    if(checkme5[0] != CHECK5)
+    if(CHECKL5 != CHECK5)
         while(1);
-
-    if(checkme6[0] != CHECK6)
+    if(CHECKL6 != CHECK6)
         while(1);
-
-    if(checkme7[0] != CHECK7)
+    if(CHECKL7 != CHECK7)
         while(1);
-
-    if(checkme8[0] != CHECK8)
+    if(CHECKL8 != CHECK8)
         while(1);
+    */
 }
 
 
 int check_me(void)
 {
-    return 1;
-    /*
+
     static int counter = 0;
     switch(counter)
     {
@@ -113,6 +111,5 @@ int check_me(void)
 
     }
     return 1;
-    */
+
 }
-//#pragma GCC pop_options
