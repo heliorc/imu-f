@@ -1,24 +1,16 @@
 #include "includes.h"
 #include "drm.h"
 
-#define CHECK_ARRAY_SIZE 8
+#define CHECK_ARRAY_SIZE 4
 
-#define CHECKL1 *(uint32_t *)0x20000050
-#define CHECK1 0xC88A711C
-#define CHECKL2 *(uint32_t *)0x20000054
-#define CHECK2 0xD2889D88
-#define CHECKL3 *(uint32_t *)0x20000058
-#define CHECK3 0x845EB36C
-#define CHECKL4 *(uint32_t *)0x2000005C
-#define CHECK4 0x0DA0C837
-#define CHECKL5 *(uint32_t *)0x20000060
-#define CHECK5 0x0B3CDFA3
-#define CHECKL6 *(uint32_t *)0x20000064
-#define CHECK6 0x05E68DA7
-#define CHECKL7 *(uint32_t *)0x20000068
-#define CHECK7 0x5A45BEC2
-#define CHECKL8 *(uint32_t *)0x2000006C
-#define CHECK8 0xC078A797
+#define CHECKL1 *(uint32_t *)0x20000010
+#define CHECK1 0x00C001D0
+#define CHECKL2 *(uint32_t *)0x20000014
+#define CHECK2 0x00000086
+#define CHECKL3 *(uint32_t *)0x20000018
+#define CHECK3 0x000000B2
+#define CHECKL4 *(uint32_t *)0x2000001C
+#define CHECK4 0x00000070
 
 volatile uint32_t checkArray[CHECK_ARRAY_SIZE];
 
@@ -33,10 +25,7 @@ void prerun_check(void)
     checkArray[1] = CHECKL2;
     checkArray[2] = CHECKL3;
     checkArray[3] = CHECKL4;
-    checkArray[4] = CHECKL5;
-    checkArray[5] = CHECKL6;
-    checkArray[6] = CHECKL7;
-    checkArray[7] = CHECKL8;
+
     /*
     if(CHECKL1 != CHECK1)
         while(1);
@@ -81,26 +70,6 @@ int check_me(void)
         break;
         case 3:
             if(checkArray[counter++] != CHECK4) {
-                return 0;
-            }
-        break;
-        case 4:
-            if(checkArray[counter++] != CHECK5) {
-                return 0;
-            }
-        break;
-        case 5:
-            if(checkArray[counter++] != CHECK6) {
-                return 0;
-            }
-        break;
-        case 6:
-            if(checkArray[counter++] != CHECK7) {
-                return 0;
-            }
-        break;
-        case 7:
-            if(checkArray[counter++] != CHECK8) {
                 return 0;
             }
             counter = 0;
