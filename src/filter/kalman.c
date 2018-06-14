@@ -89,7 +89,11 @@ inline float kalman_process(kalman_t* kalmanState, volatile float input, volatil
     
     //figure out how much to boost or reduce our error in the estimate based on setpoint target.
     //this should be close to 0 as we approach the sepoint and really high the futher away we are from the setpoint.
-    kalmanState->e = ABS(1.0f - (target/kalmanState->lastX));
+    if (target) {
+        kalmanState->e = ABS(1.0f - (target/kalmanState->lastX));
+    } else {
+        kalmanState->e = 0.0001f;
+    }
 
     //update last state
     kalmanState->lastX = kalmanState->x;
