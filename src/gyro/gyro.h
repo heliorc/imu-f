@@ -4,9 +4,9 @@
 
 typedef struct axisDataInt
 {
-    int x;
-    int y;
-    int z;
+    uint32_t x;
+    uint32_t y;
+    uint32_t z;
 } __attribute__((__packed__)) axisDataInt_t;
 
 typedef struct axisData

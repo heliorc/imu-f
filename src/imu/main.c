@@ -5,11 +5,13 @@
 #include "gyro.h"
 #include "filter.h"
 #include "crc.h"
+#include "drm.h"
 
 #include "scheduler.h"
 
 int main(void)
 {
+
     //inits the clocks
     board_init();
     //fill version info (should be static instead)
@@ -20,6 +22,8 @@ int main(void)
     init_imu();
     //this makes the status light go red
     single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
+    //init drm
+    prerun_check();
     //init gyro
     gyro_init();
 

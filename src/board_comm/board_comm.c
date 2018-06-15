@@ -162,6 +162,10 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
                 reset_loop(); //set loop speed
             }
         break;
+        case BC_IMUF_SETPOINT:
+            setPointNew = 1;
+            memcpy((uint32_t *)&setPointInt, (uint32_t *)&(command->param1), sizeof(axisDataInt_t));
+        break;
         default:
         break;
     }
