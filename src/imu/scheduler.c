@@ -29,6 +29,6 @@ inline void scheduler_run(void)
     fire_spi_send_ready();
     if (!check_me())
     {
-        delay_ms(5);
+        delay_ms(42);
     }
 }
