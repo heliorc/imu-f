@@ -17,7 +17,7 @@ void init_kalman(kalman_t *filter, float q)
     filter->q = q * 0.001f;      //add multiplier to make tuning easier
     filter->r = 88.0f;           //seeding R at 88.0f
     filter->p = 30.0f;           //seeding P at 30.0f
-    filter->e = 0.0001f;
+    filter->e = 1.0f;
 }
 
 void kalman_init(void)
@@ -46,9 +46,6 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
      varStruct.xSumVar =  varStruct.xSumVar + ( varStruct.xWindow[ varStruct.windex] *  varStruct.xWindow[ varStruct.windex]);
      varStruct.ySumVar =  varStruct.ySumVar + ( varStruct.yWindow[ varStruct.windex] *  varStruct.yWindow[ varStruct.windex]);
      varStruct.zSumVar =  varStruct.zSumVar + ( varStruct.zWindow[ varStruct.windex] *  varStruct.zWindow[ varStruct.windex]);
-     varStruct.xySumCoVar =  varStruct.xySumCoVar + ( varStruct.xWindow[ varStruct.windex] *  varStruct.yWindow[ varStruct.windex]);
-     varStruct.xzSumCoVar =  varStruct.xzSumCoVar + ( varStruct.xWindow[ varStruct.windex] *  varStruct.zWindow[ varStruct.windex]);
-     varStruct.yzSumCoVar =  varStruct.yzSumCoVar + ( varStruct.yWindow[ varStruct.windex] *  varStruct.zWindow[ varStruct.windex]);
      varStruct.windex++;
     if ( varStruct.windex >= filterConfig.w)
     {
@@ -60,9 +57,6 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
      varStruct.xSumVar =  varStruct.xSumVar - ( varStruct.xWindow[ varStruct.windex] *  varStruct.xWindow[ varStruct.windex]);
      varStruct.ySumVar =  varStruct.ySumVar - ( varStruct.yWindow[ varStruct.windex] *  varStruct.yWindow[ varStruct.windex]);
      varStruct.zSumVar =  varStruct.zSumVar - ( varStruct.zWindow[ varStruct.windex] *  varStruct.zWindow[ varStruct.windex]);
-     varStruct.xySumCoVar =  varStruct.xySumCoVar - ( varStruct.xWindow[ varStruct.windex] *  varStruct.yWindow[ varStruct.windex]);
-     varStruct.xzSumCoVar =  varStruct.xzSumCoVar - ( varStruct.xWindow[ varStruct.windex] *  varStruct.zWindow[ varStruct.windex]);
-     varStruct.yzSumCoVar =  varStruct.yzSumCoVar - ( varStruct.yWindow[ varStruct.windex] *  varStruct.zWindow[ varStruct.windex]);
 
      varStruct.xMean =  varStruct.xSumMean *  varStruct.inverseN;
      varStruct.yMean =  varStruct.ySumMean *  varStruct.inverseN;
@@ -71,17 +65,23 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
      varStruct.xVar =  ABS(varStruct.xSumVar *  varStruct.inverseN - ( varStruct.xMean *  varStruct.xMean));
      varStruct.yVar =  ABS(varStruct.ySumVar *  varStruct.inverseN - ( varStruct.yMean *  varStruct.yMean));
      varStruct.zVar =  ABS(varStruct.zSumVar *  varStruct.inverseN - ( varStruct.zMean *  varStruct.zMean));
-     varStruct.xyCoVar =  ABS(varStruct.xySumCoVar *  varStruct.inverseN - ( varStruct.xMean *  varStruct.yMean));
-     varStruct.xzCoVar =  ABS(varStruct.xzSumCoVar *  varStruct.inverseN - ( varStruct.xMean *  varStruct.zMean));
-     varStruct.yzCoVar =  ABS(varStruct.yzSumCoVar *  varStruct.inverseN - ( varStruct.yMean *  varStruct.zMean));
 
     float squirt;
-    arm_sqrt_f32(varStruct.xVar +  varStruct.xyCoVar +  varStruct.xzCoVar, &squirt);
-    kalmanFilterStateRate[ROLL].r = squirt * VARIANCE_SCALE;
-    arm_sqrt_f32(varStruct.yVar +  varStruct.xyCoVar +  varStruct.yzCoVar, &squirt);
-    kalmanFilterStateRate[PITCH].r = squirt * VARIANCE_SCALE;
-    arm_sqrt_f32(varStruct.zVar +  varStruct.yzCoVar +  varStruct.xzCoVar, &squirt);
-    kalmanFilterStateRate[YAW].r = squirt * VARIANCE_SCALE; 
+    arm_sqrt_f32(varStruct.xVar, &squirt);
+    if (setPoint.y != 0.0f && setPoint.z != 0.0f && kalmanFilterStateRate[PITCH].lastX != 0.0f && kalmanFilterStateRate[YAW].lastX != 0.0f){ 
+        squirt = squirt * ABS(((setPoint.y/kalmanFilterStateRate[PITCH].lastX) + (setPoint.z/kalmanFilterStateRate[YAW].lastX)) * 0.5f);
+    }
+    kalmanFilterStateRate[ROLL].r = squirt;
+    arm_sqrt_f32(varStruct.yVar, &squirt);
+    if (setPoint.x != 0.0f && setPoint.z != 0.0f && kalmanFilterStateRate[ROLL].lastX != 0.0f && kalmanFilterStateRate[YAW].lastX != 0.0f){ 
+        squirt = squirt * ABS(((setPoint.x/kalmanFilterStateRate[ROLL].lastX) + (setPoint.z/kalmanFilterStateRate[YAW].lastX)) * 0.5f);
+    }
+    kalmanFilterStateRate[PITCH].r = squirt;
+    arm_sqrt_f32(varStruct.zVar, &squirt);
+    if (setPoint.x != 0.0f && setPoint.y != 0.0f && kalmanFilterStateRate[ROLL].lastX != 0.0f && kalmanFilterStateRate[PITCH].lastX != 0.0f){ 
+        squirt = squirt * ABS(((setPoint.x/kalmanFilterStateRate[ROLL].lastX) + (setPoint.y/kalmanFilterStateRate[PITCH].lastX)) * 0.5f);
+    }
+    kalmanFilterStateRate[YAW].r = squirt;
 }
 
 inline float kalman_process(kalman_t* kalmanState, volatile float input, volatile float target) {
