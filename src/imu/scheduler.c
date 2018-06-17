@@ -4,7 +4,6 @@
 #include "quaternions.h"
 #include "gyro.h"
 #include "filter.h"
-#include "drm.h"
 #include "gyro_device.h" //where gyroRxFrame lives
 
 inline void scheduler_run(void)
@@ -27,8 +26,4 @@ inline void scheduler_run(void)
     update_quaternions();
     gyroDataReadDone = 0; //reset read flag to prepare for next read
     fire_spi_send_ready();
-    if (!check_me())
-    {
-        delay_ms(42);
-    }
 }
