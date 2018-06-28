@@ -8,7 +8,7 @@
 #define MIN_WINDOW_SIZE 6
 
 // #define VARIANCE_SCALE 1.0f
-#define VARIANCE_SCALE 0.3333333f
+#define VARIANCE_SCALE 0.5f
 
 typedef struct kalman
 {

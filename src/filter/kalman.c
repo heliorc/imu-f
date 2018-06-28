@@ -89,9 +89,9 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
     arm_sqrt_f32(varStruct.yVar * varStruct.zVar, &squirt);
     varStruct.yzCorrelation = varStruct.yzCoVar / squirt;
 
-    kalmanFilterStateRate[ROLL].r = ABS((varStruct.xMean + (varStruct.yMean * varStruct.xyCorrelation) + (varStruct.zMean * varStruct.xzCorrelation))) * VARIANCE_SCALE;
-    kalmanFilterStateRate[PITCH].r = ABS((varStruct.yMean + (varStruct.xMean * varStruct.xyCorrelation) + (varStruct.zMean * varStruct.yzCorrelation))) * VARIANCE_SCALE;
-    kalmanFilterStateRate[YAW].r = ABS((varStruct.zMean + (varStruct.yMean * varStruct.yzCorrelation) + (varStruct.xMean * varStruct.xzCorrelation))) * VARIANCE_SCALE;
+    kalmanFilterStateRate[ROLL].r = ABS((varStruct.xMean * ((varStruct.xyCorrelation + varStruct.xzCorrelation) * VARIANCE_SCALE)));
+    kalmanFilterStateRate[PITCH].r = ABS((varStruct.yMean * ((varStruct.xyCorrelation + varStruct.yzCorrelation) * VARIANCE_SCALE)));
+    kalmanFilterStateRate[YAW].r = ABS((varStruct.zMean * ((varStruct.yzCorrelation + varStruct.xzCorrelation) * VARIANCE_SCALE)));
 }
 
 inline float kalman_process(kalman_t* kalmanState, volatile float input, volatile float target) {
