@@ -9,6 +9,7 @@ volatile axisDataInt_t setPointInt;
 volatile axisData_t setPoint;
 kalman_t kalmanFilterStateRate[3];
 
+#define DT 1 / 32000
 
 void init_kalman(kalman_t *filter, float q)
 {
@@ -17,7 +18,10 @@ void init_kalman(kalman_t *filter, float q)
     filter->q = q * 0.001f;      //add multiplier to make tuning easier
     filter->r = 88.0f;           //seeding R at 88.0f
     filter->p = 30.0f;           //seeding P at 30.0f
+    filter->x = 0.0f;         //set intial value, can be zero if unknown
+    filter->lastX = 0.0f;     //set intial value, can be zero if unknown
     filter->e = 1.0f;
+    filter->acc = 0.0f;       //set intial value, can be zero if unknown
 }
 
 void kalman_init(void)
@@ -49,7 +53,7 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
      varStruct.windex++;
     if ( varStruct.windex >= filterConfig.w)
     {
-         varStruct.windex = 0;
+        varStruct.windex = 0;
     }
      varStruct.xSumMean -=  varStruct.xWindow[ varStruct.windex];
      varStruct.ySumMean -=  varStruct.yWindow[ varStruct.windex];
@@ -69,27 +73,25 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
     float squirt;
     arm_sqrt_f32(varStruct.xVar, &squirt);
     if (setPoint.y != 0.0f && setPoint.z != 0.0f && kalmanFilterStateRate[PITCH].lastX != 0.0f && kalmanFilterStateRate[YAW].lastX != 0.0f){ 
-        squirt = squirt * ABS(((setPoint.y/kalmanFilterStateRate[PITCH].lastX) + (setPoint.z/kalmanFilterStateRate[YAW].lastX)) * 0.5f);
+        squirt = squirt * ABS(((setPoint.y/kalmanFilterStateRate[PITCH].lastX) + (setPoint.z/kalmanFilterStateRate[YAW].lastX)) * VARIANCE_SCALE);
     }
     kalmanFilterStateRate[ROLL].r = squirt;
     arm_sqrt_f32(varStruct.yVar, &squirt);
     if (setPoint.x != 0.0f && setPoint.z != 0.0f && kalmanFilterStateRate[ROLL].lastX != 0.0f && kalmanFilterStateRate[YAW].lastX != 0.0f){ 
-        squirt = squirt * ABS(((setPoint.x/kalmanFilterStateRate[ROLL].lastX) + (setPoint.z/kalmanFilterStateRate[YAW].lastX)) * 0.5f);
+        squirt = squirt * ABS(((setPoint.x/kalmanFilterStateRate[ROLL].lastX) + (setPoint.z/kalmanFilterStateRate[YAW].lastX)) * VARIANCE_SCALE);
     }
     kalmanFilterStateRate[PITCH].r = squirt;
     arm_sqrt_f32(varStruct.zVar, &squirt);
     if (setPoint.x != 0.0f && setPoint.y != 0.0f && kalmanFilterStateRate[ROLL].lastX != 0.0f && kalmanFilterStateRate[PITCH].lastX != 0.0f){ 
-        squirt = squirt * ABS(((setPoint.x/kalmanFilterStateRate[ROLL].lastX) + (setPoint.y/kalmanFilterStateRate[PITCH].lastX)) * 0.5f);
+        squirt = squirt * ABS(((setPoint.x/kalmanFilterStateRate[ROLL].lastX) + (setPoint.y/kalmanFilterStateRate[PITCH].lastX)) * VARIANCE_SCALE);
     }
     kalmanFilterStateRate[YAW].r = squirt;
 }
 
 inline float kalman_process(kalman_t* kalmanState, volatile float input, volatile float target) {
     //project the state ahead using acceleration
-    kalmanState->x += (kalmanState->x - kalmanState->lastX);
-    
-    //figure out how much to boost or reduce our error in the estimate based on setpoint target.
-    //this should be close to 0 as we approach the sepoint and really high the futher away we are from the setpoint.
+    kalmanState->x = kalmanState->lastX + (kalmanState->acc * DT);
+
     //update last state
     kalmanState->lastX = kalmanState->x;
 
@@ -106,6 +108,10 @@ inline float kalman_process(kalman_t* kalmanState, volatile float input, volatil
     kalmanState->k = kalmanState->p / (kalmanState->p + kalmanState->r);
     kalmanState->x += kalmanState->k * (input - kalmanState->x);
     kalmanState->p = (1.0f - kalmanState->k) * kalmanState->p;
+    
+    kalmanState->acc = (kalmanState->x - kalmanState->lastX) * DT;
+    kalmanState->lastX = kalmanState->x;
+
     return kalmanState->x;
 }
 
