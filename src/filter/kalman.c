@@ -92,14 +92,13 @@ inline float kalman_process(kalman_t* kalmanState, volatile float input, volatil
     //project the state ahead using acceleration
     kalmanState->x = kalmanState->lastX + (kalmanState->acc * DT);
 
-    //update last state
-    kalmanState->lastX = kalmanState->x;
-
     if (target != 0.0f) {
         kalmanState->e = ABS(1.0f - (target/kalmanState->lastX));
     } else {
         kalmanState->e = 1.0f;
     }
+    
+    kalmanState->r += ABS(input - kalmanState->x);
     
     //prediction update
     kalmanState->p = kalmanState->p + (kalmanState->q * kalmanState->e);
