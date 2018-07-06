@@ -3,12 +3,12 @@
 #include "biquad.h"
 
 #define REFRESH_RATE           0.00003125f
-#define DEFAULT_ROLL_Q         5000
-#define DEFAULT_PITCH_Q        5000
-#define DEFAULT_YAW_Q          3500
-#define DEFAULT_ROLL_LPF_HZ    240
-#define DEFAULT_PITCH_LPF_HZ   240
-#define DEFAULT_YAW_LPF_HZ     240
+#define DEFAULT_ROLL_Q         3000
+#define DEFAULT_PITCH_Q        3000
+#define DEFAULT_YAW_Q          3000
+#define DEFAULT_ROLL_LPF_HZ    120
+#define DEFAULT_PITCH_LPF_HZ   120
+#define DEFAULT_YAW_LPF_HZ     120
 
 typedef enum filterAxisTypedef {
     ROLL = 0,
@@ -34,13 +34,6 @@ typedef struct filter_config
 } filter_config_t;
 
 extern volatile filter_config_t filterConfig;
-
-extern biquad_state_t dynNotchStateRate;
-
-//let other files be aware of these filters
-extern biquad_axis_state_t axisX;
-extern biquad_axis_state_t axisY;
-extern biquad_axis_state_t axisZ;
 
 extern void allow_filter_init(void);
 extern void filter_init(void);
