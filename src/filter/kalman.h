@@ -17,7 +17,6 @@ typedef struct kalman
     float p;     //estimation error covariance matrix
     float k;     //kalman gain
     float x;     //state
-    float acc;   //acceleration
     float lastX; //previous state
     float e;
 } kalman_t;
