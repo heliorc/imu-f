@@ -22,11 +22,6 @@ volatile filter_config_t filterConfig = {
 
 biquad_state_t lpfFilterStateRate;
 
-//actual dynamic filters live here
-biquad_axis_state_t axisX;
-biquad_axis_state_t axisY;
-biquad_axis_state_t axisZ;
-
 volatile int allowFilterInit = 1;
 
 void allow_filter_init(void)
@@ -38,8 +33,8 @@ void filter_init(void)
 {
 	kalman_init();
 
-	biquad_init(filterConfig.pitch_lpf_hz, &(lpfFilterStateRate.x), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH);
-	biquad_init(filterConfig.roll_lpf_hz, &(lpfFilterStateRate.y), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH);
+	biquad_init(filterConfig.roll_lpf_hz, &(lpfFilterStateRate.x), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH);
+	biquad_init(filterConfig.pitch_lpf_hz, &(lpfFilterStateRate.y), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH);
 	biquad_init(filterConfig.yaw_lpf_hz, &(lpfFilterStateRate.z), REFRESH_RATE, FILTER_TYPE_LOWPASS, BIQUAD_BANDWIDTH);
 }
 
@@ -49,11 +44,11 @@ void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAcc
 	{
 		allowFilterInit = 0;
 		//convert the ints to floats
-		filterConfig.pitch_q        = (float)filterConfig.i_pitch_q;
 		filterConfig.roll_q         = (float)filterConfig.i_roll_q;
+		filterConfig.pitch_q        = (float)filterConfig.i_pitch_q;
 		filterConfig.yaw_q          = (float)filterConfig.i_yaw_q;
-		filterConfig.pitch_lpf_hz   = (float)filterConfig.i_pitch_lpf_hz;
 		filterConfig.roll_lpf_hz    = (float)filterConfig.i_roll_lpf_hz;
+		filterConfig.pitch_lpf_hz   = (float)filterConfig.i_pitch_lpf_hz;
 		filterConfig.yaw_lpf_hz     = (float)filterConfig.i_yaw_lpf_hz;
 		filter_init();
 	}
