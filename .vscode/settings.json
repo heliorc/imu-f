@@ -42,6 +42,7 @@
         "type_traits": "c",
         "fft.h": "c",
         "biquad.h": "c",
-        "scheduler.h": "c"
+        "scheduler.h": "c",
+        "kalman.h": "c"
     }
 }

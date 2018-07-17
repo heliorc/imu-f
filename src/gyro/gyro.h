@@ -4,9 +4,9 @@
 
 typedef struct axisDataInt
 {
-    int x;
-    int y;
-    int z;
+    uint32_t x;
+    uint32_t y;
+    uint32_t z;
 } __attribute__((__packed__)) axisDataInt_t;
 
 typedef struct axisData
@@ -46,5 +46,5 @@ extern void gyro_init(void);
 extern void gyro_int_to_float(gyroFrame_t* gyroRxFrame);
 extern void run_gyro_filters(void);
 extern void increment_acc_tracker(void);
-extern void fire_spi_send_ready();
+extern void fire_spi_send_ready(void);
 extern void reset_loop(void);
