@@ -13,8 +13,13 @@ volatile uint32_t map9 = 0x48454C49;
 
 
 //serial number stored here
+#if defined(C3PUBL)
 volatile uint8_t serialText[512] = {'S', 'E', 'R', 'I', 'A', 'L', 'M', 'E', 0, };
-
+#elif defined(C3PU)
+volatile uint8_t serialText[512] = {'S', 'E', 'R', 'I', 'A', 'L', 'M', 'O', 0, };
+#else
+#error "bad compiler! You dun goofed! Must be C3PU or C3PUBL!!!!!!!!!"
+#endif
 
 static int kick(uint32_t input);
 static int is_sparta(void);
