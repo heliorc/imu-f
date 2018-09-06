@@ -7,16 +7,17 @@
 #include "crc.h"
 #include "fft.h"
 
+#include "scheduler.h"
+
 int main(void)
 {
+
     //inits the clocks
     board_init();
     //fill version info (should be static instead)
     set_version(); 
     //start the crc hardware
     crc_config();
-    //init filter
-    filter_init_defaults();
     //init imu
     init_imu();
     //this makes the status light go red
@@ -40,7 +41,7 @@ int main(void)
     //quaternions stuff happens in the main loop here
     while(1)
     {
-        update_quaternions();
+        scheduler_run();
         #ifndef DEBUG
         update_fft();
         #endif

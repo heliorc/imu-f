@@ -2,7 +2,7 @@
 #include "biquad.h"
 
 
-void biquad_init(float filterCutFreq, biquad_axis_state_t *state, float refreshRateSeconds, uint32_t filterType, float bandwidth, biquad_axis_state_t *oldState )
+void biquad_init(float filterCutFreq, biquad_axis_state_t *state, float refreshRateSeconds, uint32_t filterType, float bandwidth)
 {
 
 	float samplingRate;
@@ -40,21 +40,13 @@ void biquad_init(float filterCutFreq, biquad_axis_state_t *state, float refreshR
 			break;
 	}
 	//don't let these states be used until they're updated
-	//__disable_irq();
+	__disable_irq();
     state->a0 = b0 / a0;
     state->a1 = b1 / a0;
     state->a2 = b2 / a0;
     state->a3 = a1 / a0;
     state->a4 = a2 / a0;
-	//__enable_irq();
-
-	if (oldState != NULL)
-	{
-		state->y2 = oldState->y2;
-		state->y1 = oldState->y1;
-		state->x2 = oldState->x2;
-		state->x1 = oldState->x1;
-	}
+	__enable_irq();
 }
 
 #pragma GCC push_options
@@ -67,12 +59,20 @@ float biquad_update(float sample, biquad_axis_state_t *state)
     result = state->a0 * (float)sample + state->a1 * state->x1 + state->a2 * state->x2 -
             state->a3 * state->y1 - state->a4 * state->y2;
 
-    /* shift x1 to x2, sample to x1 */
-    state->x2 = state->x1;
-    state->x1 = (float)sample;
-    /* shift y1 to y2, result to y1 */
-    state->y2 = state->y1;
-    state->y1 = result;
+	if ( !isnan(result) )
+	{
+		/* shift x1 to x2, sample to x1 */
+		state->x2 = state->x1;
+		state->x1 = (float)sample;
+		/* shift y1 to y2, result to y1 */
+		state->y2 = state->y1;
+		state->y1 = result;
+	}
+	else
+	{
+		//don't filter is result goes NaN
+		return sample;
+	}
 
     return result;
 

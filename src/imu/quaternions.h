@@ -5,11 +5,21 @@
 
 typedef enum quaternionUpdateState
 {
-    QUAT_NO_DATA          = 0,
-    QUAT_PROCESS_BUFFER_0 = 1,
-    QUAT_DONE_BUFFER_0    = 2,
-    QUAT_PROCESS_BUFFER_1 = 3,
-    QUAT_DONE_BUFFER_1    = 4,
+    QUAT_NO_DATA            = 0,
+    QUAT_PROCESS_BUFFER_0_0 = 1,
+    QUAT_PROCESS_BUFFER_0_1 = 2,
+    QUAT_PROCESS_BUFFER_0_2 = 3,
+    QUAT_PROCESS_BUFFER_0_3 = 4,
+    QUAT_PROCESS_BUFFER_0_4 = 5,
+    QUAT_PROCESS_BUFFER_0_5 = 6,
+    QUAT_DONE_BUFFER_0      = 7,
+    QUAT_PROCESS_BUFFER_1_0 = 8,
+    QUAT_PROCESS_BUFFER_1_1 = 9,
+    QUAT_PROCESS_BUFFER_1_2 = 10,
+    QUAT_PROCESS_BUFFER_1_3 = 11,
+    QUAT_PROCESS_BUFFER_1_4 = 12,
+    QUAT_PROCESS_BUFFER_1_5 = 13,
+    QUAT_DONE_BUFFER_1      = 14,
 } quaternionUpdateState_t;
 
 typedef struct quaternion_buffer {

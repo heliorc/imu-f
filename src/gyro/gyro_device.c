@@ -1,7 +1,6 @@
 #include "includes.h"
 #include "invensense_register_map.h"
 #include "gyro_device.h"
-#include "fft.h"
 
 //multiple configs can go here, just need one right now
 const gyro_device_config_t gyroConfig = {1, 0, INVENS_CONST_GYRO_FCB_32_8800, 0, INVENS_CONST_ACC_FCB_ENABLE, 8};
@@ -12,7 +11,7 @@ gyroFrame_t gyroTxFrame;
 uint8_t *gyroRxFramePtr;
 uint8_t *gyroTxFramePtr;
 
-volatile int gyroReadDone = 0;
+volatile int gyroSetupReadDone = 0;
 #define GYRO_READ_TIMEOUT 20
 
 float gyroRateMultiplier = GYRO_DPS_SCALE_2000;
@@ -36,21 +35,6 @@ static void gyro_cs_lo(void);
 static void gyro_cs_hi(void);
 static void gyro_spi_init(void);
 static void gyro_setup_exti_fn(gyroFrame_t* gyroRxFrame);
-
-static void super_error(uint32_t time)
-{
-    volatile int cat = 1;
-    single_gpio_init(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN_SRC, BOOTLOADER_CHECK_PIN, 0, GPIO_Mode_OUT, GPIO_OType_PP, GPIO_PuPd_NOPULL);
-    gpio_write_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, 0);
-    while(1)
-    {
-        cat++;
-        gpio_write_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, 1);
-        delay_ms(time);
-        gpio_write_pin(BOOTLOADER_CHECK_PORT, BOOTLOADER_CHECK_PIN, 0);
-        delay_ms(time);
-    }
-}
 
 inline static void gyro_cs_lo(void)
 {
@@ -130,7 +114,7 @@ static void gyro_spi_init(void)
     spiInitStruct.SPI_CPOL = SPI_CPOL_High;
     spiInitStruct.SPI_CPHA = SPI_CPHA_2Edge;
     spiInitStruct.SPI_NSS = SPI_NSS_Soft;
-    spiInitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
+    spiInitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8;
     spiInitStruct.SPI_FirstBit = SPI_FirstBit_MSB;
     spiInitStruct.SPI_CRCPolynomial = 7;
     SPI_Init(GYRO_SPI, &spiInitStruct);
@@ -142,7 +126,7 @@ static void gyro_spi_init(void)
 
     dmaInitStruct.DMA_M2M = DMA_M2M_Disable;
     dmaInitStruct.DMA_Mode = DMA_Mode_Normal;
-    dmaInitStruct.DMA_Priority = DMA_Priority_Medium;
+    dmaInitStruct.DMA_Priority = DMA_Priority_VeryHigh;
     dmaInitStruct.DMA_DIR = DMA_DIR_PeripheralDST;
 
     dmaInitStruct.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -157,6 +141,7 @@ static void gyro_spi_init(void)
 
     DMA_Init(GYRO_TX_DMA, &dmaInitStruct);
 
+    dmaInitStruct.DMA_Priority = DMA_Priority_High;
     dmaInitStruct.DMA_DIR = DMA_DIR_PeripheralSRC;
 
     DMA_Init(GYRO_RX_DMA, &dmaInitStruct);
@@ -204,8 +189,6 @@ void GYRO_EXTI_HANDLER(void)
     {
         //what reg do we want to read from? for ICM gyros, add 0x80 to read instead of write
         gyroTxFrame.accAddress = INVENS_RM_ACCEL_XOUT_H | 0x80;
-        //set cs pin
-        gyro_cs_lo();
         //start the dma transfer
         gyro_spi_transmit_receive(gyroTxFramePtr, gyroRxFramePtr, 15);
         //clear interrupt bit
@@ -225,12 +208,11 @@ static int gyro_write_reg_setup(uint8_t reg, uint8_t data, uint8_t* returnedData
     gyroTxFrame.accAddress = reg;
     gyroTxFrame.accelX_H = data;
     //set read done check to 0
-    gyroReadDone = 0;
-    //drive cs low to enable chip
-    gyro_cs_lo();
+    gyroSetupReadDone = 0;
     //start the dma transfer
     gyro_spi_transmit_receive(gyroTxFramePtr, gyroRxFramePtr, 2);
-    while(!gyroReadDone)
+
+    while(!gyroSetupReadDone)
     {
         if(millis() - timeoutCheck > GYRO_READ_TIMEOUT)
         {
@@ -339,7 +321,7 @@ static void gyro_configure(void)
 static void gyro_setup_exti_fn(gyroFrame_t* gyroRxFrame)
 {
     (void)(gyroRxFrame);
-    gyroReadDone = 1; //used for blocking reads
+    gyroSetupReadDone = 1; //used for blocking reads
 }
 
 void gyro_device_init(gyro_read_done_t readFn) 

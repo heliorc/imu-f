@@ -1,8 +1,9 @@
 #include "includes.h"
-#include "fft.h"
+#include "gyro.h"
 #include "biquad.h"
 #include "filter.h"
 #include "imu.h"
+#include "fft.h"
 
 #include "arm_math.h"
 #include "arm_common_tables.h"
@@ -107,7 +108,7 @@ void update_fft(void)
             //run calculations, calculate filter, runs at 333 Hz using 1000 Hz samples
             calculate_fft(fftGyroDataX, rfftGyroDataX, FFT_DATA_SET_SIZE, &fftResultX, &centerFrqFiltX );
             //init new calculations
-            biquad_init(fftResultX.cutoffFreq, &axisX, REFRESH_RATE, FILTER_TYPE_NOTCH, fftResultX.notchQ, NULL);
+            biquad_init(fftResultX.cutoffFreq, &axisX, REFRESH_RATE, FILTER_TYPE_NOTCH, fftResultX.notchQ);
             //set new state
             fftUpdateState = FFT_STATE_CALCULATE_X_DONE;
             break;
@@ -118,7 +119,7 @@ void update_fft(void)
             //run calculations, calculate filter, runs at 333 Hz using 1000 Hz samples
             calculate_fft(fftGyroDataY, rfftGyroDataY, FFT_DATA_SET_SIZE, &fftResultY, &centerFrqFiltY );
             //init new calculations
-            biquad_init(fftResultY.cutoffFreq, &axisY, REFRESH_RATE, FILTER_TYPE_NOTCH, fftResultY.notchQ, NULL);
+            biquad_init(fftResultY.cutoffFreq, &axisY, REFRESH_RATE, FILTER_TYPE_NOTCH, fftResultY.notchQ);
             //set new state
             fftUpdateState = FFT_STATE_CALCULATE_Y_DONE;
             break;
@@ -129,7 +130,7 @@ void update_fft(void)
             //run calculations, calculate filter, runs at 333 Hz using 1000 Hz samples
             calculate_fft(fftGyroDataZ, rfftGyroDataZ, FFT_DATA_SET_SIZE, &fftResultZ, &centerFrqFiltZ );
             //init new calculations
-            biquad_init(fftResultZ.cutoffFreq, &axisZ, REFRESH_RATE, FILTER_TYPE_NOTCH, fftResultX.notchQ, NULL);
+            biquad_init(fftResultZ.cutoffFreq, &axisZ, REFRESH_RATE, FILTER_TYPE_NOTCH, fftResultX.notchQ);
             //set new state
             fftUpdateState = FFT_STATE_CALCULATE_Z_DONE;
             break;
@@ -165,9 +166,9 @@ void init_fft(void)
     memset(&centerFrqFiltX, 0, sizeof(centerFrqFiltX));
     memset(&centerFrqFiltY, 0, sizeof(centerFrqFiltY));
     memset(&centerFrqFiltZ, 0, sizeof(centerFrqFiltZ));
-    biquad_init(60.0f, &centerFrqFiltX, 0.003003003f, FILTER_TYPE_LOWPASS, BQQ, NULL);
-    biquad_init(60.0f, &centerFrqFiltY, 0.003003003f, FILTER_TYPE_LOWPASS, BQQ, NULL);
-    biquad_init(60.0f, &centerFrqFiltZ, 0.003003003f, FILTER_TYPE_LOWPASS, BQQ, NULL);
+    biquad_init(60.0f, &centerFrqFiltX, 0.003003003f, FILTER_TYPE_LOWPASS, BQQ);
+    biquad_init(60.0f, &centerFrqFiltY, 0.003003003f, FILTER_TYPE_LOWPASS, BQQ);
+    biquad_init(60.0f, &centerFrqFiltZ, 0.003003003f, FILTER_TYPE_LOWPASS, BQQ);
 
     //set default  state for fft:
     fftUpdateState = FFT_STATE_CALCULATE_Z_DONE; // this will start caclulations going on axis X basically

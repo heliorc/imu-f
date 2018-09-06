@@ -28,7 +28,7 @@ void spi_init(SPI_InitTypeDef *spiInitStructure, DMA_InitTypeDef *dmaInitStructu
 
     dmaInitStructure->DMA_M2M = DMA_M2M_Disable;
     dmaInitStructure->DMA_Mode = DMA_Mode_Normal;
-    dmaInitStructure->DMA_Priority = DMA_Priority_High;
+    dmaInitStructure->DMA_Priority = DMA_Priority_Low;
     dmaInitStructure->DMA_DIR = DMA_DIR_PeripheralDST;
 
     dmaInitStructure->DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -43,6 +43,7 @@ void spi_init(SPI_InitTypeDef *spiInitStructure, DMA_InitTypeDef *dmaInitStructu
 
     DMA_Init(BOARD_COMM_TX_DMA, dmaInitStructure);
 
+    dmaInitStructure->DMA_Priority = DMA_Priority_Medium;
     dmaInitStructure->DMA_DIR = DMA_DIR_PeripheralSRC;
 
     DMA_Init(BOARD_COMM_RX_DMA, dmaInitStructure);

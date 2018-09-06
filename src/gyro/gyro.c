@@ -8,12 +8,16 @@
 #include "crc.h"
 #include "fft.h"
 
+volatile int gyroDataReadDone;
 volatile int calibratingGyro;
 volatile axisData_t gyroSum;
 volatile axisData_t gyroCalibrationTrim;
 volatile axisData_t rawAccData;
 volatile axisData_t rawRateData;
 volatile gyro_settings_config_t gyroSettingsConfig;
+volatile uint32_t gyroCalibrationCycles = 0;
+
+volatile int loopDivider = 1;
 
 float gyroTempData;
 filteredData_t filteredData;
@@ -41,10 +45,11 @@ enum
     CW135_INV = 13,
     CW225_INV = 14,
     CW315_INV = 15,
+    CUSTOM    = 16,
 };
 
-static float rotationMatrix[3][3];
-static int   matrixFormed = -1;
+float rotationMatrix[3][3];
+int   matrixFormed = -1;
 
 //build the rotational matrix for allowing different board angles other than 90 degrees
 static void build_rotation_matrix(int x, int y, int z)
@@ -96,6 +101,23 @@ static void init_orientation(void)
     gyroSettingsConfig.smallY      = 0;
     gyroSettingsConfig.smallZ      = 0;
 }
+
+void reset_calibration(void){
+    gyroCalibrationCycles = 0;
+    calibratingGyro = 0;  
+    gyroSum.x = 0.0f;
+    gyroSum.y = 0.0f;
+    gyroSum.z = 0.0f;
+}
+
+void start_calibration(void) {
+    reset_calibration();
+    gyroCalibrationTrim.x = 0.0f;
+    gyroCalibrationTrim.y = 0.0f;
+    gyroCalibrationTrim.z = 0.0f;
+    calibratingGyro = 1;
+}
+
 #pragma GCC pop_options
 
 #pragma GCC push_options
@@ -117,7 +139,7 @@ static void apply_gyro_acc_rotation(volatile axisData_t* rawData)
 	nonNinety = 0;
     switch (gyroSettingsConfig.orientation)
     {
-
+        case CUSTOM:
 		case CW0:
 	    	if (x || y || z)
 	    	{
@@ -237,9 +259,8 @@ static void apply_gyro_acc_rotation(volatile axisData_t* rawData)
 }
 #pragma GCC pop_options
 
-static void gyro_int_to_float(gyroFrame_t* gyroRxFrame)
+void gyro_int_to_float(gyroFrame_t* gyroRxFrame)
 {
-    static uint32_t gyroCalibrationCycles = 0;
     static int gyroLoopCounter = 0;
 
     if (gyroLoopCounter-- <= 0)
@@ -258,6 +279,11 @@ static void gyro_int_to_float(gyroFrame_t* gyroRxFrame)
         apply_gyro_acc_rotation(&rawAccData);
     }
 
+    //f*f+f is one operation on FPU
+    rawRateData.x = (float)((int16_t)((gyroRxFrame->gyroX_H << 8) | gyroRxFrame->gyroX_L)) * gyroRateMultiplier + gyroCalibrationTrim.x;
+	rawRateData.y = (float)((int16_t)((gyroRxFrame->gyroY_H << 8) | gyroRxFrame->gyroY_L)) * gyroRateMultiplier + gyroCalibrationTrim.y;
+	rawRateData.z = (float)((int16_t)((gyroRxFrame->gyroZ_H << 8) | gyroRxFrame->gyroZ_L)) * gyroRateMultiplier + gyroCalibrationTrim.z;
+ 
     //doing in real time, might be better to move this to the main loop for processing, but we need to make sure it's done right
     if (calibratingGyro)
     {
@@ -273,87 +299,114 @@ static void gyro_int_to_float(gyroFrame_t* gyroRxFrame)
             gyroCalibrationTrim.x = -gyroSum.x / (float)gyroCalibrationCycles;
             gyroCalibrationTrim.y = -gyroSum.y / (float)gyroCalibrationCycles;
             gyroCalibrationTrim.z = -gyroSum.z / (float)gyroCalibrationCycles;
-            calibratingGyro = 0; //calibration done, set to zero and calibration data will apear in next cycle.
-            gyroCalibrationCycles = 0;
+            reset_calibration();
         }
     }
 
-    //f*f+f is one operation on FPU
-    rawRateData.x = (float)((int16_t)((gyroRxFrame->gyroX_H << 8) | gyroRxFrame->gyroX_L)) * gyroRateMultiplier + gyroCalibrationTrim.x;
-	rawRateData.y = (float)((int16_t)((gyroRxFrame->gyroY_H << 8) | gyroRxFrame->gyroY_L)) * gyroRateMultiplier + gyroCalibrationTrim.y;
-	rawRateData.z = (float)((int16_t)((gyroRxFrame->gyroZ_H << 8) | gyroRxFrame->gyroZ_L)) * gyroRateMultiplier + gyroCalibrationTrim.z;
     apply_gyro_acc_rotation(&rawRateData);
 }
 
-void gyro_read_done(gyroFrame_t* gyroRxFrame) {
+void run_gyro_filters(void)
+{
+    filter_data(&rawRateData, &rawAccData, gyroTempData, &filteredData); //profile: this takes 2.45us to run with O3 optimization, before adding biquad at least
+}
 
+void reset_loop(void)
+{
+    switch(gyroSettingsConfig.rate)
+    {
+        case 1:
+            loopDivider = 0; //32
+            break;
+        default:
+        case 2: //16
+            loopDivider = 1; //16
+            break;
+        case 3: //8
+            loopDivider = 3; //8
+            break;
+        case 4: //4
+            loopDivider = 7; //4
+            break;
+        case 5: //2
+            loopDivider = 15; //2
+            break;
+        case 6: //1
+            loopDivider = 31; //1
+            break;
+        case 7: //.5
+            loopDivider = 63; //.5
+            break;
+        case 8: //.25
+            loopDivider = 127; //.25
+            break;
+        case 9: //.125
+            loopDivider = 255; //.125
+            break;
+        case 10: //.0625
+            loopDivider = 511; //.0625
+            break;
+    }
+}
+
+void increment_acc_tracker(void)
+{
     static uint32_t accTracker = 8; //start at 7, so 8 is run first
     static volatile quaternion_buffer_t *quatBuffer = &(quatBufferA); //start working on this buffer
-    //default rateDatafilteredData
+
+    //set flags and do quats in main loop
+    //we have to fill the gyro data here though
+    //add rate data for later usage in quats. This is reset in imu.c
+    quatBuffer->vector.x += filteredData.rateData.x;
+    quatBuffer->vector.y += filteredData.rateData.y;
+    quatBuffer->vector.z += filteredData.rateData.z;
+
+    accTracker++;
+    switch(accTracker)
+    {
+        case 9:
+        case 25:
+            //update quaternions, these were calculated in imu.c
+            filteredData.quaternion[0] = attitudeFrameQuat.w;
+            filteredData.quaternion[1] = attitudeFrameQuat.vector.x;
+            filteredData.quaternion[2] = attitudeFrameQuat.vector.y;
+            filteredData.quaternion[3] = attitudeFrameQuat.vector.z;
+            //put acc into quat buffer
+            quatBuffer->accVector.x = filteredData.accData.x;
+            quatBuffer->accVector.y = filteredData.accData.y;
+            quatBuffer->accVector.z = filteredData.accData.z;
+            quatState = QUAT_PROCESS_BUFFER_0_0;
+            //switch buffers
+            quatBuffer = &quatBufferB;
+            break;
+        case 10:
+                increment_fft_state();
+            break;
+        case 33:
+            //reset acc tracker
+            accTracker = 1; //fallthru for 33, not done on 17
+        case 17:
+            //update quaternions, these were calculated in imu.c
+            filteredData.quaternion[0] = attitudeFrameQuat.w;
+            filteredData.quaternion[1] = attitudeFrameQuat.vector.x;
+            filteredData.quaternion[2] = attitudeFrameQuat.vector.y;
+            filteredData.quaternion[3] = attitudeFrameQuat.vector.z;
+            //put acc into quat buffer
+            quatBuffer->accVector.x = filteredData.accData.x;
+            quatBuffer->accVector.y = filteredData.accData.y;
+            quatBuffer->accVector.z = filteredData.accData.z;
+            quatState = QUAT_PROCESS_BUFFER_1_0;
+            //switch buffers
+            quatBuffer = &quatBufferA;
+        break;
+    }
+}
+
+void fire_spi_send_ready(void)
+{
+
     volatile uint8_t*  memptr8  = (uint8_t*)&filteredData.rateData;
     volatile uint32_t* memptr32 = (uint32_t*)&filteredData.rateData;
-
-    if (boardCommState.commMode == GTBCM_GYRO_ONLY_PASSTHRU) 
-    {
-        memptr8 = (uint8_t*)&(gyroRxFrame->gyroX_H);
-        memptr32 = (uint32_t*)&(gyroRxFrame->gyroX_H);
-    } else if (boardCommState.commMode == GTBCM_GYRO_ACC_PASSTHRU) 
-    {
-        memptr8 = (uint8_t*)&(gyroRxFrame->accAddress);
-        memptr32 = (uint32_t*)&(gyroRxFrame->accAddress);
-    }
-
-    if (boardCommState.commMode >= GTBCM_GYRO_ACC_FILTER_F){
-        gyro_int_to_float(gyroRxFrame);
-        filter_data(&rawRateData, &rawAccData, gyroTempData, &filteredData); //profile: this takes 2.45us to run with O3 optimization, before adding biquad at least
-
-        //set flags and do quats in main loop
-        //we have to fill the gyro data here though
-        //add rate data for later usage in quats. This is reset in imu.c
-        quatBuffer->vector.x += filteredData.rateData.x;
-        quatBuffer->vector.y += filteredData.rateData.y;
-        quatBuffer->vector.z += filteredData.rateData.z;
-
-        accTracker++;
-        switch(accTracker)
-        {
-            case 9:
-            case 25:
-                //update quaternions, these were calculated in imu.c
-                filteredData.quaternion[0] = attitudeFrameQuat.w;
-                filteredData.quaternion[1] = attitudeFrameQuat.vector.x;
-                filteredData.quaternion[2] = attitudeFrameQuat.vector.y;
-                filteredData.quaternion[3] = attitudeFrameQuat.vector.z;
-                //put acc into quat buffer
-                quatBuffer->accVector.x = filteredData.accData.x;
-                quatBuffer->accVector.y = filteredData.accData.y;
-                quatBuffer->accVector.z = filteredData.accData.z;
-                quatState = QUAT_PROCESS_BUFFER_0;
-                //switch buffers
-                quatBuffer = &quatBufferB;
-                break;
-            case 10:
-                increment_fft_state();
-                break;
-            case 33:
-                //reset acc tracker
-                accTracker = 1; //fallthru for 33, not done on 17
-            case 17:
-                //update quaternions, these were calculated in imu.c
-                filteredData.quaternion[0] = attitudeFrameQuat.w;
-                filteredData.quaternion[1] = attitudeFrameQuat.vector.x;
-                filteredData.quaternion[2] = attitudeFrameQuat.vector.y;
-                filteredData.quaternion[3] = attitudeFrameQuat.vector.z;
-                //put acc into quat buffer
-                quatBuffer->accVector.x = filteredData.accData.x;
-                quatBuffer->accVector.y = filteredData.accData.y;
-                quatBuffer->accVector.z = filteredData.accData.z;
-                quatState = QUAT_PROCESS_BUFFER_1;
-                //switch buffers
-                quatBuffer = &quatBufferA;
-                break;
-        }
-    }
 
     if (boardCommState.commMode != GTBCM_SETUP)
     {
@@ -365,7 +418,7 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
         if (everyOther-- <= 0)
         {
             append_crc_to_data_v( memptr32, (boardCommState.commMode >> 2)-1);
-            everyOther = 1; //reset khz counter
+            everyOther = loopDivider; //reset khz counter
 
             //check if spi is done if not, return
             //if it's not done for RESYNC_COUNTER counts in a row we reset the sync
@@ -379,11 +432,13 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
                 else
                 {
                     //reset spi and dma for spi since we've not had a reply in a while now
-                    cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_SPI_RST_MSK); //reset sync
                 }
             }
+
             oopsCounter = 0; //reset sync count
 
+            //this takes 0.78us to run
+            cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_SPI_RST_MSK); //reset sync
             //send the filtered data to the device
             spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 
             spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), memptr8, bcRxPtr);
@@ -393,13 +448,19 @@ void gyro_read_done(gyroFrame_t* gyroRxFrame) {
     }
 }
 
+void gyro_read_done(gyroFrame_t* gyroRxFrame)
+{
+    gyroDataReadDone = 1;
+}
+
 void gyro_init(void) 
 {
     init_orientation();
+    reset_calibration(); 
     gyroTempData = 0;
-    calibratingGyro = 0;    
-    gyroSum.x = 0.0f;
-    gyroSum.y = 0.0f;
-    gyroSum.z = 0.0f;
+    gyroDataReadDone = 0;
+    gyroCalibrationTrim.x = 0.0f;
+    gyroCalibrationTrim.y = 0.0f;
+    gyroCalibrationTrim.z = 0.0f;
     gyro_device_init(&gyro_read_done);
 }
