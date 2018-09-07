@@ -82,7 +82,7 @@ void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAcc
 		filterConfig.roll_lpf_hz    = (float)filterConfig.i_roll_lpf_hz;
 		filterConfig.pitch_lpf_hz   = (float)filterConfig.i_pitch_lpf_hz;
 		filterConfig.yaw_lpf_hz     = (float)filterConfig.i_yaw_lpf_hz;
-		filterConfig.dyn_gain       = (float)(1001.0f - 10.0f);
+		filterConfig.dyn_gain       = (float)filterConfig.dyn_gain;
 		filter_init();
 	}
 

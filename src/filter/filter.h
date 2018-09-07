@@ -9,7 +9,7 @@
 #define DEFAULT_ROLL_LPF_HZ    240
 #define DEFAULT_PITCH_LPF_HZ   240
 #define DEFAULT_YAW_LPF_HZ     240
-#define DEFAULT_DYN_GAIN       10.0f
+#define DEFAULT_DYN_GAIN       20.0f
 #define DEFAULT_FLAGS          0
 
 typedef enum filterAxisTypedef {
