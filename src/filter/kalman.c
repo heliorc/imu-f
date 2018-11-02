@@ -6,6 +6,7 @@
 variance_t varStruct;
 volatile uint32_t setPointNew;
 volatile axisDataInt_t setPointInt;
+volatile int armStatus;
 volatile axisData_t setPoint;
 kalman_t kalmanFilterStateRate[3];
 

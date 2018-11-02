@@ -56,6 +56,7 @@ typedef struct variance
 extern volatile filter_config_t filterConfig;
 extern volatile uint32_t setPointNew;
 extern volatile axisDataInt_t setPointInt;
+extern volatile int armStatus;
 extern volatile axisData_t setPoint;
 extern void kalman_init(void);
 extern void kalman_update(volatile axisData_t *input, filteredData_t* output);

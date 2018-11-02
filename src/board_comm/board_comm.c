@@ -165,6 +165,7 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
         case BC_IMUF_SETPOINT:
             setPointNew = 1;
             memcpy((uint32_t *)&setPointInt, (uint32_t *)&(command->param1), sizeof(axisDataInt_t));
+            armStatus = command->param4;
         break;
         default:
         break;
