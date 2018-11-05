@@ -9,6 +9,8 @@
 #define DEFAULT_ROLL_LPF_HZ    240
 #define DEFAULT_PITCH_LPF_HZ   240
 #define DEFAULT_YAW_LPF_HZ     240
+#define MIN_LPF_HZ             50.0f
+#define MAX_LPF_HZ             260.0f
 
 typedef enum filterAxisTypedef {
     ROLL = 0,
