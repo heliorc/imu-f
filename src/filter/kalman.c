@@ -4,9 +4,6 @@
 #include "filter.h"
 
 variance_t varStruct;
-volatile uint32_t setPointNew;
-volatile axisDataInt_t setPointInt;
-volatile axisData_t setPoint;
 kalman_t kalmanFilterStateRate[3];
 
 
@@ -23,8 +20,6 @@ void kalman_init(void)
 {
     setPointNew = 0;
     memset(&varStruct, 0, sizeof(varStruct));
-    memset((uint32_t *)&setPoint, 0, sizeof(axisData_t));
-    memset((uint32_t *)&setPointInt, 0, sizeof(axisDataInt_t));
     init_kalman(&kalmanFilterStateRate[ROLL], filterConfig.roll_q);
     init_kalman(&kalmanFilterStateRate[PITCH], filterConfig.pitch_q);
     init_kalman(&kalmanFilterStateRate[YAW], filterConfig.yaw_q);
@@ -110,11 +105,6 @@ inline float kalman_process(kalman_t* kalmanState, volatile float input, volatil
 
 void kalman_update(volatile axisData_t* input, filteredData_t* output)
 {
-    if (setPointNew) 
-    {
-        setPointNew = 0;
-        memcpy((uint32_t *)&setPoint, (uint32_t *)&setPointInt, sizeof(axisData_t));
-    }
     update_kalman_covariance(input);
     output->rateData.x = kalman_process(&kalmanFilterStateRate[ROLL], input->x, setPoint.x);
     output->rateData.y = kalman_process(&kalmanFilterStateRate[PITCH], input->y, setPoint.y);

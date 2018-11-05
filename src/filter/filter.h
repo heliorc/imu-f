@@ -34,7 +34,9 @@ typedef struct filter_config
 } filter_config_t;
 
 extern volatile filter_config_t filterConfig;
-
+extern volatile uint32_t setPointNew;
+extern volatile axisDataInt_t setPointInt;
+extern volatile axisData_t setPoint;
 extern void allow_filter_init(void);
 extern void filter_init(void);
 extern void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAccData, float gyroTempData, filteredData_t* filteredData);
