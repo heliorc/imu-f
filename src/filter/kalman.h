@@ -3,7 +3,7 @@
 #include "gyro.h"
 #include "filter.h"
 
-#define MAX_WINDOW_SIZE 300
+#define MAX_WINDOW_SIZE 1024
 #define DEF_WINDOW_SIZE 32
 #define MIN_WINDOW_SIZE 6
 
