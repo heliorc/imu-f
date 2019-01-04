@@ -403,7 +403,7 @@ void increment_acc_tracker(void)
 void fire_spi_send_ready(void)
 {
 
-    static uint8_t sendBuffer[60];
+    static volatile uint8_t sendBuffer[60];
     volatile uint8_t*  memptr8  = (uint8_t*)&filteredData.rateData;
     volatile uint32_t* memptr32 = (uint32_t*)&filteredData.rateData;
 
@@ -439,9 +439,9 @@ void fire_spi_send_ready(void)
             cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_SPI_RST_MSK); //reset sync
             //send the filtered data to the device
             //copy send buffer
-            memcpy(sendBuffer, memptr8, boardCommState.commMode);
+            memcpy((uint8_t *)sendBuffer, (uint8_t *)memptr8, boardCommState.commMode);
             //calc crc for send buffer
-            append_crc_to_data_v( sendBuffer, (boardCommState.commMode >> 2)-1);
+            append_crc_to_data_v( (uint32_t *)sendBuffer, (boardCommState.commMode >> 2)-1);
             spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 
             spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), sendBuffer, bcRxPtr);
             gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //a quick spike for EXTI
