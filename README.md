@@ -1,5 +1,5 @@
-# C3PU
-c3pu flight controller project
+# IMU-F
+IMU-F flight controller project
 
 # setup
 clone the project
