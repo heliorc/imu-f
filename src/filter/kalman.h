@@ -7,8 +7,8 @@
 #define DEF_WINDOW_SIZE 32
 #define MIN_WINDOW_SIZE 6
 
-// #define VARIANCE_SCALE 0.001
-#define VARIANCE_SCALE 0.3333333f
+// #define VARIANCE_SCALE 1.0f
+#define VARIANCE_SCALE 0.5f
 
 typedef struct kalman
 {
@@ -17,8 +17,10 @@ typedef struct kalman
     float p;     //estimation error covariance matrix
     float k;     //kalman gain
     float x;     //state
+    float acc;   //acceleration
     float lastX; //previous state
     float e;
+    float processCount; //keeps track of the process covariance
 } kalman_t;
 
 typedef struct variance
@@ -46,9 +48,14 @@ typedef struct variance
     float xSumVar;
     float ySumVar;
     float zSumVar;
+    
     float xySumCoVar;
     float xzSumCoVar;
     float yzSumCoVar;
+    
+    float xyCorrelation;
+    float xzCorrelation;
+    float yzCorrelation;
 
     float inverseN;
 } variance_t;
