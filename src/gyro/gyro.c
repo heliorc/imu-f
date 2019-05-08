@@ -403,6 +403,7 @@ void increment_acc_tracker(void)
 void fire_spi_send_ready(void)
 {
 
+    static volatile uint8_t sendBuffer[60];
     volatile uint8_t*  memptr8  = (uint8_t*)&filteredData.rateData;
     volatile uint32_t* memptr32 = (uint32_t*)&filteredData.rateData;
 
@@ -415,7 +416,6 @@ void fire_spi_send_ready(void)
         //everyother is 16KHz
         if (everyOther-- <= 0)
         {
-            append_crc_to_data_v( memptr32, (boardCommState.commMode >> 2)-1);
             everyOther = loopDivider; //reset khz counter
 
             //check if spi is done if not, return
@@ -438,8 +438,12 @@ void fire_spi_send_ready(void)
             //this takes 0.78us to run
             cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_SPI_RST_MSK); //reset sync
             //send the filtered data to the device
+            //copy send buffer
+            memcpy((uint8_t *)sendBuffer, (uint8_t *)memptr8, boardCommState.commMode);
+            //calc crc for send buffer
+            append_crc_to_data_v( (uint32_t *)sendBuffer, (boardCommState.commMode >> 2)-1);
             spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 
-            spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), memptr8, bcRxPtr);
+            spi_fire_dma(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, &boardCommDmaInitStruct, (uint32_t *)&(boardCommState.bufferSize), sendBuffer, bcRxPtr);
             gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 1); //a quick spike for EXTI
             gpio_write_pin(BOARD_COMM_DATA_RDY_PORT, BOARD_COMM_DATA_RDY_PIN, 0); //a quick spike for EXTI
         }
