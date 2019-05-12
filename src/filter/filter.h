@@ -35,3 +35,5 @@ extern volatile axisData_t setPoint;
 extern void allow_filter_init(void);
 extern void filter_init(void);
 extern void filter_data(volatile axisData_t* gyroRateData, volatile axisData_t* gyroAccData, float gyroTempData, filteredData_t* filteredData);
+
+void filter_acc(volatile axisData_t *gyroAccData);

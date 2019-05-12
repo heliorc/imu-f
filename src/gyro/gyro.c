@@ -276,6 +276,7 @@ void gyro_int_to_float(gyroFrame_t* gyroRxFrame)
         //RoomTemp_Offset = 25ºC
         //gyroTempMultiplier is gyro temp in C
         apply_gyro_acc_rotation(&rawAccData);
+        filter_acc(&rawAccData);
     }
 
     //f*f+f is one operation on FPU

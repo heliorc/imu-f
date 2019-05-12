@@ -96,3 +96,57 @@ void filter_data(volatile axisData_t *gyroRateData, volatile axisData_t *gyroAcc
 	//should filter this
 	filteredData->tempC = gyroTempData;
 }
+
+// PT1 Low Pass filter
+bool acc_filter_initialized = false;
+typedef struct pt1Filter_s {
+    float state;
+    float k;
+} pt1Filter_t;
+
+pt1Filter_t ax_filter;
+pt1Filter_t ay_filter;
+pt1Filter_t az_filter;
+
+float pt1FilterGain(uint16_t f_cut, float dT);
+void  pt1FilterInit(pt1Filter_t *filter, float k, float val);
+float pt1FilterApply(pt1Filter_t *filter, float input);
+
+float pt1FilterGain(uint16_t f_cut, float dT)
+{
+    float RC = 1 / ( 2 * M_PI_FLOAT * f_cut);
+    return dT / (RC + dT);
+}
+
+void pt1FilterInit(pt1Filter_t *filter, float k, float val)
+{
+    filter->state = val;
+    filter->k = k;
+}
+
+float pt1FilterApply(pt1Filter_t *filter, float input)
+{
+    filter->state = filter->state + filter->k * (input - filter->state);
+    return filter->state;
+}
+
+void filter_acc(volatile axisData_t *gyroAccData)
+{
+#define ACC_CUTOFF    (40.0f)
+#define ACC_READ_RATE (1.0f / 1000.0f)
+
+	if (!acc_filter_initialized)
+	{
+		acc_filter_initialized = true;
+		const float k = pt1FilterGain(ACC_CUTOFF, ACC_READ_RATE);
+		pt1FilterInit(&ax_filter, k, 0.0f);
+		pt1FilterInit(&ay_filter, k, 0.0f);
+		pt1FilterInit(&az_filter, k, gyroAccData->z);
+	}
+	else
+	{
+		 gyroAccData->x = pt1FilterApply(&ax_filter,  gyroAccData->x);
+		 gyroAccData->y = pt1FilterApply(&ay_filter,  gyroAccData->y);
+		 gyroAccData->z = pt1FilterApply(&az_filter,  gyroAccData->z);
+	}
+}
