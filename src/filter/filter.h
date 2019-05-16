@@ -26,6 +26,7 @@ typedef struct filter_config
     float pitch_lpf_hz;
     float roll_lpf_hz;
     float yaw_lpf_hz;
+    uint16_t acc_lpf_hz;
 } filter_config_t;
 
 extern volatile filter_config_t filterConfig;
