@@ -4,23 +4,57 @@
 #include "kalman.h"
 #include "biquad.h"
 
-volatile filter_config_t filterConfig = {
+/*
+typedef struct filter_config
+{
+    uint16_t i_roll_q;
+    uint16_t i_pitch_q;
+    uint16_t i_yaw_q;
+    uint16_t w;
+
+    float roll_q;
+    float pitch_q;
+    float yaw_q;
+
+    float pitch_lpf_hz;
+    float roll_lpf_hz;
+    float yaw_lpf_hz;
+
+    uint16_t acc_lpf_hz;
+
+
+    uint16_t i_roll_lpf_hz;
+	uint16_t i_pitch_lpf_hz;
+	uint16_t i_yaw_lpf_hz;
+} filter_config_t;
+*/
+volatile filter_config_t filterConfig =
+{
 		DEFAULT_ROLL_Q,
 		DEFAULT_PITCH_Q,
 		DEFAULT_YAW_Q,
 		MIN_WINDOW_SIZE,
+
 		(float)DEFAULT_ROLL_Q,
 		(float)DEFAULT_PITCH_Q,
 		(float)DEFAULT_YAW_Q,
+
 		(float)BASE_LPF_HZ,
 		(float)BASE_LPF_HZ,
 		(float)BASE_LPF_HZ,
-		40.0f
+
+		40.0f,
+
+		BASE_LPF_HZ,
+		BASE_LPF_HZ,
+		BASE_LPF_HZ,
+		100,
 };
 
 // PT1 Low Pass filter
 bool acc_filter_initialized = false;
-typedef struct pt1Filter_s {
+typedef struct pt1Filter_s
+{
     float state;
     float k;
 } pt1Filter_t;
@@ -39,6 +73,8 @@ volatile axisDataInt_t setPointInt;
 volatile axisData_t oldSetPoint;
 volatile axisData_t setPoint;
 volatile int allowFilterInit = 1;
+
+extern float r_filter_weight;
 
 void allow_filter_init(void)
 {
@@ -59,15 +95,17 @@ void filter_init(void)
 	memset((uint32_t *)&oldSetPoint, 0, sizeof(axisData_t));
 	memset((uint32_t *)&setPointInt, 0, sizeof(axisDataInt_t));
 	kalman_init();
-	filter_biquad_init(BASE_LPF_HZ, &(lpfFilterStateRate.x));
-	filter_biquad_init(BASE_LPF_HZ, &(lpfFilterStateRate.y));
-	filter_biquad_init(BASE_LPF_HZ, &(lpfFilterStateRate.z));
+	filter_biquad_init(filterConfig.i_roll_lpf_hz, &(lpfFilterStateRate.x));
+	filter_biquad_init(filterConfig.i_pitch_lpf_hz, &(lpfFilterStateRate.y));
+	filter_biquad_init(filterConfig.i_yaw_lpf_hz, &(lpfFilterStateRate.z));
 
 	// set imuf acc cutoff frequency
 	const float k = pt1FilterGain((float)filterConfig.acc_lpf_hz, ACC_READ_RATE);
 	pt1FilterInit(&ax_filter, k, 0.0f);
 	pt1FilterInit(&ay_filter, k, 0.0f);
 	pt1FilterInit(&az_filter, k, 0.0f);
+
+	r_filter_weight = (float)filterConfig.r_weight / 100.0f;
 }
 
 void filter_data(volatile axisData_t *gyroRateData, volatile axisData_t *gyroAccData, float gyroTempData, filteredData_t *filteredData)
@@ -124,7 +162,7 @@ void filter_data(volatile axisData_t *gyroRateData, volatile axisData_t *gyroAcc
 
 float pt1FilterGain(uint16_t f_cut, float dT)
 {
-    float RC = 1 / ( 2 * M_PI_FLOAT * f_cut);
+    const float RC = 0.5f / (M_PI_FLOAT * f_cut);
     return dT / (RC + dT);
 }
 
