@@ -11,7 +11,7 @@ float      r_filter_weight = 1.0f;
 void init_kalman(kalman_t *filter, float q)
 {
     memset(filter, 0, sizeof(kalman_t));
-    filter->q = q * 0.01f;     //add multiplier to make tuning easier
+    filter->q = q * 0.0001f;     //add multiplier to make tuning easier
     filter->r = 88.0f;           //seeding R at 88.0f
     filter->p = 30.0f;           //seeding P at 30.0f
     filter->e = 1.0f;
@@ -83,7 +83,7 @@ inline float kalman_process(kalman_t* kalmanState, volatile float input, volatil
 {
 	//project the state ahead using acceleration
     kalmanState->x += (kalmanState->x - kalmanState->lastX);
-
+    
     //figure out how much to boost or reduce our error in the estimate based on setpoint target.
     //this should be close to 0 as we approach the setpoint and really high the further away we are from the setpoint.
     //update last state
@@ -97,7 +97,7 @@ inline float kalman_process(kalman_t* kalmanState, volatile float input, volatil
     {
         kalmanState->e = 1.0f;
     }
-
+    
     //prediction update
     kalmanState->p = kalmanState->p + (kalmanState->q * kalmanState->e);
 
