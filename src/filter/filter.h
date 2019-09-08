@@ -19,7 +19,7 @@ typedef struct filter_config
     uint16_t i_roll_q;
     uint16_t i_pitch_q;
     uint16_t i_yaw_q;
-    uint16_t w;    
+    uint16_t w;
     float roll_q;
     float pitch_q;
     float yaw_q;
@@ -27,6 +27,10 @@ typedef struct filter_config
     float roll_lpf_hz;
     float yaw_lpf_hz;
     uint16_t acc_lpf_hz;
+    uint16_t i_roll_lpf_hz;
+    uint16_t i_pitch_lpf_hz;
+    uint16_t i_yaw_lpf_hz;
+    uint16_t r_weight;
 } filter_config_t;
 
 extern volatile filter_config_t filterConfig;

@@ -4,7 +4,8 @@
 #include "filter.h"
 
 variance_t varStruct;
-kalman_t kalmanFilterStateRate[3];
+kalman_t   kalmanFilterStateRate[3];
+float      r_filter_weight = 1.0f;
 
 
 void init_kalman(kalman_t *filter, float q)
@@ -71,17 +72,17 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
 
     float squirt;
     arm_sqrt_f32(varStruct.xVar +  varStruct.xyCoVar +  varStruct.xzCoVar, &squirt);
-    kalmanFilterStateRate[ROLL].r = squirt * VARIANCE_SCALE;
+    kalmanFilterStateRate[ROLL].r = squirt * r_filter_weight;
     arm_sqrt_f32(varStruct.yVar +  varStruct.xyCoVar +  varStruct.yzCoVar, &squirt);
-    kalmanFilterStateRate[PITCH].r = squirt * VARIANCE_SCALE;
+    kalmanFilterStateRate[PITCH].r = squirt * r_filter_weight;
     arm_sqrt_f32(varStruct.zVar +  varStruct.yzCoVar +  varStruct.xzCoVar, &squirt);
-    kalmanFilterStateRate[YAW].r = squirt * VARIANCE_SCALE; 
+    kalmanFilterStateRate[YAW].r = squirt * r_filter_weight;
 }
 
 inline float kalman_process(kalman_t* kalmanState, volatile float input, volatile float target) {
     //project the state ahead using acceleration
     kalmanState->x += (kalmanState->x - kalmanState->lastX);
-    
+
     //figure out how much to boost or reduce our error in the estimate based on setpoint target.
     //this should be close to 0 as we approach the sepoint and really high the futher away we are from the setpoint.
     //update last state
@@ -92,7 +93,7 @@ inline float kalman_process(kalman_t* kalmanState, volatile float input, volatil
     } else {
         kalmanState->e = 1.0f;
     }
-    
+
     //prediction update
     kalmanState->p = kalmanState->p + (kalmanState->q * kalmanState->e);
 
