@@ -4,14 +4,13 @@
 #include "filter.h"
 
 variance_t varStruct;
-kalman_t   kalmanFilterStateRate[3];
-float      r_filter_weight = 1.0f;
+kalman_t kalmanFilterStateRate[3];
 
 
 void init_kalman(kalman_t *filter, float q)
 {
     memset(filter, 0, sizeof(kalman_t));
-    filter->q = q * 0.0001f;     //add multiplier to make tuning easier
+    filter->q = q * 0.001f;      //add multiplier to make tuning easier
     filter->r = 88.0f;           //seeding R at 88.0f
     filter->p = 30.0f;           //seeding P at 30.0f
     filter->e = 1.0f;
@@ -72,29 +71,25 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
 
     float squirt;
     arm_sqrt_f32(varStruct.xVar +  varStruct.xyCoVar +  varStruct.xzCoVar, &squirt);
-    kalmanFilterStateRate[ROLL].r = squirt * r_filter_weight;
+    kalmanFilterStateRate[ROLL].r = squirt * VARIANCE_SCALE;
     arm_sqrt_f32(varStruct.yVar +  varStruct.xyCoVar +  varStruct.yzCoVar, &squirt);
-    kalmanFilterStateRate[PITCH].r = squirt * r_filter_weight;
+    kalmanFilterStateRate[PITCH].r = squirt * VARIANCE_SCALE;
     arm_sqrt_f32(varStruct.zVar +  varStruct.yzCoVar +  varStruct.xzCoVar, &squirt);
-    kalmanFilterStateRate[YAW].r = squirt * r_filter_weight;
+    kalmanFilterStateRate[YAW].r = squirt * VARIANCE_SCALE; 
 }
 
-inline float kalman_process(kalman_t* kalmanState, volatile float input, volatile float target)
-{
-	//project the state ahead using acceleration
+inline float kalman_process(kalman_t* kalmanState, volatile float input, volatile float target) {
+    //project the state ahead using acceleration
     kalmanState->x += (kalmanState->x - kalmanState->lastX);
     
     //figure out how much to boost or reduce our error in the estimate based on setpoint target.
-    //this should be close to 0 as we approach the setpoint and really high the further away we are from the setpoint.
+    //this should be close to 0 as we approach the sepoint and really high the futher away we are from the setpoint.
     //update last state
     kalmanState->lastX = kalmanState->x;
 
-    if (target != 0.0f && input  != 0.0f)
-    {
-        kalmanState->e = ABS(1.0f - target/input);
-    }
-    else
-    {
+    if (target != 0.0f) {
+        kalmanState->e = ABS(1.0f - (target/kalmanState->lastX));
+    } else {
         kalmanState->e = 1.0f;
     }
     
