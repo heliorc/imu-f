@@ -88,11 +88,13 @@ inline float kalman_process(kalman_t* kalmanState, volatile float input, volatil
     //update last state
     kalmanState->lastX = kalmanState->x;
 
-    if (target != 0.0f) {
+    /*if (target != 0.0f) {
         kalmanState->e = ABS(1.0f - (target/kalmanState->lastX));
     } else {
         kalmanState->e = 1.0f;
-    }
+    }*/
+    
+    kalmanState->e = ABS((target - input) * 2) + ABS(input/5);
 
     //prediction update
     kalmanState->p = kalmanState->p + (kalmanState->q * kalmanState->e);
