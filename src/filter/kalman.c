@@ -11,7 +11,7 @@ float      r_filter_weight = 1.0f;
 void init_kalman(kalman_t *filter, float q)
 {
     memset(filter, 0, sizeof(kalman_t));
-    filter->q = q * 0.0001f;      //add multiplier to make tuning easier
+    filter->q = q * 0.001f;      //add multiplier to make tuning easier
     filter->r = 88.0f;           //seeding R at 88.0f
     filter->p = 30.0f;           //seeding P at 30.0f
     filter->e = 1.0f;
@@ -88,13 +88,13 @@ inline float kalman_process(kalman_t* kalmanState, volatile float input, volatil
     //update last state
     kalmanState->lastX = kalmanState->x;
 
-    /*if (target != 0.0f) {
-        kalmanState->e = ABS(1.0f - (target/kalmanState->lastX));
+    if (target != 0.0f) {
+        kalmanState->e = ABS(1.0f - (target / kalmanState->lastX));
     } else {
         kalmanState->e = 1.0f;
-    }*/
+    }
 
-    kalmanState->e = ABS((target - input) * 3) + ABS(input/4);
+    //kalmanState->e = ABS((target - input) * 3) + ABS(input/4);
 
     //prediction update
     kalmanState->p = kalmanState->p + (kalmanState->q * kalmanState->e);
