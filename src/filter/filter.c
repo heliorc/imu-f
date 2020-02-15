@@ -73,7 +73,7 @@ volatile axisData_t oldSetPoint;
 volatile axisData_t setPoint;
 volatile int allowFilterInit = 1;
 
-extern float r_filter_weight;
+float sharpness;
 
 void allow_filter_init(void)
 {
@@ -104,7 +104,7 @@ void filter_init(void)
 	pt1FilterInit(&ay_filter, k, 0.0f);
 	pt1FilterInit(&az_filter, k, 0.0f);
 
-	r_filter_weight = (float)filterConfig.r_weight / 100.0f;
+	sharpness = (float)filterConfig.sharpness / 250.0f;
 }
 
 void filter_data(volatile axisData_t *gyroRateData, volatile axisData_t *gyroAccData, float gyroTempData, filteredData_t *filteredData)
@@ -131,13 +131,13 @@ void filter_data(volatile axisData_t *gyroRateData, volatile axisData_t *gyroAcc
 	filteredData->rateData.z = biquad_update(filteredData->rateData.z, &(lpfFilterStateRate.z));
 
 // calculate the error
-	float errorMultiplierX = ABS(setPoint.x - filteredData->rateData.x / 6.0f);
-	float errorMultiplierY = ABS(setPoint.y - filteredData->rateData.y / 6.0f);
-	float errorMultiplierZ = ABS(setPoint.z - filteredData->rateData.z / 6.0f);
+	float errorMultiplierX = ABS(setPoint.x - filteredData->rateData.x) * sharpness;
+	float errorMultiplierY = ABS(setPoint.y - filteredData->rateData.y) * sharpness;
+	float errorMultiplierZ = ABS(setPoint.z - filteredData->rateData.z) * sharpness;
 
-  float setPointChangeBoostX = CONSTRAIN((ABS(setPoint.x - setPoint.x) / 10.0f) + 1.0f, 1.0f, 10.0f);
-	float setPointChangeBoostY = CONSTRAIN((ABS(setPoint.y - setPoint.y) / 10.0f) + 1.0f, 1.0f, 10.0f);
-	float setPointChangeBoostZ = CONSTRAIN((ABS(setPoint.z - setPoint.z) / 10.0f) + 1.0f, 1.0f, 10.0f);
+//  float setPointChangeBoostX = CONSTRAIN((ABS(setPoint.x - setPoint.x) / 10.0f) + 1.0f, 1.0f, 10.0f);
+//  float setPointChangeBoostY = CONSTRAIN((ABS(setPoint.y - setPoint.y) / 10.0f) + 1.0f, 1.0f, 10.0f);
+//  float setPointChangeBoostZ = CONSTRAIN((ABS(setPoint.z - setPoint.z) / 10.0f) + 1.0f, 1.0f, 10.0f);
 
 //	errorMultiplierX = errorMultiplierX * CONSTRAIN(ABS(setPoint.x / 100.0f), 0.1f, 1.0f);
 //	errorMultiplierY = errorMultiplierY * CONSTRAIN(ABS(setPoint.y / 100.0f), 0.1f, 1.0f);
@@ -145,9 +145,9 @@ void filter_data(volatile axisData_t *gyroRateData, volatile axisData_t *gyroAcc
 
 // give a boost to the setpoint, used to caluclate the filter cutoff, based on the error and setpoint/gyrodata
 
-	errorMultiplierX = CONSTRAIN(errorMultiplierX * setPointChangeBoostX * ABS(1.0f - (setPoint.x / filteredData->rateData.x)) + 1.0f, 1.0f, 10.0f);
-	errorMultiplierY = CONSTRAIN(errorMultiplierY * setPointChangeBoostX * ABS(1.0f - (setPoint.y / filteredData->rateData.y)) + 1.0f, 1.0f, 10.0f);
-	errorMultiplierZ = CONSTRAIN(errorMultiplierZ * setPointChangeBoostX * ABS(1.0f - (setPoint.z / filteredData->rateData.z)) + 1.0f, 1.0f, 10.0f);
+	errorMultiplierX = CONSTRAIN(errorMultiplierX * ABS(1.0f - (setPoint.x / filteredData->rateData.x)) + 1.0f, 1.0f, 10.0f);
+	errorMultiplierY = CONSTRAIN(errorMultiplierY * ABS(1.0f - (setPoint.y / filteredData->rateData.y)) + 1.0f, 1.0f, 10.0f);
+	errorMultiplierZ = CONSTRAIN(errorMultiplierZ * ABS(1.0f - (setPoint.z / filteredData->rateData.z)) + 1.0f, 1.0f, 10.0f);
 
 
 	if (setPointNew)

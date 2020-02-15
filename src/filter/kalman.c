@@ -5,8 +5,6 @@
 
 variance_t varStruct;
 kalman_t   kalmanFilterStateRate[3];
-float      r_filter_weight = 1.0f;
-
 
 void init_kalman(kalman_t *filter, float q)
 {
@@ -72,11 +70,11 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
 
     float squirt;
     arm_sqrt_f32(varStruct.xVar +  varStruct.xyCoVar +  varStruct.xzCoVar, &squirt);
-    kalmanFilterStateRate[ROLL].r = squirt * r_filter_weight;
+    kalmanFilterStateRate[ROLL].r = squirt * VARIANCE_SCALE;
     arm_sqrt_f32(varStruct.yVar +  varStruct.xyCoVar +  varStruct.yzCoVar, &squirt);
-    kalmanFilterStateRate[PITCH].r = squirt * r_filter_weight;
+    kalmanFilterStateRate[PITCH].r = squirt * VARIANCE_SCALE;
     arm_sqrt_f32(varStruct.zVar +  varStruct.yzCoVar +  varStruct.xzCoVar, &squirt);
-    kalmanFilterStateRate[YAW].r = squirt * r_filter_weight;
+    kalmanFilterStateRate[YAW].r = squirt * VARIANCE_SCALE;
 }
 
 inline float kalman_process(kalman_t* kalmanState, volatile float input, volatile float target) {
