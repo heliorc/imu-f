@@ -151,10 +151,10 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
                 filterConfig.i_roll_lpf_hz       = (int16_t)(command->param4 & 0xFFFF);
                 filterConfig.i_pitch_lpf_hz      = (int16_t)(command->param5 >> 16);
                 filterConfig.i_yaw_lpf_hz        = (int16_t)(command->param5 & 0xFFFF);
-                gyroSettingsConfig.smallX        = (int32_t) ((int16_t)(command->param8 >> 16));
-                gyroSettingsConfig.smallY        = (int32_t) ((int16_t)(command->param9 & 0xFFFF));
-                gyroSettingsConfig.smallZ        = (int32_t) ((int16_t)(command->param9 >> 16));
-                filterConfig.sharpness            = (int16_t) ((int16_t)(command->param10 >> 16));
+                gyroSettingsConfig.smallX        = (int32_t)((int16_t)(command->param8 >> 16));
+                gyroSettingsConfig.smallY        = (int32_t)((int16_t)(command->param9 & 0xFFFF));
+                gyroSettingsConfig.smallZ        = (int32_t)((int16_t)(command->param9 >> 16));
+                filterConfig.sharpness            = (int16_t)(command->param10 >> 16);
                 if (!filterConfig.sharpness)
                 {
                 	filterConfig.sharpness = 35;
