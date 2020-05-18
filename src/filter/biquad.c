@@ -23,9 +23,9 @@ void biquad_init(float filterCutFreq, biquad_axis_state_t *state, float refreshR
 	switch (filterType)
 	{
 		case FILTER_TYPE_LOWPASS:
-			b0 = (1.0f - cs) * 0.5f;
+			b0 = (1.0f - cs) *0.5f;
 			b1 = 1.0f - cs;
-			b2 = (1.0f - cs) * 0.5f;
+			b2 = (1.0f - cs) *0.5f;
 			a0 = 1.0f + alpha;
 			a1 = -2.0f * cs;
 			a2 = 1.0f - alpha;
@@ -41,12 +41,12 @@ void biquad_init(float filterCutFreq, biquad_axis_state_t *state, float refreshR
 	}
 	//don't let these states be used until they're updated
 	__disable_irq();
-		const float a0r = 1.0f / a0;
-    state->a0 = b0 * a0r;
-    state->a1 = b1 * a0r;
-    state->a2 = b2 * a0r;
-    state->a3 = a1 * a0r;
-    state->a4 = a2 * a0r;
+	const float a0r = 1.0f / a0;
+	state->a0 = b0 * a0r;
+	state->a1 = b1 * a0r;
+	state->a2 = b2 * a0r;
+	state->a3 = a1 * a0r;
+	state->a4 = a2 * a0r;
 	__enable_irq();
 }
 

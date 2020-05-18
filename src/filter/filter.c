@@ -6,25 +6,25 @@
 
 volatile filter_config_t filterConfig =
 {
-		DEFAULT_ROLL_Q,
-		DEFAULT_PITCH_Q,
-		DEFAULT_YAW_Q,
-		MIN_WINDOW_SIZE,
+	DEFAULT_ROLL_Q,
+	DEFAULT_PITCH_Q,
+	DEFAULT_YAW_Q,
+	MIN_WINDOW_SIZE,
 
-		(float)DEFAULT_ROLL_Q,
-		(float)DEFAULT_PITCH_Q,
-		(float)DEFAULT_YAW_Q,
+	(float)DEFAULT_ROLL_Q,
+	(float)DEFAULT_PITCH_Q,
+	(float)DEFAULT_YAW_Q,
 
-		(float)BASE_LPF_HZ,
-		(float)BASE_LPF_HZ,
-		(float)BASE_LPF_HZ,
+	(float)BASE_LPF_HZ,
+	(float)BASE_LPF_HZ,
+	(float)BASE_LPF_HZ,
 
-		40.0f,
+	40.0f,
 
-		BASE_LPF_HZ,
-		BASE_LPF_HZ,
-		BASE_LPF_HZ,
-		100,
+	BASE_LPF_HZ,
+	BASE_LPF_HZ,
+	BASE_LPF_HZ,
+	100,
 };
 
 // PT1 Low Pass filter
@@ -80,7 +80,7 @@ void filter_init(void)
 	pt1FilterInit(&ay_filter, k, 0.0f);
 	pt1FilterInit(&az_filter, k, 0.0f);
 
-	sharpness = filterConfig.sharpness / 250.0f;
+	sharpness = (float)filterConfig.sharpness / 250.0f;
 }
 
 void filter_data(volatile axisData_t *gyroRateData, volatile axisData_t *gyroAccData, float gyroTempData, filteredData_t *filteredData)
@@ -112,9 +112,10 @@ void filter_data(volatile axisData_t *gyroRateData, volatile axisData_t *gyroAcc
 	float errorMultiplierZ = ABS(setPoint.z - filteredData->rateData.z) * sharpness;
 
 // give a boost to the setpoint, used to caluclate the filter cutoff, based on the error and setpoint/gyrodata
-	errorMultiplierX = CONSTRAIN(errorMultiplierX * ABS(1.0f - (setPoint.x / filteredData->rateData.x)) + 1.0f, 1.0f, 50.0f);
-	errorMultiplierY = CONSTRAIN(errorMultiplierY * ABS(1.0f - (setPoint.y / filteredData->rateData.y)) + 1.0f, 1.0f, 50.0f);
-	errorMultiplierZ = CONSTRAIN(errorMultiplierZ * ABS(1.0f - (setPoint.z / filteredData->rateData.z)) + 1.0f, 1.0f, 50.0f);
+
+	errorMultiplierX = CONSTRAIN(errorMultiplierX * ABS(1.0f - (setPoint.x / filteredData->rateData.x)) + 1.0f, 1.0f, 10.0f);
+	errorMultiplierY = CONSTRAIN(errorMultiplierY * ABS(1.0f - (setPoint.y / filteredData->rateData.y)) + 1.0f, 1.0f, 10.0f);
+	errorMultiplierZ = CONSTRAIN(errorMultiplierZ * ABS(1.0f - (setPoint.z / filteredData->rateData.z)) + 1.0f, 1.0f, 10.0f);
 
 
 	if (setPointNew)
@@ -122,17 +123,17 @@ void filter_data(volatile axisData_t *gyroRateData, volatile axisData_t *gyroAcc
 		setPointNew = 0;
 		if (setPoint.x != 0.0f && oldSetPoint.x != setPoint.x)
 		{
-			filterConfig.roll_lpf_hz = CONSTRAIN(10.0f * ABS(1.0f - ((setPoint.x * errorMultiplierX) / filteredData->rateData.x)), 10.0f, 500.0f);
+			filterConfig.roll_lpf_hz = CONSTRAIN((float)filterConfig.i_roll_lpf_hz * ABS(1.0f - ((setPoint.x * errorMultiplierX) / filteredData->rateData.x)), 10.0f, 500.0f);
 			filter_biquad_init(filterConfig.roll_lpf_hz, &(lpfFilterStateRate.x));
 		}
 		if (setPoint.y != 0.0f && oldSetPoint.y != setPoint.y)
 		{
-			filterConfig.pitch_lpf_hz = CONSTRAIN(10.0f * ABS(1.0f - ((setPoint.y * errorMultiplierY) / filteredData->rateData.y)), 10.0f, 500.0f);
+			filterConfig.pitch_lpf_hz = CONSTRAIN((float)filterConfig.i_pitch_lpf_hz * ABS(1.0f - ((setPoint.y * errorMultiplierY) / filteredData->rateData.y)), 10.0f, 500.0f);
 			filter_biquad_init(filterConfig.pitch_lpf_hz, &(lpfFilterStateRate.y));
 		}
 		if (setPoint.z != 0.0f && oldSetPoint.z != setPoint.z)
 		{
-			filterConfig.yaw_lpf_hz = CONSTRAIN(10.0f * ABS(1.0f - ((setPoint.z * errorMultiplierZ) / filteredData->rateData.z)), 10.0f, 500.0f);
+			filterConfig.yaw_lpf_hz = CONSTRAIN((float)filterConfig.i_yaw_lpf_hz * ABS(1.0f - ((setPoint.z * errorMultiplierZ) / filteredData->rateData.z)), 10.0f, 500.0f);
 			filter_biquad_init(filterConfig.yaw_lpf_hz, &(lpfFilterStateRate.z));
 		}
 		memcpy((uint32_t *)&oldSetPoint, (uint32_t *)&setPoint, sizeof(axisData_t));

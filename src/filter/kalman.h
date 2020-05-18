@@ -26,9 +26,6 @@ typedef struct variance
     float xVar;
     float yVar;
     float zVar;
-    float xyCoVar;
-    float xzCoVar;
-    float yzCoVar;
 
     uint32_t windex;
     float xWindow[MAX_WINDOW_SIZE];
@@ -46,9 +43,6 @@ typedef struct variance
     float xSumVar;
     float ySumVar;
     float zSumVar;
-    float xySumCoVar;
-    float xzSumCoVar;
-    float yzSumCoVar;
 
     float inverseN;
 } variance_t;

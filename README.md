@@ -13,3 +13,5 @@ sudo mv ~/Downloads/gcc_arm-6-2017-q1 /usr/local/gcc_arm-6-2017-q1
 sudo ln -s /usr/local/gcc_arm-6-2017-q1 /usr/local/gcc_arm
 echo 'export PATH="$PATH:/usr/local/gcc_arm/bin"' >> ~/.bash_profile 
 ```
+After getting everything that you need to compile, run this command to compile the IMUF
+python make.py -T F3
