@@ -5,4 +5,4 @@ redirection
 redirection.junk
 kalman/test
 .exe
-vendor/CMSIS_std/DSP_Lib/Source/TransformFunctions/arm_bitreversal2.S
+gcc-arm*
