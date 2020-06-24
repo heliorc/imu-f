@@ -36,28 +36,44 @@ void update_kalman_covariance(volatile axisData_t *gyroRateData)
     varStruct.xSumMean +=  varStruct.xWindow[ varStruct.windex];
     varStruct.ySumMean +=  varStruct.yWindow[ varStruct.windex];
     varStruct.zSumMean +=  varStruct.zWindow[ varStruct.windex];
-    varStruct.xSumVar =  varStruct.xSumVar + ( varStruct.xWindow[ varStruct.windex] *  varStruct.xWindow[ varStruct.windex]);
-    varStruct.ySumVar =  varStruct.ySumVar + ( varStruct.yWindow[ varStruct.windex] *  varStruct.yWindow[ varStruct.windex]);
-    varStruct.zSumVar =  varStruct.zSumVar + ( varStruct.zWindow[ varStruct.windex] *  varStruct.zWindow[ varStruct.windex]);
+
+    // calc varianceElement
+    float xvarianceElement = varStruct.xWindow[ varStruct.windex] - varStruct.xMean;
+    float yvarianceElement = varStruct.yWindow[ varStruct.windex] - varStruct.yMean;
+    float zvarianceElement = varStruct.zWindow[ varStruct.windex] - varStruct.zMean;
+
+    xvarianceElement = xvarianceElement * xvarianceElement;
+    yvarianceElement = yvarianceElement * yvarianceElement;
+    zvarianceElement = zvarianceElement * zvarianceElement;
+
+    varStruct.xSumVar += xvarianceElement;
+    varStruct.ySumVar += yvarianceElement;
+    varStruct.zSumVar += zvarianceElement;
+
+    varStruct.xvarianceWindow[varStruct.windex] = xvarianceElement;
+    varStruct.yvarianceWindow[varStruct.windex] = yvarianceElement;
+    varStruct.zvarianceWindow[varStruct.windex] = zvarianceElement;
+
     varStruct.windex++;
     if ( varStruct.windex >= filterConfig.w)
     {
          varStruct.windex = 0;
     }
+
     varStruct.xSumMean -=  varStruct.xWindow[ varStruct.windex];
     varStruct.ySumMean -=  varStruct.yWindow[ varStruct.windex];
     varStruct.zSumMean -=  varStruct.zWindow[ varStruct.windex];
-    varStruct.xSumVar =  varStruct.xSumVar - ( varStruct.xWindow[ varStruct.windex] *  varStruct.xWindow[ varStruct.windex]);
-    varStruct.ySumVar =  varStruct.ySumVar - ( varStruct.yWindow[ varStruct.windex] *  varStruct.yWindow[ varStruct.windex]);
-    varStruct.zSumVar =  varStruct.zSumVar - ( varStruct.zWindow[ varStruct.windex] *  varStruct.zWindow[ varStruct.windex]);
+    varStruct.xSumVar -=   varStruct.xvarianceWindow[varStruct.windex];
+    varStruct.ySumVar -=   varStruct.yvarianceWindow[varStruct.windex];
+    varStruct.zSumVar -=   varStruct.zvarianceWindow[varStruct.windex];
 
+    //New mean
     varStruct.xMean =  varStruct.xSumMean *  varStruct.inverseN;
     varStruct.yMean =  varStruct.ySumMean *  varStruct.inverseN;
     varStruct.zMean =  varStruct.zSumMean *  varStruct.inverseN;
-
-    varStruct.xVar =  ABS(varStruct.xSumVar *  varStruct.inverseN - ( varStruct.xMean *  varStruct.xMean));
-    varStruct.yVar =  ABS(varStruct.ySumVar *  varStruct.inverseN - ( varStruct.yMean *  varStruct.yMean));
-    varStruct.zVar =  ABS(varStruct.zSumVar *  varStruct.inverseN - ( varStruct.zMean *  varStruct.zMean));
+    varStruct.xVar =   varStruct.xSumVar *  varStruct.inverseN;
+    varStruct.yVar =   varStruct.ySumVar *  varStruct.inverseN;
+    varStruct.zVar =   varStruct.zSumVar *  varStruct.inverseN;
 
     float squirt;
     arm_sqrt_f32(varStruct.xVar, &squirt);
