@@ -40,5 +40,5 @@ curl -L -s "https://developer.arm.com/-/media/Files/downloads/gnu-rm/6_1-2017q1/
 ## Build
 ```shell
 export PATH="$PATH:$(pwd)/gcc-arm-none-eabi-6-2017-q1-update/bin"
-python make.py -T F3
+python make.py -C -T F3
 ```
