@@ -6,22 +6,23 @@
 variance_t varStruct;
 kalman_t   kalmanFilterStateRate[3];
 
-void init_kalman(kalman_t *filter, float q)
+void init_kalman(kalman_t *filter, float q, float sharpness)
 {
     memset(filter, 0, sizeof(kalman_t));
     filter->q = q * 0.001f;      //add multiplier to make tuning easier
     filter->r = 88.0f;           //seeding R at 88.0f
     filter->p = 30.0f;           //seeding P at 30.0f
     filter->e = 1.0f;
+    filter->s = sharpness * 0.01f;
 }
 
 void kalman_init(void)
 {
     setPointNew = 0;
     memset(&varStruct, 0, sizeof(varStruct));
-    init_kalman(&kalmanFilterStateRate[ROLL], filterConfig.roll_q);
-    init_kalman(&kalmanFilterStateRate[PITCH], filterConfig.pitch_q);
-    init_kalman(&kalmanFilterStateRate[YAW], filterConfig.yaw_q);
+    init_kalman(&kalmanFilterStateRate[ROLL], filterConfig.roll_q, filterConfig.sharpness);
+    init_kalman(&kalmanFilterStateRate[PITCH], filterConfig.pitch_q, filterConfig.sharpness);
+    init_kalman(&kalmanFilterStateRate[YAW], filterConfig.yaw_q, filterConfig.sharpness);
     varStruct.inverseN = 1.0f/filterConfig.w;
 }
 

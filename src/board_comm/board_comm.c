@@ -157,7 +157,7 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
                 filterConfig.sharpness            = (int16_t) ((int16_t)(command->param10 >> 16));
                 if (!filterConfig.sharpness)
                 {
-                	filterConfig.sharpness = 35;
+                	filterConfig.sharpness = 2500;
                 }
                 filterConfig.acc_lpf_hz          = (int16_t)(command->param10 & 0xFFFF);
                 if (!filterConfig.acc_lpf_hz)
