@@ -5,3 +5,4 @@ redirection
 redirection.junk
 kalman/test
 .exe
+gcc-arm*

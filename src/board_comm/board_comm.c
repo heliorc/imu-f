@@ -42,7 +42,7 @@ void board_comm_init(void)
     #ifndef BOARD_COMM_CS_TYPE
         //exti is used for NSS
         gpio_exti_init(BOARD_COMM_EXTI_PORT, BOARD_COMM_EXTI_PORT_SRC, BOARD_COMM_EXTI_PIN, BOARD_COMM_EXTI_PIN_SRC, BOARD_COMM_EXTI_LINE, EXTI_Trigger_Rising, BOARD_COMM_EXTI_IRQn, BOARD_COMM_EXTI_ISR_PRE_PRI, BOARD_COMM_EXTI_ISR_SUB_PRI);
-        spi_init(&boardCommSpiInitStruct, &boardCommDmaInitStruct, BOARD_COMM_SPI, SPI_Mode_Slave, SPI_NSS_Soft, SPI_CPOL_Low, SPI_CPHA_1Edge, SPI_BaudRatePrescaler_2); 
+        spi_init(&boardCommSpiInitStruct, &boardCommDmaInitStruct, BOARD_COMM_SPI, SPI_Mode_Slave, SPI_NSS_Soft, SPI_CPOL_Low, SPI_CPHA_1Edge, SPI_BaudRatePrescaler_2);
     #else
         single_gpio_init(BOARD_COMM_CS_PORT, BOARD_COMM_CS_PIN_SRC, BOARD_COMM_CS_PIN, BOARD_COMM_CS_ALTERNATE, BOARD_COMM_CS_TYPE, GPIO_OType_PP, GPIO_PuPd_NOPULL);
         spi_init(&boardCommSpiInitStruct, &boardCommDmaInitStruct, BOARD_COMM_SPI, SPI_Mode_Slave, BOARD_COMM_CS_TYPE, SPI_CPOL_Low, SPI_CPHA_1Edge, SPI_BaudRatePrescaler_2);
@@ -66,7 +66,7 @@ int parse_imuf_command(volatile imufCommand_t* command)
 
 void start_listening(void)
 {
-    spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely 
+    spiDoneFlag = 0; //flag for use during runtime to limit ISR overhead, might be able to remove this completely
     append_crc_to_data_v((volatile uint32_t *)bcTxPtr, 11); //11 will put the crc at the location it needs to be which is imufCommand.crc
     //this takes 0.78us to run
     cleanup_spi(BOARD_COMM_SPI, BOARD_COMM_TX_DMA, BOARD_COMM_RX_DMA, BOARD_COMM_SPI_RST_MSK);
@@ -90,8 +90,8 @@ void board_comm_spi_callback_function(void)
     {
         //command checks out
         //run the command and generate the reply
-        run_command(&bcRx,&bcTx); 
-        
+        run_command(&bcRx,&bcTx);
+
     }
     else if ( (bcTx.command == BC_IMUF_SETUP) ) //we just replied that we got proper setup commands, let's activate them now
     {
@@ -103,7 +103,7 @@ void board_comm_spi_callback_function(void)
         reset_matrix(); //reset oreintation matrix in case it's been changes
         reset_loop(); //set loop speed
     }
-    else 
+    else
     {
         //bad command, listen for another
         bcTx.command = BC_IMUF_LISTENING;
@@ -148,9 +148,22 @@ static void run_command(volatile imufCommand_t* command, volatile imufCommand_t*
                 filterConfig.i_pitch_q           = (int16_t)(command->param3 & 0xFFFF);
                 filterConfig.i_yaw_q             = (int16_t)(command->param4 >> 16);
                 gyroSettingsConfig.orientation   = (uint32_t)((uint16_t)(command->param8 & 0xFFFF));
+                filterConfig.i_roll_lpf_hz       = (int16_t)(command->param4 & 0xFFFF);
+                filterConfig.i_pitch_lpf_hz      = (int16_t)(command->param5 >> 16);
+                filterConfig.i_yaw_lpf_hz        = (int16_t)(command->param5 & 0xFFFF);
                 gyroSettingsConfig.smallX        = (int32_t) ((int16_t)(command->param8 >> 16));
                 gyroSettingsConfig.smallY        = (int32_t) ((int16_t)(command->param9 & 0xFFFF));
                 gyroSettingsConfig.smallZ        = (int32_t) ((int16_t)(command->param9 >> 16));
+                filterConfig.sharpness            = (int16_t) ((int16_t)(command->param10 >> 16));
+                if (!filterConfig.sharpness)
+                {
+                	filterConfig.sharpness = 2500;
+                }
+                filterConfig.acc_lpf_hz          = (int16_t)(command->param10 & 0xFFFF);
+                if (!filterConfig.acc_lpf_hz)
+                {
+                	filterConfig.acc_lpf_hz = 256;
+                }
 
                 memset((uint8_t *)reply, 0, sizeof(imufCommand_t));
                 reply->command = BC_IMUF_SETUP;

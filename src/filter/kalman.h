@@ -3,12 +3,12 @@
 #include "gyro.h"
 #include "filter.h"
 
-#define MAX_WINDOW_SIZE 1024
+#define MAX_WINDOW_SIZE 512
 #define DEF_WINDOW_SIZE 32
 #define MIN_WINDOW_SIZE 6
 
 // #define VARIANCE_SCALE 0.001
-#define VARIANCE_SCALE 0.3333333f
+#define VARIANCE_SCALE 0.67f
 
 typedef struct kalman
 {
@@ -18,7 +18,8 @@ typedef struct kalman
     float k;     //kalman gain
     float x;     //state
     float lastX; //previous state
-    float e;
+    float e;     //multiplier or adder to q
+    float s;     //changes how dynamic e is
 } kalman_t;
 
 typedef struct variance
@@ -26,14 +27,14 @@ typedef struct variance
     float xVar;
     float yVar;
     float zVar;
-    float xyCoVar;
-    float xzCoVar;
-    float yzCoVar;
 
     uint32_t windex;
     float xWindow[MAX_WINDOW_SIZE];
     float yWindow[MAX_WINDOW_SIZE];
     float zWindow[MAX_WINDOW_SIZE];
+    float xvarianceWindow[MAX_WINDOW_SIZE];
+    float yvarianceWindow[MAX_WINDOW_SIZE];
+    float zvarianceWindow[MAX_WINDOW_SIZE];
 
     float xSumMean;
     float ySumMean;
@@ -46,9 +47,6 @@ typedef struct variance
     float xSumVar;
     float ySumVar;
     float zSumVar;
-    float xySumCoVar;
-    float xzSumCoVar;
-    float yzSumCoVar;
 
     float inverseN;
 } variance_t;

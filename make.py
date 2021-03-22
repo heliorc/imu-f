@@ -31,7 +31,10 @@ class ColorFallback(object):
 
 try:
     from colorama import init, Fore, Back, Style
-    init(convert=True)
+    if platform.system() == 'Windows':
+        init(convert=True)
+    else:
+        init(convert=False)
 except ImportError:
     Fore = Style = ColorFallback()
 
@@ -176,7 +179,7 @@ def configure_target(TARGET):
     #extra source files to include not in the below dirs
     SOURCE_FILES = [
         this_dir + "/assembly/startup/startup_stm32f303xc.s",
-        LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/TransformFunctions/arm_bitreversal2.s"
+        LIBRARY_PATH + "/CMSIS_std/DSP_Lib/Source/TransformFunctions/arm_bitreversal2.S"
     ]
 
     #All include dirs
@@ -524,7 +527,7 @@ def ProcessList(fileNames, target_config):
 
         linkerObjs.append(os.path.join("output", makeObject(fileName, target_config.target)))
         if FileModified(fileName, target_config):
-            if fileName[-2:] == ".s":
+            if (fileName[-2:] == ".s") or ((fileName[-2:] == ".S")):
                 commands.append(asm_command.format(
                     INPUT_FILE=fileName.path,
                     OUTPUT_FILE=makeObject(fileName.path, target_config.target),
